@@ -3,10 +3,7 @@ require('dotenv').config();
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/thalai-guardian', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/thalai-guardian');
 
     if (process.env.NODE_ENV !== 'test') {
       console.log(`✅ MongoDB Connected: ${conn.connection.host}`);

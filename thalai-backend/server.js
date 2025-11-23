@@ -70,10 +70,27 @@ app.use(errorHandler);
 
 // Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   if (process.env.NODE_ENV !== 'test') {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
+  }
+});
+
+// Handle server errors gracefully
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use!`);
+    console.error(`\n💡 Try one of these solutions:`);
+    console.error(`   1. Kill the process using port ${PORT}:`);
+    console.error(`      Windows: netstat -ano | findstr :${PORT}`);
+    console.error(`      Then: taskkill /PID <PID> /F`);
+    console.error(`   2. Or use a different port: PORT=5001 npm run dev`);
+    console.error(`   3. Or run: npm run kill-port\n`);
+    process.exit(1);
+  } else {
+    console.error('❌ Server error:', error);
+    process.exit(1);
   }
 });
 
