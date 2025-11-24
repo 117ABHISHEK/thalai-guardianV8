@@ -2,15 +2,33 @@ const User = require('../models/userModel');
 const Donor = require('../models/donorModel');
 
 // @route   POST /api/auth/register
-// @desc    Register a new user
+// @desc    Register a new user (with enhanced donor validation)
 // @access  Public
 const register = async (req, res) => {
   try {
-    const { name, email, password, role, bloodGroup, phone, address, dateOfBirth } = req.body;
+    const {
+      name,
+      email,
+      password,
+      role,
+      bloodGroup,
+      phone,
+      address,
+      dateOfBirth,
+      // Donor-specific fields
+      dob,
+      heightCm,
+      weightKg,
+      medicalHistory,
+      lastDonationDate,
+      donationFrequencyMonths,
+      gender,
+    } = req.body;
 
-    // Validation
+    // Basic validation
     if (!name || !email || !password || !role || !bloodGroup) {
       return res.status(400).json({
+        success: false,
         message: 'Please provide all required fields: name, email, password, role, bloodGroup',
       });
     }
@@ -19,6 +37,7 @@ const register = async (req, res) => {
     const validRoles = ['patient', 'donor', 'admin'];
     if (!validRoles.includes(role)) {
       return res.status(400).json({
+        success: false,
         message: 'Invalid role. Must be one of: patient, donor, admin',
       });
     }
@@ -27,6 +46,7 @@ const register = async (req, res) => {
     const validBloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
     if (!validBloodGroups.includes(bloodGroup)) {
       return res.status(400).json({
+        success: false,
         message: 'Invalid blood group',
       });
     }
@@ -35,6 +55,7 @@ const register = async (req, res) => {
     const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({
+        success: false,
         message: 'Please provide a valid email address',
       });
     }
@@ -42,6 +63,7 @@ const register = async (req, res) => {
     // Validate password length
     if (password.length < 6) {
       return res.status(400).json({
+        success: false,
         message: 'Password must be at least 6 characters long',
       });
     }
@@ -50,8 +72,73 @@ const register = async (req, res) => {
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({
+        success: false,
         message: 'User already exists with this email',
       });
+    }
+
+    // Donor-specific validation
+    if (role === 'donor') {
+      // Validate donor age (must be >= 18)
+      const donorDob = dob || dateOfBirth;
+      if (!donorDob) {
+        return res.status(400).json({
+          success: false,
+          message: 'Date of birth (dob) is required for donor registration',
+        });
+      }
+
+      const ageValidation = validateDonorAge(donorDob);
+      if (!ageValidation.valid) {
+        return res.status(400).json({
+          success: false,
+          message: ageValidation.message,
+          error: 'AGE_REQUIREMENT_NOT_MET',
+        });
+      }
+
+      // Validate required donor fields
+      if (!heightCm || !weightKg) {
+        return res.status(400).json({
+          success: false,
+          message: 'Height (heightCm) and weight (weightKg) are required for donor registration',
+        });
+      }
+
+      // Validate donation interval (90-day rule)
+      if (lastDonationDate) {
+        const intervalValidation = validateDonationInterval(
+          lastDonationDate,
+          donationFrequencyMonths || 3
+        );
+        if (!intervalValidation.valid) {
+          return res.status(422).json({
+            success: false,
+            message: intervalValidation.message,
+            nextPossibleDate: intervalValidation.nextPossibleDate,
+            daysSince: intervalValidation.daysSince,
+            minIntervalDays: intervalValidation.minIntervalDays,
+            error: 'DONATION_INTERVAL_NOT_MET',
+          });
+        }
+      }
+
+      // Comprehensive donor validation
+      const donorValidation = validateDonorRegistration({
+        dob: donorDob,
+        heightCm,
+        weightKg,
+        lastDonationDate,
+        donationFrequencyMonths: donationFrequencyMonths || 3,
+      });
+
+      if (!donorValidation.valid) {
+        return res.status(422).json({
+          success: false,
+          message: 'Donor registration validation failed',
+          errors: donorValidation.errors,
+        });
+      }
     }
 
     // Create user
@@ -63,19 +150,51 @@ const register = async (req, res) => {
       bloodGroup,
       phone,
       address,
-      dateOfBirth,
+      dateOfBirth: dob || dateOfBirth, // Use dob if provided, else dateOfBirth
     });
 
-    // If user is a donor, create donor profile
+    // Create role-specific profile
     if (role === 'donor') {
-      await Donor.create({
+      const donorProfile = await Donor.create({
         user: user._id,
+        dob: dob || dateOfBirth,
+        heightCm,
+        weightKg,
+        medicalHistory: medicalHistory || [],
+        lastDonationDate: lastDonationDate || null,
+        donationFrequencyMonths: donationFrequencyMonths || 3,
         availabilityStatus: false,
+        eligibilityStatus: 'deferred', // Starts as deferred until admin review
+        eligibilityReason: 'Pending admin review and health clearance',
+      });
+
+      // Compute initial eligibility
+      await donorProfile.populate('user');
+      const eligibility = computeEligibility(donorProfile);
+      
+      // Update donor with eligibility results
+      donorProfile.eligibilityStatus = eligibility.eligible ? 'eligible' : 'deferred';
+      donorProfile.eligibilityReason = eligibility.reason;
+      donorProfile.nextPossibleDonationDate = eligibility.nextPossibleDate;
+      donorProfile.eligibilityLastChecked = new Date();
+      await donorProfile.save();
+    } else if (role === 'patient') {
+      // Create patient profile
+      await Patient.create({
+        user: user._id,
+        transfusionHistory: [],
       });
     }
 
     // Generate token
     const token = user.generateToken();
+
+    // Log registration
+    logger.logRegistration(user._id, role, user.email, {
+      bloodGroup: user.bloodGroup,
+      isDonor: role === 'donor',
+      isPatient: role === 'patient',
+    });
 
     res.status(201).json({
       success: true,
@@ -93,7 +212,21 @@ const register = async (req, res) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: Object.values(error.errors).map((err) => ({
+          field: err.path,
+          message: err.message,
+        })),
+      });
+    }
+
     res.status(500).json({
+      success: false,
       message: 'Server error during registration',
       error: error.message,
     });

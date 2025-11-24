@@ -1,68 +1,73 @@
 const Donor = require('../models/donorModel');
 const User = require('../models/userModel');
+const { computeEligibility } = require('../services/eligibilityService');
+const logger = require('../utils/logger');
 
 // @route   POST /api/donors/availability
 // @desc    Update donor availability status
-// @access  Private (Donor only)
+// @access  Private (Donor)
 const updateAvailability = async (req, res) => {
   try {
-    const { availabilityStatus, lastDonationDate } = req.body;
+    const { availabilityStatus, lastDonationDate, donationFrequencyMonths } = req.body;
 
-    // Validation
-    if (typeof availabilityStatus !== 'boolean') {
-      return res.status(400).json({
-        message: 'availabilityStatus must be a boolean (true/false)',
-      });
-    }
-
-    // Check if user is a donor
-    if (req.user.role !== 'donor') {
-      return res.status(403).json({
-        message: 'Only donors can update availability',
-      });
-    }
-
-    // Find or create donor profile
-    let donor = await Donor.findOne({ user: req.user._id });
+    // Find donor profile
+    const donor = await Donor.findOne({ user: req.user._id });
 
     if (!donor) {
-      // Create donor profile if it doesn't exist
-      donor = await Donor.create({
-        user: req.user._id,
-        availabilityStatus,
-        lastDonationDate: lastDonationDate ? new Date(lastDonationDate) : null,
+      return res.status(404).json({
+        success: false,
+        message: 'Donor profile not found',
       });
-    } else {
-      // Update existing donor profile
-      const updateFields = { availabilityStatus };
-      if (lastDonationDate) {
-        updateFields.lastDonationDate = new Date(lastDonationDate);
-        // Increment total donations if lastDonationDate is being set
-        if (!donor.lastDonationDate || donor.lastDonationDate.toISOString() !== new Date(lastDonationDate).toISOString()) {
-          updateFields.totalDonations = (donor.totalDonations || 0) + 1;
-        }
-      }
-
-      donor = await Donor.findByIdAndUpdate(
-        donor._id,
-        { $set: updateFields },
-        { new: true, runValidators: true }
-      );
     }
 
+    // Update availability
+    if (availabilityStatus !== undefined) {
+      donor.availabilityStatus = availabilityStatus;
+    }
+
+    // Update last donation date if provided
+    if (lastDonationDate) {
+      donor.lastDonationDate = new Date(lastDonationDate);
+    }
+
+    // Update donation frequency if provided
+    if (donationFrequencyMonths) {
+      if (donationFrequencyMonths < 3) {
+        return res.status(400).json({
+          success: false,
+          message: 'Minimum donation frequency is 3 months',
+        });
+      }
+      donor.donationFrequencyMonths = donationFrequencyMonths;
+    }
+
+    // Recompute eligibility after updates
+    await donor.populate('user');
+    const eligibility = computeEligibility(donor);
+    
+    // Update eligibility fields
+    donor.eligibilityStatus = eligibility.eligible ? 'eligible' : 'deferred';
+    donor.eligibilityReason = eligibility.reason;
+    donor.nextPossibleDonationDate = eligibility.nextPossibleDate;
+    donor.eligibilityLastChecked = new Date();
+
+    await donor.save();
+
     // Populate user details
-    await donor.populate('user', 'name email bloodGroup phone');
+    await donor.populate('user', 'name email bloodGroup phone dateOfBirth');
 
     res.status(200).json({
       success: true,
-      message: 'Donor availability updated successfully',
+      message: 'Availability updated successfully',
       data: {
         donor,
+        eligibility,
       },
     });
   } catch (error) {
-    console.error('Update availability error:', error);
+    logger.error('Update availability error', { error: error.message, userId: req.user._id });
     res.status(500).json({
+      success: false,
       message: 'Server error',
       error: error.message,
     });
@@ -71,39 +76,71 @@ const updateAvailability = async (req, res) => {
 
 // @route   GET /api/donors/availability
 // @desc    Get donor availability status
-// @access  Private (Donor only)
+// @access  Private (Donor)
 const getAvailability = async (req, res) => {
   try {
-    // Check if user is a donor
-    if (req.user.role !== 'donor') {
-      return res.status(403).json({
-        message: 'Only donors can view availability',
-      });
-    }
-
-    // Find donor profile
-    let donor = await Donor.findOne({ user: req.user._id });
+    const donor = await Donor.findOne({ user: req.user._id }).populate(
+      'user',
+      'name email bloodGroup phone dateOfBirth'
+    );
 
     if (!donor) {
-      // Create default donor profile if it doesn't exist
-      donor = await Donor.create({
-        user: req.user._id,
-        availabilityStatus: false,
+      return res.status(404).json({
+        success: false,
+        message: 'Donor profile not found',
       });
     }
 
-    // Populate user details
-    await donor.populate('user', 'name email bloodGroup phone');
+    // Compute eligibility
+    const eligibility = computeEligibility(donor);
 
     res.status(200).json({
       success: true,
       data: {
         donor,
+        eligibility,
       },
     });
   } catch (error) {
-    console.error('Get availability error:', error);
+    logger.error('Get availability error', { error: error.message, userId: req.user._id });
     res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+    });
+  }
+};
+
+// @route   GET /api/donors/profile
+// @desc    Get donor profile with eligibility information
+// @access  Private (Donor)
+const getDonorProfile = async (req, res) => {
+  try {
+    const donor = await Donor.findOne({ user: req.user._id })
+      .populate('user', 'name email bloodGroup phone dateOfBirth address')
+      .populate('verifiedBy', 'name email');
+
+    if (!donor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Donor profile not found',
+      });
+    }
+
+    // Compute eligibility
+    const eligibility = computeEligibility(donor);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        donor,
+        eligibility,
+      },
+    });
+  } catch (error) {
+    logger.error('Get donor profile error', { error: error.message, userId: req.user._id });
+    res.status(500).json({
+      success: false,
       message: 'Server error',
       error: error.message,
     });
@@ -113,5 +150,5 @@ const getAvailability = async (req, res) => {
 module.exports = {
   updateAvailability,
   getAvailability,
+  getDonorProfile,
 };
-

@@ -1,8 +1,10 @@
 const express = require('express');
 const cors = require('cors');
+const morgan = require('morgan');
 require('dotenv').config();
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
+const logger = require('./utils/logger');
 
 // Import Routes
 const publicRoutes = require('./routes/publicRoutes');
@@ -33,12 +35,20 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Request logging (only in development)
+// HTTP request logging with Morgan
 if (process.env.NODE_ENV === 'development') {
-  app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path}`);
-    next();
-  });
+  app.use(morgan('dev', {
+    stream: {
+      write: (message) => logger.info(message.trim(), { type: 'http_request' })
+    }
+  }));
+} else {
+  // Production: log to file with more details
+  app.use(morgan('combined', {
+    stream: {
+      write: (message) => logger.info(message.trim(), { type: 'http_request' })
+    }
+  }));
 }
 
 // Routes
@@ -72,6 +82,11 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {
   if (process.env.NODE_ENV !== 'test') {
+    logger.info(`Server started on port ${PORT}`, {
+      port: PORT,
+      environment: process.env.NODE_ENV || 'development',
+      timestamp: new Date().toISOString(),
+    });
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
   }
@@ -79,6 +94,7 @@ const server = app.listen(PORT, () => {
 
 // Handle server errors gracefully
 server.on('error', (error) => {
+  logger.error('Server error', { error: error.message, code: error.code, stack: error.stack });
   if (error.code === 'EADDRINUSE') {
     console.error(`❌ Port ${PORT} is already in use!`);
     console.error(`\n💡 Try one of these solutions:`);

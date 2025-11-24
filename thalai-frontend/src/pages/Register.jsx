@@ -58,6 +58,29 @@ const Register = () => {
       return;
     }
 
+    // If role is 'donor', redirect to enhanced donor registration form
+    if (formData.role === 'donor') {
+      navigate('/register/donor', {
+        state: {
+          formData: {
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            confirmPassword: formData.confirmPassword,
+            role: formData.role,
+            bloodGroup: formData.bloodGroup,
+            phone: formData.phone,
+            street: formData.street,
+            city: formData.city,
+            state: formData.state,
+            zipCode: formData.zipCode,
+            dateOfBirth: formData.dateOfBirth,
+          },
+        },
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {

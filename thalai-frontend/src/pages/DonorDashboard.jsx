@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getProfile, updateProfile } from '../api/auth';
 import { getDonorAvailability, updateDonorAvailability } from '../api/donor';
@@ -187,14 +188,22 @@ const DonorDashboard = () => {
           <div className="card">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">My Profile</h2>
-              {!editing && (
-                <button
-                  onClick={() => setEditing(true)}
-                  className="btn-primary"
+              <div className="flex gap-2">
+                <Link
+                  to="/donor-profile"
+                  className="bg-health-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  Edit Profile
-                </button>
-              )}
+                  View Eligibility Profile
+                </Link>
+                {!editing && (
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="btn-primary"
+                  >
+                    Edit Profile
+                  </button>
+                )}
+              </div>
             </div>
 
             {editing ? (

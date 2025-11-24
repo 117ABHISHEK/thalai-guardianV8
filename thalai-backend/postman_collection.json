@@ -1,0 +1,377 @@
+{
+  "info": {
+    "name": "ThalAI Guardian API - Production Features",
+    "description": "Complete API collection for ThalAI Guardian with production-ready features",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "2.0.0"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ml_service_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register Donor (Enhanced)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('token', jsonData.data.token);",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"johndoe@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"donor\",\n  \"bloodGroup\": \"O+\",\n  \"phone\": \"+1234567890\",\n  \"dob\": \"1990-01-15\",\n  \"heightCm\": 175,\n  \"weightKg\": 70,\n  \"donationFrequencyMonths\": 3,\n  \"lastDonationDate\": \"2023-12-01\",\n  \"medicalHistory\": [],\n  \"address\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"Mumbai\",\n    \"state\": \"Maharashtra\",\n    \"zipCode\": \"400001\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Register Donor - Age < 18 (Should Fail)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Young Donor\",\n  \"email\": \"young@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"donor\",\n  \"bloodGroup\": \"O+\",\n  \"dob\": \"2010-01-01\",\n  \"heightCm\": 150,\n  \"weightKg\": 45\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Register Donor - Last Donation < 90 Days (Should Fail)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Recent Donor\",\n  \"email\": \"recent@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"donor\",\n  \"bloodGroup\": \"O+\",\n  \"dob\": \"1990-01-01\",\n  \"heightCm\": 175,\n  \"weightKg\": 70,\n  \"lastDonationDate\": \"2024-01-15\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('token', jsonData.data.token);",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@thalai.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donor",
+      "item": [
+        {
+          "name": "Get Donor Profile with Eligibility",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/donors/profile",
+              "host": ["{{base_url}}"],
+              "path": ["donors", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Get Donor Availability",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/donors/availability",
+              "host": ["{{base_url}}"],
+              "path": ["donors", "availability"]
+            }
+          }
+        },
+        {
+          "name": "Update Donor Availability",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"availabilityStatus\": true,\n  \"lastDonationDate\": \"2024-01-01\",\n  \"donationFrequencyMonths\": 3\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/donors/availability",
+              "host": ["{{base_url}}"],
+              "path": ["donors", "availability"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Get All Donors",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/donors",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "donors"]
+            }
+          }
+        },
+        {
+          "name": "Verify Donor",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"donorId\": \"DONOR_ID_HERE\",\n  \"healthClearance\": true,\n  \"eligibilityStatus\": \"eligible\",\n  \"eligibilityReason\": \"All checks passed\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/donors/verify",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "donors", "verify"]
+            }
+          }
+        },
+        {
+          "name": "Get Eligibility Report",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/donors/eligibility-report",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "donors", "eligibility-report"]
+            }
+          }
+        },
+        {
+          "name": "Get Stats",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/stats",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ML Service",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ml_service_url}}/health",
+              "host": ["{{ml_service_url}}"],
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "Predict Next Transfusion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"patient_123\",\n  \"history\": [\n    {\"date\": \"2024-01-15\", \"units\": 2, \"hb_value\": 8.5},\n    {\"date\": \"2024-02-20\", \"units\": 2, \"hb_value\": 8.2}\n  ],\n  \"lastHb\": 8.0,\n  \"age\": 25,\n  \"weightKg\": 50,\n  \"comorbidities\": [\"thalassemia\"],\n  \"currentDate\": \"2024-03-01\"\n}"
+            },
+            "url": {
+              "raw": "{{ml_service_url}}/predict-next-transfusion",
+              "host": ["{{ml_service_url}}"],
+              "path": ["predict-next-transfusion"]
+            }
+          }
+        },
+        {
+          "name": "Model Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ml_service_url}}/model-info",
+              "host": ["{{ml_service_url}}"],
+              "path": ["model-info"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+

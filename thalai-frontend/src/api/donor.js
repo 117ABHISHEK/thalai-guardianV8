@@ -20,3 +20,13 @@ export const updateDonorAvailability = async (availabilityData) => {
   }
 };
 
+// Get donor profile with eligibility information
+export const getDonorProfile = async () => {
+  try {
+    const response = await api.get('/donors/profile');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Failed to fetch donor profile' };
+  }
+};
+

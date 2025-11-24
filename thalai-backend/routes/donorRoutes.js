@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   updateAvailability,
   getAvailability,
+  getDonorProfile,
 } = require('../controllers/donorController');
 const { protect } = require('../middleware/authMiddleware');
 const { allowRoles } = require('../middleware/roleMiddleware');
@@ -25,6 +26,16 @@ router.get(
   protect,
   allowRoles('donor'),
   getAvailability
+);
+
+// @route   GET /api/donors/profile
+// @desc    Get donor profile with eligibility information
+// @access  Private (Donor only)
+router.get(
+  '/profile',
+  protect,
+  allowRoles('donor'),
+  getDonorProfile
 );
 
 module.exports = router;

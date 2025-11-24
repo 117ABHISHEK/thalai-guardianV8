@@ -11,6 +11,7 @@ import DonorsPage from './pages/DonorsPage';
 import RequestsPage from './pages/RequestsPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import DonorRegister from './pages/DonorRegister';
 
 // Protected Pages
 import PatientDashboard from './pages/PatientDashboard';
@@ -19,6 +20,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import DonorVerification from './pages/DonorVerification';
 import AdminRequestManager from './pages/AdminRequestManager';
 import DonorMatchResults from './pages/DonorMatchResults';
+import DonorProfile from './pages/DonorProfile';
 
 // Home component that redirects based on auth status
 const Home = () => {
@@ -76,6 +78,7 @@ function App() {
               <Route path="/requests" element={<RequestsPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/register/donor" element={<DonorRegister />} />
               
               {/* Protected Dashboard Routes */}
               <Route
@@ -91,6 +94,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['donor']}>
                     <DonorDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/donor-profile"
+                element={
+                  <ProtectedRoute allowedRoles={['donor']}>
+                    <DonorProfile />
                   </ProtectedRoute>
                 }
               />

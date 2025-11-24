@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   getDonors,
   verifyDonor,
+  getEligibilityReport,
   getStats,
 } = require('../controllers/adminController');
 const { protect } = require('../middleware/authMiddleware');
@@ -21,6 +22,11 @@ router.get('/donors', getDonors);
 // @desc    Verify a donor
 // @access  Private/Admin
 router.post('/donors/verify', verifyDonor);
+
+// @route   GET /api/admin/donors/eligibility-report
+// @desc    Get eligibility report for all donors
+// @access  Private/Admin
+router.get('/donors/eligibility-report', getEligibilityReport);
 
 // @route   GET /api/admin/stats
 // @desc    Get system statistics
