@@ -94,7 +94,7 @@ const ChatbotWidget = () => {
           className="fixed bottom-6 right-6 w-16 h-16 bg-health-blue text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors z-50 flex items-center justify-center text-2xl"
           title="Open Chatbot"
         >
-          💬
+          (⊙ˍ⊙)
         </button>
       )}
 

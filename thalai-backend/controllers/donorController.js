@@ -10,8 +10,8 @@ const updateAvailability = async (req, res) => {
   try {
     const { availabilityStatus, lastDonationDate, donationFrequencyMonths } = req.body;
 
-    // Find donor profile
-    const donor = await Donor.findOne({ user: req.user._id });
+    // Find donor profile to get current state for eligibility calculation
+    const donor = await Donor.findOne({ user: req.user._id }).populate('user');
 
     if (!donor) {
       return res.status(404).json({
@@ -20,47 +20,55 @@ const updateAvailability = async (req, res) => {
       });
     }
 
-    // Update availability
-    if (availabilityStatus !== undefined) {
-      donor.availabilityStatus = availabilityStatus;
+    if (donationFrequencyMonths && donationFrequencyMonths < 3) {
+      return res.status(400).json({
+        success: false,
+        message: 'Minimum donation frequency is 3 months',
+      });
     }
-
-    // Update last donation date if provided
-    if (lastDonationDate) {
-      donor.lastDonationDate = new Date(lastDonationDate);
-    }
-
-    // Update donation frequency if provided
-    if (donationFrequencyMonths) {
-      if (donationFrequencyMonths < 3) {
-        return res.status(400).json({
-          success: false,
-          message: 'Minimum donation frequency is 3 months',
-        });
-      }
-      donor.donationFrequencyMonths = donationFrequencyMonths;
-    }
-
-    // Recompute eligibility after updates
-    await donor.populate('user');
-    const eligibility = computeEligibility(donor);
     
-    // Update eligibility fields
-    donor.eligibilityStatus = eligibility.eligible ? 'eligible' : 'deferred';
-    donor.eligibilityReason = eligibility.reason;
-    donor.nextPossibleDonationDate = eligibility.nextPossibleDate;
-    donor.eligibilityLastChecked = new Date();
+    // Create a temporary plain object for eligibility computation with pending changes
+    const tempDonorState = donor.toObject();
+    if (availabilityStatus !== undefined) {
+      tempDonorState.availabilityStatus = availabilityStatus;
+    }
+    if (lastDonationDate) {
+      tempDonorState.lastDonationDate = new Date(lastDonationDate);
+    }
+    if (donationFrequencyMonths) {
+      tempDonorState.donationFrequencyMonths = donationFrequencyMonths;
+    }
 
-    await donor.save();
+    const eligibility = computeEligibility(tempDonorState);
 
-    // Populate user details
-    await donor.populate('user', 'name email bloodGroup phone dateOfBirth');
+    const updatePayload = {
+      eligibilityStatus: eligibility.eligible ? 'eligible' : 'deferred',
+      eligibilityReason: eligibility.reason,
+      nextPossibleDonationDate: eligibility.nextPossibleDate,
+      eligibilityLastChecked: new Date(),
+    };
+
+    if (availabilityStatus !== undefined) {
+      updatePayload.availabilityStatus = availabilityStatus;
+    }
+    if (lastDonationDate) {
+      updatePayload.lastDonationDate = new Date(lastDonationDate);
+    }
+    if (donationFrequencyMonths) {
+      updatePayload.donationFrequencyMonths = donationFrequencyMonths;
+    }
+
+    const updatedDonor = await Donor.findByIdAndUpdate(
+      donor._id,
+      { $set: updatePayload },
+      { new: true } // `new: true` to return the modified document
+    ).populate('user', 'name email bloodGroup phone dateOfBirth');
 
     res.status(200).json({
       success: true,
       message: 'Availability updated successfully',
       data: {
-        donor,
+        donor: updatedDonor,
         eligibility,
       },
     });

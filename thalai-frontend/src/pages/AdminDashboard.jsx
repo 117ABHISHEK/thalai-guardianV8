@@ -58,12 +58,6 @@ const AdminDashboard = () => {
               >
                 Manage Requests
               </button>
-              <button
-                onClick={logout}
-                className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-              >
-                Logout
-              </button>
             </div>
           </div>
         </div>
