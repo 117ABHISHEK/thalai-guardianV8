@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getProfile } from '../api/auth';
+import { getProfile, updateProfile } from '../api/auth';
+import HealthMetricsForm from '../components/HealthMetricsForm';
 import { getDonorProfile } from '../api/donor';
 
 /**
@@ -14,6 +15,8 @@ const DonorProfile = () => {
   const [eligibility, setEligibility] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showHealthMetricsEdit, setShowHealthMetricsEdit] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -63,6 +66,20 @@ const DonorProfile = () => {
       month: 'long',
       day: 'numeric',
     });
+  };
+
+  const handleHealthMetricsUpdate = async (data) => {
+    try {
+      setUpdating(true);
+      await updateProfile(data);
+      await fetchProfile(); // Refresh data
+      setShowHealthMetricsEdit(false);
+    } catch (err) {
+      console.error('Failed to update health metrics:', err);
+      // You might want to show an error message here
+    } finally {
+      setUpdating(false);
+    }
   };
 
   if (loading) {
@@ -164,59 +181,95 @@ const DonorProfile = () => {
         {/* Donor Information */}
         {donorProfile && (
           <div className="card p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Donor Information</h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Height</p>
-                <p className="font-semibold text-gray-900">{donorProfile.heightCm || 'N/A'} cm</p>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Donor Information</h2>
+              <button
+                onClick={() => setShowHealthMetricsEdit(!showHealthMetricsEdit)}
+                className="text-sm text-health-blue hover:text-blue-800 font-medium"
+              >
+                {showHealthMetricsEdit ? 'Cancel Edit' : 'Edit Health Metrics'}
+              </button>
+            </div>
+
+            {showHealthMetricsEdit ? (
+              <HealthMetricsForm
+                initialData={donorProfile}
+                onSave={handleHealthMetricsUpdate}
+                loading={updating}
+              />
+            ) : (
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">Height</p>
+                  <p className="font-semibold text-gray-900">{donorProfile.heightCm || 'N/A'} cm</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Weight</p>
+                  <p className="font-semibold text-gray-900">{donorProfile.weightKg || 'N/A'} kg</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Date of Birth</p>
+                  <p className="font-semibold text-gray-900">{formatDate(donorProfile.dob || user.dateOfBirth)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Age</p>
+                  <p className="font-semibold text-gray-900">
+                    {donorProfile.dob || user.dateOfBirth
+                      ? Math.floor((new Date() - new Date(donorProfile.dob || user.dateOfBirth)) / (365.25 * 24 * 60 * 60 * 1000))
+                      : 'N/A'}{' '}
+                    years
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Last Donation Date</p>
+                  <p className="font-semibold text-gray-900">{formatDate(donorProfile.lastDonationDate)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Donations</p>
+                  <p className="font-semibold text-gray-900">{donorProfile.totalDonations || 0}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Donation Frequency</p>
+                  <p className="font-semibold text-gray-900">{donorProfile.donationFrequencyMonths || 3} months</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Health Clearance</p>
+                  <p className={`font-semibold ${donorProfile.healthClearance ? 'text-green-600' : 'text-yellow-600'}`}>
+                    {donorProfile.healthClearance ? '✓ Granted' : 'Pending'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Verification Status</p>
+                  <p className={`font-semibold ${donorProfile.isVerified ? 'text-green-600' : 'text-yellow-600'}`}>
+                    {donorProfile.isVerified ? '✓ Verified' : 'Pending'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Availability Status</p>
+                  <p className={`font-semibold ${donorProfile.availabilityStatus ? 'text-green-600' : 'text-gray-600'}`}>
+                    {donorProfile.availabilityStatus ? 'Available' : 'Not Available'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Weight</p>
-                <p className="font-semibold text-gray-900">{donorProfile.weightKg || 'N/A'} kg</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Date of Birth</p>
-                <p className="font-semibold text-gray-900">{formatDate(donorProfile.dob || user.dateOfBirth)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Age</p>
-                <p className="font-semibold text-gray-900">
-                  {donorProfile.dob || user.dateOfBirth
-                    ? Math.floor((new Date() - new Date(donorProfile.dob || user.dateOfBirth)) / (365.25 * 24 * 60 * 60 * 1000))
-                    : 'N/A'}{' '}
-                  years
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Last Donation Date</p>
-                <p className="font-semibold text-gray-900">{formatDate(donorProfile.lastDonationDate)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Total Donations</p>
-                <p className="font-semibold text-gray-900">{donorProfile.totalDonations || 0}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Donation Frequency</p>
-                <p className="font-semibold text-gray-900">{donorProfile.donationFrequencyMonths || 3} months</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Health Clearance</p>
-                <p className={`font-semibold ${donorProfile.healthClearance ? 'text-green-600' : 'text-yellow-600'}`}>
-                  {donorProfile.healthClearance ? '✓ Granted' : 'Pending'}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Verification Status</p>
-                <p className={`font-semibold ${donorProfile.isVerified ? 'text-green-600' : 'text-yellow-600'}`}>
-                  {donorProfile.isVerified ? '✓ Verified' : 'Pending'}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Availability Status</p>
-                <p className={`font-semibold ${donorProfile.availabilityStatus ? 'text-green-600' : 'text-gray-600'}`}>
-                  {donorProfile.availabilityStatus ? 'Available' : 'Not Available'}
-                </p>
-              </div>
+            )}
+          </div>
+        )}
+
+        {/* Medical Reports (New Section) */}
+        {donorProfile?.medicalReports && donorProfile.medicalReports.length > 0 && (
+          <div className="card p-6 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Medical Reports</h2>
+            <div className="space-y-3">
+              {donorProfile.medicalReports.map((report, index) => (
+                <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-semibold text-gray-900">{report.title}</h3>
+                    <span className="text-xs text-gray-500">{formatDate(report.reportDate)}</span>
+                  </div>
+                  {report.value && <p className="text-sm font-medium text-gray-800 mb-1">Result: {report.value}</p>}
+                  {report.notes && <p className="text-sm text-gray-600">{report.notes}</p>}
+                </div>
+              ))}
             </div>
           </div>
         )}

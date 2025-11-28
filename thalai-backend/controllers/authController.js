@@ -1,5 +1,53 @@
 const User = require('../models/userModel');
 const Donor = require('../models/donorModel');
+const Patient = require('../models/patientModel');
+const { computeEligibility, validateDonorRegistration } = require('../services/eligibilityService');
+const logger = require('../utils/logger');
+
+// Helper validation functions
+const validateDonorAge = (dob) => {
+  const today = new Date();
+  const birthDate = new Date(dob);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  const dayDiff = today.getDate() - birthDate.getDate();
+
+  if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+    age--;
+  }
+
+  if (age < 18) {
+    return {
+      valid: false,
+      message: `Donor must be at least 18 years old. Current age: ${age} years`,
+      age
+    };
+  }
+
+  return { valid: true, age };
+};
+
+const validateDonationInterval = (lastDonationDate, donationFrequencyMonths = 3) => {
+  const today = new Date();
+  const lastDonation = new Date(lastDonationDate);
+  const daysSince = Math.floor((today - lastDonation) / (1000 * 60 * 60 * 24));
+  const minIntervalDays = donationFrequencyMonths * 30;
+
+  if (daysSince < minIntervalDays) {
+    const nextPossibleDate = new Date(lastDonation);
+    nextPossibleDate.setDate(nextPossibleDate.getDate() + minIntervalDays);
+
+    return {
+      valid: false,
+      message: `Minimum ${minIntervalDays} days must pass since last donation. ${daysSince} days have passed. Next possible donation: ${nextPossibleDate.toISOString().split('T')[0]}`,
+      daysSince,
+      minIntervalDays,
+      nextPossibleDate
+    };
+  }
+
+  return { valid: true, daysSince, minIntervalDays };
+};
 
 // @route   POST /api/auth/register
 // @desc    Register a new user (with enhanced donor validation)
@@ -171,7 +219,7 @@ const register = async (req, res) => {
       // Compute initial eligibility
       await donorProfile.populate('user');
       const eligibility = computeEligibility(donorProfile);
-      
+
       // Update donor with eligibility results
       donorProfile.eligibilityStatus = eligibility.eligible ? 'eligible' : 'deferred';
       donorProfile.eligibilityReason = eligibility.reason;
@@ -212,7 +260,7 @@ const register = async (req, res) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
-    
+
     // Handle validation errors
     if (error.name === 'ValidationError') {
       return res.status(400).json({
@@ -311,10 +359,18 @@ const getProfile = async (req, res) => {
       });
     }
 
+    let roleData = null;
+    if (user.role === 'donor') {
+      roleData = await Donor.findOne({ user: user._id });
+    } else if (user.role === 'patient') {
+      roleData = await Patient.findOne({ user: user._id });
+    }
+
     res.status(200).json({
       success: true,
       data: {
         user,
+        [user.role]: roleData,
       },
     });
   } catch (error) {
@@ -331,7 +387,17 @@ const getProfile = async (req, res) => {
 // @access  Private
 const updateProfile = async (req, res) => {
   try {
-    const { name, phone, address, dateOfBirth, bloodGroup } = req.body;
+    const {
+      name,
+      phone,
+      address,
+      dateOfBirth,
+      bloodGroup,
+      // Health metrics
+      heightCm,
+      weightKg,
+      medicalReports
+    } = req.body;
 
     // Build update object
     const updateFields = {};
@@ -361,6 +427,31 @@ const updateProfile = async (req, res) => {
       return res.status(404).json({
         message: 'User not found',
       });
+    }
+
+    // Update role-specific profile
+    if (user.role === 'donor') {
+      const donorUpdate = {};
+      if (heightCm) donorUpdate.heightCm = heightCm;
+      if (weightKg) donorUpdate.weightKg = weightKg;
+      if (medicalReports) donorUpdate.medicalReports = medicalReports;
+
+      await Donor.findOneAndUpdate(
+        { user: user._id },
+        { $set: donorUpdate },
+        { new: true, runValidators: true }
+      );
+    } else if (user.role === 'patient') {
+      const patientUpdate = {};
+      if (heightCm) patientUpdate.heightCm = heightCm;
+      if (weightKg) patientUpdate.weightKg = weightKg;
+      if (medicalReports) patientUpdate.medicalReports = medicalReports;
+
+      await Patient.findOneAndUpdate(
+        { user: user._id },
+        { $set: patientUpdate },
+        { new: true, runValidators: true }
+      );
     }
 
     res.status(200).json({

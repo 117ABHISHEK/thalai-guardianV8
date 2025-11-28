@@ -68,6 +68,80 @@ const calculateNextPossibleDate = (lastDonationDate, donationFrequencyMonths = 3
 };
 
 /**
+ * Validate blood report parameters
+ * @param {Object} report - Medical report with vitals
+ * @returns {Object} { passed: boolean, issues: Array }
+ */
+const validateBloodReport = (report) => {
+  const issues = [];
+
+  // Hemoglobin check (minimum 12.5 g/dL for donors)
+  if (report.hemoglobin !== undefined && report.hemoglobin !== null) {
+    if (report.hemoglobin < 12.5) {
+      issues.push(`Hemoglobin too low: ${report.hemoglobin} g/dL (minimum 12.5 g/dL required)`);
+    } else if (report.hemoglobin > 20) {
+      issues.push(`Hemoglobin abnormally high: ${report.hemoglobin} g/dL (requires medical review)`);
+    }
+  }
+
+  // Blood Pressure check (Systolic: 90-180, Diastolic: 60-100)
+  if (report.bpSystolic !== undefined && report.bpSystolic !== null) {
+    if (report.bpSystolic < 90 || report.bpSystolic > 180) {
+      issues.push(`Blood pressure out of range: ${report.bpSystolic}/${report.bpDiastolic || '?'} mmHg`);
+    }
+  }
+  if (report.bpDiastolic !== undefined && report.bpDiastolic !== null) {
+    if (report.bpDiastolic < 60 || report.bpDiastolic > 100) {
+      issues.push(`Diastolic BP out of range: ${report.bpDiastolic} mmHg (normal: 60-100)`);
+    }
+  }
+
+  // Pulse Rate check (60-100 bpm normal range)
+  if (report.pulseRate !== undefined && report.pulseRate !== null) {
+    if (report.pulseRate < 50 || report.pulseRate > 110) {
+      issues.push(`Pulse rate abnormal: ${report.pulseRate} bpm (normal: 60-100 bpm)`);
+    }
+  }
+
+  // Temperature check (normal: 36.1-37.2°C)
+  if (report.temperature !== undefined && report.temperature !== null) {
+    if (report.temperature > 37.5) {
+      issues.push(`Temperature elevated: ${report.temperature}°C (may indicate infection)`);
+    } else if (report.temperature < 35.5) {
+      issues.push(`Temperature too low: ${report.temperature}°C`);
+    }
+  }
+
+  return {
+    passed: issues.length === 0,
+    issues
+  };
+};
+
+/**
+ * Get the most recent blood report
+ * @param {Array} reports - Array of medical reports
+ * @returns {Object|null} Most recent report or null
+ */
+const getMostRecentBloodReport = (reports) => {
+  if (!reports || reports.length === 0) return null;
+
+  // Filter reports that have at least one vital parameter
+  const reportsWithVitals = reports.filter(r =>
+    r.hemoglobin || r.bpSystolic || r.bpDiastolic || r.pulseRate || r.temperature
+  );
+
+  if (reportsWithVitals.length === 0) return null;
+
+  // Sort by date (most recent first)
+  const sorted = reportsWithVitals.sort((a, b) =>
+    new Date(b.reportDate) - new Date(a.reportDate)
+  );
+
+  return sorted[0];
+};
+
+/**
  * Main eligibility computation function
  * @param {Object} donorDoc - Mongoose donor document
  * @returns {Object} { eligible: boolean, reason: string, nextPossibleDate: Date|null, checks: Object }
@@ -77,6 +151,7 @@ const computeEligibility = (donorDoc) => {
     ageCheck: { passed: false, reason: '' },
     donationIntervalCheck: { passed: false, reason: '' },
     medicalHistoryCheck: { passed: false, reason: '' },
+    bloodReportCheck: { passed: false, reason: '' },
     healthClearanceCheck: { passed: false, reason: '' },
     verificationCheck: { passed: false, reason: '' },
   };
@@ -143,7 +218,37 @@ const computeEligibility = (donorDoc) => {
     }
   }
 
-  // 4. Health clearance check (admin must set this)
+  // 4. Blood Report Validation (NEW)
+  const recentReport = getMostRecentBloodReport(donorDoc.medicalReports);
+  if (recentReport) {
+    const reportValidation = validateBloodReport(recentReport);
+
+    if (!reportValidation.passed) {
+      checks.bloodReportCheck.reason = reportValidation.issues.join('; ');
+      reasons.push('Blood report shows abnormal values');
+    } else {
+      checks.bloodReportCheck.passed = true;
+    }
+
+    // Check if report is too old (more than 3 months)
+    const reportAge = Math.floor((new Date() - new Date(recentReport.reportDate)) / (1000 * 60 * 60 * 24));
+    if (reportAge > 90) {
+      checks.bloodReportCheck.reason = `Latest blood report is ${reportAge} days old. Please submit a recent report (within 90 days)`;
+      checks.bloodReportCheck.passed = false;
+      reasons.push('Blood report outdated (must be within 90 days)');
+    }
+  } else {
+    // No blood report provided
+    if (!donorDoc.healthClearance) {
+      checks.bloodReportCheck.reason = 'No blood report submitted; requires medical clearance';
+      reasons.push('Blood report required for eligibility');
+    } else {
+      // Admin has granted clearance despite no report
+      checks.bloodReportCheck.passed = true;
+    }
+  }
+
+  // 5. Health clearance check (admin must set this)
   if (!donorDoc.healthClearance) {
     checks.healthClearanceCheck.reason = 'Health clearance not granted by admin';
     reasons.push('Pending health clearance');
@@ -151,7 +256,7 @@ const computeEligibility = (donorDoc) => {
     checks.healthClearanceCheck.passed = true;
   }
 
-  // 5. Verification check
+  // 6. Verification check
   if (!donorDoc.isVerified) {
     checks.verificationCheck.reason = 'Donor not verified by admin';
     reasons.push('Pending admin verification');
@@ -174,6 +279,7 @@ const computeEligibility = (donorDoc) => {
       checks.ageCheck.passed &&
       checks.donationIntervalCheck.passed &&
       checks.medicalHistoryCheck.passed &&
+      checks.bloodReportCheck.passed &&
       checks.healthClearanceCheck.passed &&
       checks.verificationCheck.passed;
   }
@@ -203,6 +309,7 @@ const computeEligibility = (donorDoc) => {
     reason: reasons.length > 0 ? reasons.join('; ') : 'Eligible to donate',
     nextPossibleDate,
     checks,
+    recentBloodReport: recentReport,
   };
 };
 

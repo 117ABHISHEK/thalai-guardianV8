@@ -1,0 +1,44 @@
+{
+  "feature_columns": [
+    "mean_interval_days",
+    "hb_trend",
+    "units_per_transfusion_avg",
+    "days_since_last_transfusion",
+    "age",
+    "weightKg",
+    "month",
+    "day_of_week",
+    "has_comorbidities",
+    "last_hb",
+    "last_units"
+  ],
+  "feature_importance": {
+    "mean_interval_days": 1004363.7772827148,
+    "hb_trend": 5673.1451778411865,
+    "units_per_transfusion_avg": 3970.4656867980957,
+    "days_since_last_transfusion": 165640.60289001465,
+    "age": 3455.3004941940308,
+    "weightKg": 7610.829591751099,
+    "month": 6937.4837856292725,
+    "day_of_week": 3873.822109222412,
+    "has_comorbidities": 124.52450180053711,
+    "last_hb": 5021.240191459656,
+    "last_units": 4858.742115020752
+  },
+  "metrics": {
+    "train": {
+      "mae": 2.1436533748110898,
+      "rmse": 2.6063120918705103,
+      "r2": 0.8931029633771013
+    },
+    "test": {
+      "mae": 2.446583554608945,
+      "rmse": 3.041357208621744,
+      "r2": 0.8582236079618748
+    },
+    "coverage_7_days": 0.9766718506998445,
+    "coverage_14_days": 1.0
+  },
+  "trained_at": "2025-11-28T13:12:18.770560",
+  "model_version": "1.0.0"
+}

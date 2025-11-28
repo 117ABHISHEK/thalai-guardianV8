@@ -4,10 +4,12 @@ import { getProfile, updateProfile } from '../api/auth';
 import PatientRequestForm from './PatientRequestForm';
 import PatientRequestHistory from './PatientRequestHistory';
 import StatCard from '../components/StatCard';
+import HealthMetricsForm from '../components/HealthMetricsForm';
 
 const PatientDashboard = () => {
   const { user, logout, updateUser } = useAuth();
   const [profile, setProfile] = useState(null);
+  const [patientProfile, setPatientProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({});
@@ -29,6 +31,9 @@ const PatientDashboard = () => {
     try {
       const response = await getProfile();
       setProfile(response.data.user);
+      if (response.data.patient) {
+        setPatientProfile(response.data.patient);
+      }
       setFormData({
         name: response.data.user.name || '',
         phone: response.data.user.phone || '',
@@ -83,6 +88,18 @@ const PatientDashboard = () => {
     }
   };
 
+  const handleHealthMetricsUpdate = async (data) => {
+    try {
+      await updateProfile(data);
+      await fetchProfile(); // Refresh data
+      setMessage('Health metrics updated successfully!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      setMessage(error.message || 'Failed to update health metrics');
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -108,11 +125,10 @@ const PatientDashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {message && (
           <div
-            className={`mb-6 p-4 rounded-lg ${
-              message.includes('success')
-                ? 'bg-green-50 text-green-800 border border-green-200'
-                : 'bg-red-50 text-red-800 border border-red-200'
-            }`}
+            className={`mb-6 p-4 rounded-lg ${message.includes('success')
+              ? 'bg-green-50 text-green-800 border border-green-200'
+              : 'bg-red-50 text-red-800 border border-red-200'
+              }`}
           >
             {message}
           </div>
@@ -124,17 +140,17 @@ const PatientDashboard = () => {
             <nav className="flex -mb-px">
               {[
                 { id: 'profile', label: 'Profile' },
+                { id: 'health', label: 'Health Reports' },
                 { id: 'request', label: 'Create Request' },
                 { id: 'history', label: 'Request History' },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-6 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.id
-                      ? 'border-health-blue text-health-blue'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
+                  className={`py-4 px-6 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
+                    ? 'border-health-blue text-health-blue'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -350,6 +366,20 @@ const PatientDashboard = () => {
           </div>
         )}
 
+
+
+        {activeTab === 'health' && (
+          <div className="card">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Health Reports & Metrics</h2>
+            <HealthMetricsForm
+              initialData={patientProfile}
+              onSave={handleHealthMetricsUpdate}
+              loading={loading}
+              role="patient"
+            />
+          </div>
+        )}
+
         {activeTab === 'request' && (
           <PatientRequestForm
             onRequestCreated={() => {
@@ -360,7 +390,7 @@ const PatientDashboard = () => {
 
         {activeTab === 'history' && (
           <PatientRequestHistory
-            onRequestCancelled={() => {}}
+            onRequestCancelled={() => { }}
           />
         )}
       </div>

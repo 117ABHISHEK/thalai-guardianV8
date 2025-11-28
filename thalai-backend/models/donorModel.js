@@ -63,6 +63,64 @@ const donorSchema = new mongoose.Schema(
         },
       },
     ],
+    // Medical reports (user submitted)
+    medicalReports: [
+      {
+        title: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+        reportDate: {
+          type: Date,
+          default: Date.now,
+        },
+        // Donor specific vitals
+        hemoglobin: {
+          type: Number, // g/dL
+          min: 0,
+          max: 25,
+        },
+        bpSystolic: {
+          type: Number, // mmHg
+          min: 0,
+          max: 300,
+        },
+        bpDiastolic: {
+          type: Number, // mmHg
+          min: 0,
+          max: 200,
+        },
+        pulseRate: {
+          type: Number, // bpm
+          min: 0,
+          max: 250,
+        },
+        temperature: {
+          type: Number, // Celsius
+          min: 0,
+          max: 50,
+        },
+        notes: {
+          type: String,
+          trim: true,
+        },
+        value: {
+          type: String,
+          trim: true,
+        },
+        heightCm: {
+          type: Number,
+          min: 0,
+          max: 300,
+        },
+        weightKg: {
+          type: Number,
+          min: 0,
+          max: 500,
+        },
+      },
+    ],
     // Donation history
     lastDonationDate: {
       type: Date,
@@ -179,14 +237,14 @@ donorSchema.pre('save', function (next) {
 // Method to check if donation is allowed today
 donorSchema.methods.canDonateToday = function () {
   if (!this.lastDonationDate) return true; // Never donated before
-  
+
   const daysSince = this.daysSinceLastDonation;
   const minIntervalDays = this.donationFrequencyMonths * 30;
-  
-  return daysSince >= minIntervalDays && 
-         this.eligibilityStatus === 'eligible' && 
-         this.healthClearance === true &&
-         this.isVerified === true;
+
+  return daysSince >= minIntervalDays &&
+    this.eligibilityStatus === 'eligible' &&
+    this.healthClearance === true &&
+    this.isVerified === true;
 };
 
 const Donor = mongoose.model('Donor', donorSchema);

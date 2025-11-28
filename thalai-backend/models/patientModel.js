@@ -110,6 +110,71 @@ const patientSchema = new mongoose.Schema(
     currentHbDate: {
       type: Date,
     },
+    // Health metrics
+    heightCm: {
+      type: Number,
+      min: [0, 'Height must be positive'],
+      max: [300, 'Height seems unrealistic'],
+    },
+    weightKg: {
+      type: Number,
+      min: [0, 'Weight must be positive'],
+      max: [500, 'Weight seems unrealistic'],
+    },
+    // Medical reports (user submitted)
+    medicalReports: [
+      {
+        title: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+        reportDate: {
+          type: Date,
+          default: Date.now,
+        },
+        // Thalassemia specific parameters
+        hemoglobin: {
+          type: Number, // g/dL
+          min: 0,
+          max: 25,
+        },
+        ferritin: {
+          type: Number, // ng/mL
+          min: 0,
+        },
+        sgpt: {
+          type: Number, // U/L (ALT)
+          min: 0,
+        },
+        sgot: {
+          type: Number, // U/L (AST)
+          min: 0,
+        },
+        creatinine: {
+          type: Number, // mg/dL
+          min: 0,
+        },
+        notes: {
+          type: String,
+          trim: true,
+        },
+        value: {
+          type: String,
+          trim: true,
+        },
+        heightCm: {
+          type: Number,
+          min: 0,
+          max: 300,
+        },
+        weightKg: {
+          type: Number,
+          min: 0,
+          max: 500,
+        },
+      },
+    ],
     // Notes
     notes: {
       type: String,

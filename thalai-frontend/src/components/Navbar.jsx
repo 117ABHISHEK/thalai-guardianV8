@@ -29,46 +29,31 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-1">
             <Link
               to="/"
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                isActive('/') 
-                  ? 'bg-health-blue text-white' 
+              className={`px-4 py-2 rounded-lg transition-colors ${isActive('/')
+                  ? 'bg-health-blue text-white'
                   : 'text-gray-700 hover:bg-gray-100'
-              }`}
+                }`}
             >
               Home
             </Link>
             <Link
               to="/donors"
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                isActive('/donors') 
-                  ? 'bg-health-blue text-white' 
+              className={`px-4 py-2 rounded-lg transition-colors ${isActive('/donors')
+                  ? 'bg-health-blue text-white'
                   : 'text-gray-700 hover:bg-gray-100'
-              }`}
+                }`}
             >
               Donors
             </Link>
             <Link
               to="/requests"
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                isActive('/requests') 
-                  ? 'bg-health-blue text-white' 
+              className={`px-4 py-2 rounded-lg transition-colors ${isActive('/requests')
+                  ? 'bg-health-blue text-white'
                   : 'text-gray-700 hover:bg-gray-100'
-              }`}
+                }`}
             >
               Requests
             </Link>
-            {isAuthenticated && (
-              <Link
-                to="/chatbot"
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/chatbot') 
-                    ? 'bg-health-blue text-white' 
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                Chatbot
-              </Link>
-            )}
           </div>
 
           {/* Auth Buttons */}

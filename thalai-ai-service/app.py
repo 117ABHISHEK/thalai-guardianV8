@@ -253,8 +253,21 @@ def predict_next_transfusion():
         current_date = data['currentDate']
         patient_id = data.get('patientId', 'unknown')
         
+        # Extract Thalassemia specific parameters (optional)
+        ferritin = float(data.get('ferritin', 0)) if data.get('ferritin') else None
+        sgpt = float(data.get('sgpt', 0)) if data.get('sgpt') else None
+        sgot = float(data.get('sgot', 0)) if data.get('sgot') else None
+        creatinine = float(data.get('creatinine', 0)) if data.get('creatinine') else None
+        
         # Prepare features
         features = prepare_features(history, last_hb, age, weight_kg, comorbidities, current_date)
+        
+        # Add extra parameters to features for response/logging
+        if features is not None:
+            if ferritin is not None: features['ferritin'] = ferritin
+            if sgpt is not None: features['sgpt'] = sgpt
+            if sgot is not None: features['sgot'] = sgot
+            if creatinine is not None: features['creatinine'] = creatinine
         
         # Use ML model if available and sufficient data, otherwise use rule-based
         if model is not None and features is not None:
