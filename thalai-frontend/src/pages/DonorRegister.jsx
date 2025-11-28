@@ -122,15 +122,11 @@ const DonorRegister = () => {
       }
     }
 
-    if (!formData.heightCm) {
-      newErrors.heightCm = 'Height is required';
-    } else if (formData.heightCm < 50 || formData.heightCm > 250) {
+    if (formData.heightCm && (formData.heightCm < 50 || formData.heightCm > 250)) {
       newErrors.heightCm = 'Height must be between 50 and 250 cm';
     }
 
-    if (!formData.weightKg) {
-      newErrors.weightKg = 'Weight is required';
-    } else if (formData.weightKg < 20 || formData.weightKg > 250) {
+    if (formData.weightKg && (formData.weightKg < 20 || formData.weightKg > 250)) {
       newErrors.weightKg = 'Weight must be between 20 and 250 kg';
     }
 
@@ -218,8 +214,8 @@ const DonorRegister = () => {
           zipCode: formData.zipCode || undefined,
         },
         dob: formData.dob,
-        heightCm: parseFloat(formData.heightCm),
-        weightKg: parseFloat(formData.weightKg),
+        heightCm: formData.heightCm ? parseFloat(formData.heightCm) : undefined,
+        weightKg: formData.weightKg ? parseFloat(formData.weightKg) : undefined,
         donationFrequencyMonths: parseInt(formData.donationFrequencyMonths) || 3,
         lastDonationDate: formData.lastDonationDate || undefined,
         medicalHistory: formData.medicalHistory.filter(
@@ -394,7 +390,7 @@ const DonorRegister = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Height (cm) *
+                    Height (cm)
                   </label>
                   <input
                     type="number"
@@ -404,14 +400,13 @@ const DonorRegister = () => {
                     className={`input-field ${errors.heightCm ? 'border-red-500' : ''}`}
                     min="50"
                     max="250"
-                    required
                   />
                   {errors.heightCm && <p className="text-red-500 text-sm mt-1">{errors.heightCm}</p>}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Weight (kg) *
+                    Weight (kg)
                   </label>
                   <input
                     type="number"
@@ -422,7 +417,6 @@ const DonorRegister = () => {
                     min="20"
                     max="250"
                     step="0.1"
-                    required
                   />
                   {errors.weightKg && <p className="text-red-500 text-sm mt-1">{errors.weightKg}</p>}
                 </div>

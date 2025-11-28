@@ -99,8 +99,24 @@ const getAvailability = async (req, res) => {
       });
     }
 
-    // Compute eligibility
-    const eligibility = computeEligibility(donor);
+    // Compute eligibility with error handling
+    let eligibility;
+    try {
+      eligibility = computeEligibility(donor);
+    } catch (eligibilityError) {
+      logger.error('Eligibility computation error', { 
+        error: eligibilityError.message, 
+        donorId: donor._id,
+        userId: req.user._id 
+      });
+      // Return donor data without eligibility if computation fails
+      eligibility = {
+        eligible: false,
+        reason: 'Unable to compute eligibility - please contact admin',
+        checks: {},
+        nextPossibleDate: null
+      };
+    }
 
     res.status(200).json({
       success: true,
@@ -110,7 +126,7 @@ const getAvailability = async (req, res) => {
       },
     });
   } catch (error) {
-    logger.error('Get availability error', { error: error.message, userId: req.user._id });
+    logger.error('Get availability error', { error: error.message, stack: error.stack, userId: req.user._id });
     res.status(500).json({
       success: false,
       message: 'Server error',
@@ -135,8 +151,24 @@ const getDonorProfile = async (req, res) => {
       });
     }
 
-    // Compute eligibility
-    const eligibility = computeEligibility(donor);
+    // Compute eligibility with error handling
+    let eligibility;
+    try {
+      eligibility = computeEligibility(donor);
+    } catch (eligibilityError) {
+      logger.error('Eligibility computation error in profile', { 
+        error: eligibilityError.message, 
+        donorId: donor._id,
+        userId: req.user._id 
+      });
+      // Return donor data without eligibility if computation fails
+      eligibility = {
+        eligible: false,
+        reason: 'Unable to compute eligibility - please contact admin',
+        checks: {},
+        nextPossibleDate: null
+      };
+    }
 
     res.status(200).json({
       success: true,
@@ -146,7 +178,7 @@ const getDonorProfile = async (req, res) => {
       },
     });
   } catch (error) {
-    logger.error('Get donor profile error', { error: error.message, userId: req.user._id });
+    logger.error('Get donor profile error', { error: error.message, stack: error.stack, userId: req.user._id });
     res.status(500).json({
       success: false,
       message: 'Server error',

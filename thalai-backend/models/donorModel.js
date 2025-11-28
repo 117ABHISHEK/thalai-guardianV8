@@ -34,13 +34,11 @@ const donorSchema = new mongoose.Schema(
       type: Number,
       min: [50, 'Height must be at least 50 cm'],
       max: [250, 'Height must not exceed 250 cm'],
-      required: [true, 'Height is required'],
     },
     weightKg: {
       type: Number,
       min: [20, 'Weight must be at least 20 kg'],
       max: [250, 'Weight must not exceed 250 kg'],
-      required: [true, 'Weight is required'],
     },
     // Medical history
     medicalHistory: [

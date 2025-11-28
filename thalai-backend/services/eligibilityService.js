@@ -39,10 +39,14 @@ const isContraindication = (condition) => {
  */
 const calculateAge = (dob) => {
   if (!dob) return null;
+  
+  // Convert to Date object if it's a string
+  const birthDate = dob instanceof Date ? dob : new Date(dob);
+  
   const today = new Date();
-  const age = today.getFullYear() - dob.getFullYear();
-  const monthDiff = today.getMonth() - dob.getMonth();
-  const dayDiff = today.getDate() - dob.getDate();
+  const age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  const dayDiff = today.getDate() - birthDate.getDate();
   return age - (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? 1 : 0);
 };
 

@@ -189,49 +189,122 @@ const register = async (req, res) => {
       }
     }
 
+    // Log registration attempt
+    logger.info('Registration attempt', { email, role });
+
     // Create user
-    const user = await User.create({
-      name,
-      email,
-      password,
-      role,
-      bloodGroup,
-      phone,
-      address,
-      dateOfBirth: dob || dateOfBirth, // Use dob if provided, else dateOfBirth
-    });
+    let user;
+    try {
+      user = await User.create({
+        name,
+        email,
+        password,
+        role,
+        bloodGroup,
+        phone,
+        address,
+        dateOfBirth: dob || dateOfBirth, // Use dob if provided, else dateOfBirth
+      });
+      logger.info('User created successfully', { userId: user._id, email, role });
+    } catch (userError) {
+      console.error('❌ User creation error:', userError);
+      logger.error('User creation error', { error: userError.message, stack: userError.stack, email });
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to create user account',
+        error: userError.message,
+      });
+    }
 
     // Create role-specific profile
     if (role === 'donor') {
-      const donorProfile = await Donor.create({
-        user: user._id,
-        dob: dob || dateOfBirth,
-        heightCm,
-        weightKg,
-        medicalHistory: medicalHistory || [],
-        lastDonationDate: lastDonationDate || null,
-        donationFrequencyMonths: donationFrequencyMonths || 3,
-        availabilityStatus: false,
-        eligibilityStatus: 'deferred', // Starts as deferred until admin review
-        eligibilityReason: 'Pending admin review and health clearance',
-      });
+      try {
+        const donorProfile = await Donor.create({
+          user: user._id,
+          dob: dob || dateOfBirth,
+          heightCm,
+          weightKg,
+          medicalHistory: medicalHistory || [],
+          lastDonationDate: lastDonationDate || null,
+          donationFrequencyMonths: donationFrequencyMonths || 3,
+          availabilityStatus: false,
+          eligibilityStatus: 'deferred', // Starts as deferred until admin review
+          eligibilityReason: 'Pending admin review and health clearance',
+        });
+        logger.info('Donor profile created', { donorId: donorProfile._id, userId: user._id });
 
-      // Compute initial eligibility
-      await donorProfile.populate('user');
-      const eligibility = computeEligibility(donorProfile);
-
-      // Update donor with eligibility results
-      donorProfile.eligibilityStatus = eligibility.eligible ? 'eligible' : 'deferred';
-      donorProfile.eligibilityReason = eligibility.reason;
-      donorProfile.nextPossibleDonationDate = eligibility.nextPossibleDate;
-      donorProfile.eligibilityLastChecked = new Date();
-      await donorProfile.save();
+        // Compute initial eligibility with error handling
+        await donorProfile.populate('user');
+        
+        let eligibility;
+        try {
+          eligibility = computeEligibility(donorProfile);
+          
+          // Update donor with eligibility results
+          donorProfile.eligibilityStatus = eligibility.eligible ? 'eligible' : 'deferred';
+          donorProfile.eligibilityReason = eligibility.reason;
+          donorProfile.nextPossibleDonationDate = eligibility.nextPossibleDate;
+          donorProfile.eligibilityLastChecked = new Date();
+          
+          logger.info('Eligibility computed', { donorId: donorProfile._id, eligible: eligibility.eligible });
+        } catch (eligibilityError) {
+          logger.error('Eligibility computation error during registration', { 
+            error: eligibilityError.message,
+            stack: eligibilityError.stack,
+            donorId: donorProfile._id,
+            userId: user._id 
+          });
+          
+          // Set default deferred status if computation fails
+          donorProfile.eligibilityStatus = 'deferred';
+          donorProfile.eligibilityReason = 'Pending admin review and health clearance';
+          donorProfile.eligibilityLastChecked = new Date();
+        }
+        
+        await donorProfile.save();
+        logger.info('Donor profile saved', { donorId: donorProfile._id });
+        
+      } catch (donorError) {
+        console.error('❌ Donor profile creation error:', donorError);
+        logger.error('Donor profile creation error', { 
+          error: donorError.message, 
+          stack: donorError.stack,
+          userId: user._id 
+        });
+        
+        // Clean up user if donor profile creation fails
+        await User.findByIdAndDelete(user._id);
+        
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to create donor profile',
+          error: donorError.message,
+        });
+      }
     } else if (role === 'patient') {
-      // Create patient profile
-      await Patient.create({
-        user: user._id,
-        transfusionHistory: [],
-      });
+      try {
+        // Create patient profile
+        await Patient.create({
+          user: user._id,
+          transfusionHistory: [],
+        });
+        logger.info('Patient profile created', { userId: user._id });
+      } catch (patientError) {
+        logger.error('Patient profile creation error', { 
+          error: patientError.message,
+          stack: patientError.stack,
+          userId: user._id 
+        });
+        
+        // Clean up user if patient profile creation fails
+        await User.findByIdAndDelete(user._id);
+        
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to create patient profile',
+          error: patientError.message,
+        });
+      }
     }
 
     // Generate token
@@ -259,7 +332,8 @@ const register = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('❌ MAIN CATCH - Registration error:', error);
+    console.error('Error details:', { name: error.name, message: error.message, stack: error.stack });
 
     // Handle validation errors
     if (error.name === 'ValidationError') {
