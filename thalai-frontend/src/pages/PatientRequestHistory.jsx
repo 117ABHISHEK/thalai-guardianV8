@@ -27,7 +27,7 @@ const PatientRequestHistory = ({ onRequestCancelled }) => {
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      const response = await getUserRequests(user._id);
+      const response = await getUserRequests(user._id || user.id);
       setRequests(response.data.requests || []);
     } catch (err) {
       setError(err.message || 'Failed to load requests');

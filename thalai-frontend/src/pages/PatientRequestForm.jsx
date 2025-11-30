@@ -31,7 +31,7 @@ const PatientRequestForm = ({ onRequestCreated }) => {
 
   const checkActiveRequests = async () => {
     try {
-      const response = await getUserRequests(user._id);
+      const response = await getUserRequests(user._id || user.id);
       const activeRequests = response.data.requests.filter(
         (req) => req.status === 'pending' || req.status === 'searching'
       );
