@@ -1,6 +1,7 @@
 const User = require('../models/userModel');
 const Donor = require('../models/donorModel');
 const Patient = require('../models/patientModel');
+const Doctor = require('../models/doctorModel');
 const { computeEligibility } = require('../services/eligibilityService');
 const logger = require('../utils/logger');
 
@@ -246,8 +247,14 @@ const getStats = async (req, res) => {
     // Total donors
     const totalDonors = await User.countDocuments({ role: 'donor', isActive: true });
 
+    // Total doctors
+    const totalDoctors = await User.countDocuments({ role: 'doctor', isActive: true });
+
     // Verified donors
     const verifiedDonors = await Donor.countDocuments({ isVerified: true });
+
+    // Verified doctors
+    const verifiedDoctors = await Doctor.countDocuments({ isVerified: true });
 
     // Eligible donors
     const eligibleDonors = await Donor.countDocuments({ eligibilityStatus: 'eligible', healthClearance: true });
@@ -315,7 +322,9 @@ const getStats = async (req, res) => {
       data: {
         totalPatients,
         totalDonors,
+        totalDoctors,
         verifiedDonors,
+        verifiedDoctors,
         eligibleDonors,
         pendingRequests,
         completedRequests,
@@ -340,9 +349,265 @@ const getStats = async (req, res) => {
   }
 };
 
+
+
+/**
+ * @route   GET /api/admin/doctors
+ * @desc    Get list of all doctors
+ * @access  Private/Admin
+ */
+const getDoctors = async (req, res) => {
+  try {
+    const doctors = await Doctor.find()
+      .populate('user', 'name email bloodGroup phone address dateOfBirth')
+      .populate('verifiedBy', 'name email')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: doctors.length,
+      data: {
+        doctors,
+      },
+    });
+  } catch (error) {
+    console.error('Get doctors error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @route   POST /api/admin/doctors/verify
+ * @desc    Verify a doctor
+ * @access  Private/Admin
+ */
+const verifyDoctor = async (req, res) => {
+  try {
+    const { doctorId, notes } = req.body;
+
+    if (!doctorId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Doctor ID is required',
+      });
+    }
+
+    const doctor = await Doctor.findById(doctorId).populate('user');
+
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Doctor not found',
+      });
+    }
+
+    // Update verification status
+    doctor.isVerified = true;
+    doctor.verificationDate = new Date();
+    doctor.verifiedBy = req.user._id;
+    if (notes) {
+      doctor.verificationNotes = notes;
+    }
+
+    await doctor.save();
+
+    logger.info('Doctor verified', { doctorId: doctor._id, verifiedBy: req.user._id });
+
+    // Populate the updated doctor
+    await doctor.populate('user', 'name email phone');
+    await doctor.populate('verifiedBy', 'name email');
+
+    res.status(200).json({
+      success: true,
+      message: 'Doctor verified successfully',
+      data: {
+        doctor,
+      },
+    });
+  } catch (error) {
+    console.error('Verify doctor error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @route   POST /api/admin/doctors/assign-patient
+ * @desc    Assign a patient to a doctor
+ * @access  Private/Admin
+ */
+const assignPatientToDoctor = async (req, res) => {
+  try {
+    const { doctorId, patientId, notes } = req.body;
+
+    if (!doctorId || !patientId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Doctor ID and Patient ID are required',
+      });
+    }
+
+    const doctor = await Doctor.findById(doctorId);
+    const patient = await Patient.findById(patientId);
+
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Doctor not found',
+      });
+    }
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Patient not found',
+      });
+    }
+
+    // Check if doctor is verified
+    if (!doctor.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Doctor must be verified before assigning patients',
+      });
+    }
+
+    // Assign patient to doctor
+    try {
+      doctor.assignPatient(patientId, req.user._id, notes || '');
+      await doctor.save();
+
+      logger.info('Patient assigned to doctor', {
+        doctorId: doctor._id,
+        patientId: patient._id,
+        assignedBy: req.user._id,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Patient assigned to doctor successfully',
+        data: {
+          doctor,
+        },
+      });
+    } catch (assignError) {
+      return res.status(400).json({
+        success: false,
+        message: assignError.message,
+      });
+    }
+  } catch (error) {
+    console.error('Assign patient to doctor error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @route   POST /api/admin/doctors/unassign-patient
+ * @desc    Unassign a patient from a doctor
+ * @access  Private/Admin
+ */
+const unassignPatientFromDoctor = async (req, res) => {
+  try {
+    const { doctorId, patientId } = req.body;
+
+    if (!doctorId || !patientId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Doctor ID and Patient ID are required',
+      });
+    }
+
+    const doctor = await Doctor.findById(doctorId);
+
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Doctor not found',
+      });
+    }
+
+    // Remove patient from doctor
+    try {
+      doctor.removePatient(patientId);
+      await doctor.save();
+
+      logger.info('Patient unassigned from doctor', {
+        doctorId: doctor._id,
+        patientId,
+        unassignedBy: req.user._id,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Patient unassigned from doctor successfully',
+        data: {
+          doctor,
+        },
+      });
+    } catch (removeError) {
+      return res.status(400).json({
+        success: false,
+        message: removeError.message,
+      });
+    }
+  } catch (error) {
+    console.error('Unassign patient from doctor error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @route   GET /api/admin/patients
+ * @desc    Get list of all patients
+ * @access  Private/Admin
+ */
+const getPatients = async (req, res) => {
+  try {
+    const patients = await Patient.find()
+      .populate('user', 'name email bloodGroup phone address dateOfBirth')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: patients.length,
+      data: {
+        patients,
+      },
+    });
+  } catch (error) {
+    console.error('Get patients error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getDonors,
   verifyDonor,
   getEligibilityReport,
   getStats,
+  getDoctors,
+  verifyDoctor,
+  assignPatientToDoctor,
+  unassignPatientFromDoctor,
+  getPatients,
 };

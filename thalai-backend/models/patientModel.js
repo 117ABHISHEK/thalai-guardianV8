@@ -186,8 +186,7 @@ const patientSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
-patientSchema.index({ user: 1 });
+// Indexes (user already indexed via unique: true)
 patientSchema.index({ lastTransfusionDate: -1 });
 patientSchema.index({ predictedNextTransfusionDate: 1 });
 

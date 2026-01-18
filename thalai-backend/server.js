@@ -16,6 +16,9 @@ const matchRoutes = require('./routes/matchRoutes');
 const externalRoutes = require('./routes/externalRoutes');
 const chatbotRoutes = require('./routes/chatbotRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const doctorRoutes = require('./routes/doctorRoutes');
+
+// Force restart for new routes
 
 // Initialize Express App
 const app = express();
@@ -61,6 +64,7 @@ app.use('/api/match', matchRoutes);
 app.use('/api/external', externalRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/doctor', doctorRoutes);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {

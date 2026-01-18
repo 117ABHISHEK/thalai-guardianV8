@@ -1,6 +1,7 @@
 const User = require('../models/userModel');
 const Donor = require('../models/donorModel');
 const Patient = require('../models/patientModel');
+const Doctor = require('../models/doctorModel');
 const { computeEligibility, validateDonorRegistration } = require('../services/eligibilityService');
 const logger = require('../utils/logger');
 
@@ -71,6 +72,12 @@ const register = async (req, res) => {
       lastDonationDate,
       donationFrequencyMonths,
       gender,
+      // Doctor-specific fields
+      licenseNumber,
+      specialization,
+      qualification,
+      experience,
+      hospital,
     } = req.body;
 
     // Basic validation
@@ -82,11 +89,11 @@ const register = async (req, res) => {
     }
 
     // Validate role
-    const validRoles = ['patient', 'donor', 'admin'];
+    const validRoles = ['patient', 'donor', 'admin', 'doctor'];
     if (!validRoles.includes(role)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid role. Must be one of: patient, donor, admin',
+        message: 'Invalid role. Must be one of: patient, donor, admin, doctor',
       });
     }
 
@@ -305,6 +312,54 @@ const register = async (req, res) => {
           error: patientError.message,
         });
       }
+    } else if (role === 'doctor') {
+      try {
+        // Validate required doctor fields
+        if (!licenseNumber || !specialization || !qualification) {
+          await User.findByIdAndDelete(user._id);
+          return res.status(400).json({
+            success: false,
+            message: 'License number, specialization, and qualification are required for doctor registration',
+          });
+        }
+
+        // Check if license number already exists
+        const existingDoctor = await Doctor.findOne({ licenseNumber });
+        if (existingDoctor) {
+          await User.findByIdAndDelete(user._id);
+          return res.status(400).json({
+            success: false,
+            message: 'A doctor with this license number already exists',
+          });
+        }
+
+        // Create doctor profile
+        await Doctor.create({
+          user: user._id,
+          licenseNumber,
+          specialization: specialization || 'Hematology',
+          qualification,
+          experience: experience || 0,
+          hospital: hospital || {},
+          isVerified: false,
+        });
+        logger.info('Doctor profile created', { userId: user._id, licenseNumber });
+      } catch (doctorError) {
+        logger.error('Doctor profile creation error', { 
+          error: doctorError.message,
+          stack: doctorError.stack,
+          userId: user._id 
+        });
+        
+        // Clean up user if doctor profile creation fails
+        await User.findByIdAndDelete(user._id);
+        
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to create doctor profile',
+          error: doctorError.message,
+        });
+      }
     }
 
     // Generate token
@@ -438,6 +493,8 @@ const getProfile = async (req, res) => {
       roleData = await Donor.findOne({ user: user._id });
     } else if (user.role === 'patient') {
       roleData = await Patient.findOne({ user: user._id });
+    } else if (user.role === 'doctor') {
+      roleData = await Doctor.findOne({ user: user._id }).populate('assignedPatients.patient');
     }
 
     res.status(200).json({
@@ -524,6 +581,22 @@ const updateProfile = async (req, res) => {
       await Patient.findOneAndUpdate(
         { user: user._id },
         { $set: patientUpdate },
+        { new: true, runValidators: true }
+      );
+    } else if (user.role === 'doctor') {
+      const doctorUpdate = {};
+      const { specialization, qualification, experience, hospital, availability, consultationHours } = req.body;
+      
+      if (specialization) doctorUpdate.specialization = specialization;
+      if (qualification) doctorUpdate.qualification = qualification;
+      if (experience !== undefined) doctorUpdate.experience = experience;
+      if (hospital) doctorUpdate.hospital = hospital;
+      if (availability) doctorUpdate.availability = availability;
+      if (consultationHours) doctorUpdate.consultationHours = consultationHours;
+
+      await Doctor.findOneAndUpdate(
+        { user: user._id },
+        { $set: doctorUpdate },
         { new: true, runValidators: true }
       );
     }

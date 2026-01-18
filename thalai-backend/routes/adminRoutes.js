@@ -5,6 +5,11 @@ const {
   verifyDonor,
   getEligibilityReport,
   getStats,
+  getDoctors,
+  verifyDoctor,
+  assignPatientToDoctor,
+  unassignPatientFromDoctor,
+  getPatients,
 } = require('../controllers/adminController');
 const { protect } = require('../middleware/authMiddleware');
 const { allowRoles } = require('../middleware/roleMiddleware');
@@ -32,6 +37,31 @@ router.get('/donors/eligibility-report', getEligibilityReport);
 // @desc    Get system statistics
 // @access  Private/Admin
 router.get('/stats', getStats);
+
+// @route   GET /api/admin/doctors
+// @desc    Get list of all doctors
+// @access  Private/Admin
+router.get('/doctors', getDoctors);
+
+// @route   POST /api/admin/doctors/verify
+// @desc    Verify a doctor
+// @access  Private/Admin
+router.post('/doctors/verify', verifyDoctor);
+
+// @route   POST /api/admin/doctors/assign-patient
+// @desc    Assign a patient to a doctor
+// @access  Private/Admin
+router.post('/doctors/assign-patient', assignPatientToDoctor);
+
+// @route   POST /api/admin/doctors/unassign-patient
+// @desc    Unassign a patient from a doctor
+// @access  Private/Admin
+router.post('/doctors/unassign-patient', unassignPatientFromDoctor);
+
+// @route   GET /api/admin/patients
+// @desc    Get list of all patients
+// @access  Private/Admin
+router.get('/patients', getPatients);
 
 module.exports = router;
 

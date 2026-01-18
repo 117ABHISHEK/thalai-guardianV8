@@ -17,6 +17,7 @@ import DonorRegister from './pages/DonorRegister';
 import PatientDashboard from './pages/PatientDashboard';
 import DonorDashboard from './pages/DonorDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import DoctorDashboard from './pages/DoctorDashboard';
 import DonorVerification from './pages/DonorVerification';
 import AdminRequestManager from './pages/AdminRequestManager';
 import DonorMatchResults from './pages/DonorMatchResults';
@@ -59,6 +60,8 @@ const DashboardRoute = () => {
       return <DonorDashboard />;
     case 'admin':
       return <AdminDashboard />;
+    case 'doctor':
+      return <DoctorDashboard />;
     default:
       return <Navigate to="/login" replace />;
   }
@@ -110,6 +113,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['admin']}>
                     <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/doctor-dashboard"
+                element={
+                  <ProtectedRoute allowedRoles={['doctor']}>
+                    <DoctorDashboard />
                   </ProtectedRoute>
                 }
               />
