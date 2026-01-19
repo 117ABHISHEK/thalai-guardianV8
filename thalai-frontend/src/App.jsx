@@ -22,6 +22,7 @@ import DonorVerification from './pages/DonorVerification';
 import AdminRequestManager from './pages/AdminRequestManager';
 import DonorMatchResults from './pages/DonorMatchResults';
 import DonorProfile from './pages/DonorProfile';
+import BookAppointment from './pages/BookAppointment';
 
 // Home component that redirects based on auth status
 const Home = () => {
@@ -147,6 +148,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <DonorMatchResults />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/book-appointment"
+                element={
+                  <ProtectedRoute allowedRoles={['patient']}>
+                    <BookAppointment />
                   </ProtectedRoute>
                 }
               />

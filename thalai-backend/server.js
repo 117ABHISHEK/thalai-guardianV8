@@ -17,6 +17,7 @@ const externalRoutes = require('./routes/externalRoutes');
 const chatbotRoutes = require('./routes/chatbotRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
 
 // Force restart for new routes
 
@@ -65,6 +66,7 @@ app.use('/api/external', externalRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/doctor', doctorRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {

@@ -21,8 +21,7 @@ const askChatbot = async (req, res) => {
     // Generate response
     const result = chatbotService.generateResponse(
       message,
-      req.user._id,
-      req.user.role
+      req.user
     );
 
     // Get recommendations
@@ -104,8 +103,32 @@ const getChatHistory = async (req, res) => {
   }
 };
 
+/**
+ * @route   GET /api/chatbot/suggestions
+ * @desc    Get initial suggestions for chatbot
+ * @access  Private
+ */
+const getSuggestions = (req, res) => {
+  try {
+    const suggestions = chatbotService.getInitialSuggestions(req.user);
+    res.status(200).json({
+      success: true,
+      data: {
+        suggestions,
+      },
+    });
+  } catch (error) {
+    console.error('Get suggestions error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching suggestions',
+    });
+  }
+};
+
 module.exports = {
   askChatbot,
   getChatHistory,
+  getSuggestions,
 };
 

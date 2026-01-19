@@ -3,6 +3,73 @@
  */
 
 const responses = {
+  greetings: {
+    patterns: ['hi', 'hello', 'hey', 'start', 'greetings', 'who are you', 'how are you'],
+    response: (name) => `Hello ${name}! I'm your ThalAI Guardian assistant. I'm here to support you as a member of our community.
+
+How can I help you today?`,
+  },
+  thanks: {
+    patterns: ['thanks', 'thank you', 'ok', 'alright', 'bye', 'goodbye', 'thx', 'thnk', 'tks', 'cool', 'great'],
+    response: (name) => `You're very welcome, ${name}! If you have more questions later, I'm always here to help. Stay healthy! (⊙ˍ⊙)`,
+  },
+  appointment: {
+    patterns: ['appointment', 'book', 'schedule', 'doctor', 'visit', 'checkup', 'consultation'],
+    response: `You can schedule an appointment with a hematologist directly through ThalAI Guardian.
+
+Steps:
+1. Select "Book Appointment" from the suggestions below.
+2. Choose your preferred doctor.
+3. Select a date and time.
+4. Confirm your booking.
+
+Would you like to start the booking process now?`,
+  },
+  my_requests: {
+    patterns: ['my requests', 'my status', 'check request', 'request history'],
+    response: `You can view all your blood requests in the "Request History" section. 
+
+Current counts: 
+• Pending: Check dashboard
+• Completed: Check history
+
+Would you like to go to your request history?`,
+  },
+  thalassemia_info: {
+    patterns: ['what is', 'thalassemia', 'definition', 'causes', 'inherited', 'genetic'],
+    response: `Thalassemia is an inherited blood disorder where the body makes an abnormal form of hemoglobin. Hemoglobin is the protein in red blood cells that carries oxygen.
+
+Key concepts:
+• It's genetic (passed from parents to children)
+• It leads to excessive red blood cell destruction
+• Results in anemia (low red blood cell count)
+• Two main types: Alpha and Beta Thalassemia`,
+  },
+  iron_overload: {
+    patterns: ['iron', 'overload', 'chelation', 'ferritin', 'desferal', 'exjade', 'kelfer'],
+    response: `Iron overload is a common complication for patients receiving regular transfusions.
+
+Management:
+• Chelation therapy helps remove excess iron
+• Common drugs: Exjade, Desferal, Kelfer
+• Monitor Serum Ferritin levels regularly
+• Target Ferritin is usually < 1000 ng/mL`,
+  },
+  diet_advice: {
+    patterns: ['diet', 'eat', 'food', 'nutrition', 'vitamin', 'avoid'],
+    response: `Diet recommendations for Thalassemia:
+
+Do's:
+• Low-iron diet (if transfused regularly)
+• Calcium-rich foods (dairy, almonds)
+• Vitamin D and Folic acid supplements
+• Stay hydrated
+
+Don'ts:
+• Avoid red meat and liver (high iron)
+• Avoid iron-fortified cereals
+• Limit Vitamin C during meals (enhances iron absorption)`,
+  },
   transfusion_schedule: {
     patterns: [
       'transfusion',
@@ -11,6 +78,7 @@ const responses = {
       'how often',
       'frequency',
       'interval',
+      'blood timing',
     ],
     response: `Thalassemia patients typically need blood transfusions every 2-4 weeks, depending on their condition. 
 
@@ -30,6 +98,7 @@ Please consult your doctor for your specific schedule.`,
       'requirements',
       'who can',
       'guidelines',
+      'how to donate',
     ],
     response: `Blood Donor Eligibility Guidelines:
 
@@ -57,6 +126,7 @@ For detailed guidelines, visit your nearest blood bank.`,
       'weak',
       'dizzy',
       'pale',
+      'yellowish',
     ],
     response: `Common Thalassemia Symptoms:
 
@@ -83,6 +153,7 @@ If you experience severe symptoms, contact your doctor immediately.`,
       'immediate',
       'now',
       'asap',
+      'danger',
     ],
     response: `🚨 EMERGENCY SUPPORT:
 
@@ -103,13 +174,16 @@ For blood requirement, create an urgent request on ThalAI Guardian.`,
   },
   system_help: {
     patterns: [
-      'help',
       'how to',
       'use',
       'guide',
       'tutorial',
       'support',
       'assistance',
+      'how',
+      'process',
+      'steps',
+      'work',
     ],
     response: `ThalAI Guardian System Help:
 
@@ -139,13 +213,15 @@ Need more help? Contact admin support.`,
   },
   general: {
     patterns: [],
-    response: `Hello! I'm the ThalAI Guardian chatbot. I can help you with:
+    response: `I'm not sure I fully understand that. However, I can help you with:
 
 • Transfusion schedules
 • Donor guidelines
+• Thalassemia information
+• Iron overload & Chelation
+• Diet advice
 • Symptoms information
 • Emergency support
-• System usage help
 
 What would you like to know?`,
   },
@@ -155,14 +231,19 @@ What would you like to know?`,
  * Detect intent from user message
  */
 const detectIntent = (message) => {
-  const lowerMessage = message.toLowerCase();
+  const lowerMessage = message.toLowerCase().trim();
   
+  // Special handling for legacy/short words
+  if (lowerMessage === 'how') return 'system_help';
+  if (['thx', 'ok', 'bye'].includes(lowerMessage)) return 'thanks';
+
   // Check each intent
   for (const [intent, data] of Object.entries(responses)) {
     if (intent === 'general') continue;
     
     for (const pattern of data.patterns) {
-      if (lowerMessage.includes(pattern)) {
+      const regex = new RegExp(`\\b${pattern}\\b`, 'i');
+      if (regex.test(lowerMessage)) {
         return intent;
       }
     }
@@ -174,17 +255,24 @@ const detectIntent = (message) => {
 /**
  * Generate chatbot response
  */
-const generateResponse = (message, userId = null, userRole = null) => {
+const generateResponse = (message, user = null) => {
   const intent = detectIntent(message);
   const responseData = responses[intent];
+  const userName = user?.name ? user.name.split(' ')[0] : 'there';
+  const role = user?.role;
   
-  let response = responseData.response;
+  let response = typeof responseData.response === 'function' 
+    ? responseData.response(userName) 
+    : responseData.response;
   
-  // Add role-specific information
-  if (userRole === 'patient') {
-    response += '\n\n💡 Tip: You can create a blood request from your dashboard.';
-  } else if (userRole === 'donor') {
-    response += '\n\n💡 Tip: Keep your availability status updated to help patients.';
+  // Only add tip for relevant intents for patients/donors
+  const tipIntents = ['thalassemia_info', 'symptoms', 'transfusion_schedule', 'emergency', 'general'];
+  if (tipIntents.includes(intent)) {
+    if (role === 'patient') {
+      response += '\n\n💡 Tip: You can create a blood request from your dashboard.';
+    } else if (role === 'donor') {
+      response += '\n\n💡 Tip: Keep your availability status updated to help patients.';
+    }
   }
   
   return {
@@ -200,12 +288,40 @@ const generateResponse = (message, userId = null, userRole = null) => {
 const getRecommendations = (intent, userRole) => {
   const recommendations = [];
   
+  if (intent === 'greetings' || intent === 'general') {
+    recommendations.push({ text: 'Book Appointment', action: 'book_appointment' });
+    recommendations.push({ text: 'What is Thalassemia?', action: 'message' });
+    if (userRole === 'patient') {
+      recommendations.push({ text: 'Create Request', action: 'create_request' });
+    }
+  }
+
+  if (intent === 'appointment') {
+    recommendations.push({ text: 'Book Appointment Now', action: 'book_appointment', type: 'action' });
+    recommendations.push({ text: 'View My Appointments', action: 'view_appointments', type: 'action' });
+  }
+
+  if (intent === 'my_requests') {
+    recommendations.push({ text: 'Go to Request History', action: 'history_redirect', type: 'action' });
+  }
+
+  if (intent === 'thalassemia_info') {
+    recommendations.push({ text: 'Symptoms', action: 'message' });
+    recommendations.push({ text: 'Diet Advice', action: 'message' });
+  }
+
+  if (intent === 'iron_overload') {
+    recommendations.push({ text: 'Diet Advice', action: 'message' });
+    recommendations.push({ text: 'Transfusion Info', action: 'message' });
+  }
+
   if (intent === 'transfusion_schedule' && userRole === 'patient') {
     recommendations.push({
       type: 'action',
       text: 'Create Blood Request',
       action: 'create_request',
     });
+    recommendations.push({ text: 'Diet Advice', action: 'message' });
   }
   
   if (intent === 'donor_guidelines' && userRole === 'donor') {
@@ -227,9 +343,34 @@ const getRecommendations = (intent, userRole) => {
   return recommendations;
 };
 
+/**
+ * Get initial suggestions for new chat
+ */
+const getInitialSuggestions = (user) => {
+  const userName = user?.name ? user.name.split(' ')[0] : 'there';
+  const role = user?.role;
+
+  const suggestions = [
+    { text: `Hi ${userName}!`, action: 'message' },
+    { text: 'Book Appointment', action: 'message' },
+    { text: 'What is Thalassemia?', action: 'message' },
+  ];
+
+  if (role === 'patient') {
+    suggestions.push({ text: 'Create Blood Request', action: 'create_request' });
+    suggestions.push({ text: 'My Requests', action: 'message' });
+  } else if (role === 'donor') {
+    suggestions.push({ text: 'Update Availability', action: 'update_availability' });
+    suggestions.push({ text: 'Donor Guidelines', action: 'message' });
+  }
+
+  return suggestions;
+};
+
 module.exports = {
   generateResponse,
   detectIntent,
   getRecommendations,
+  getInitialSuggestions,
 };
 

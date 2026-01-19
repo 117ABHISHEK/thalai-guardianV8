@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AppointmentList from '../components/AppointmentList';
 
 const DoctorDashboard = () => {
   const [stats, setStats] = useState({
@@ -12,6 +13,7 @@ const DoctorDashboard = () => {
   const [error, setError] = useState(null);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [patientDetails, setPatientDetails] = useState(null);
+  const [activeTab, setActiveTab] = useState('patients');
 
   // Hardcoded URL to prevent crash
   const API_BASE = 'http://localhost:5000/api/doctor';
@@ -149,121 +151,149 @@ const DoctorDashboard = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-blue-500 rounded-md p-3">
-                <span className="text-white text-xl">👥</span>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Active Patients</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.activePatientsCount}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-green-500 rounded-md p-3">
-                <span className="text-white text-xl">📋</span>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Total Assigned</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.totalPatientsAssigned}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-yellow-500 rounded-md p-3">
-                <span className="text-white text-xl">⚠️</span>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Needs Transfusion</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.patientsNeedingTransfusionSoon}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className={`flex-shrink-0 ${stats.isVerified ? 'bg-green-500' : 'bg-red-500'} rounded-md p-3`}>
-                <span className="text-white text-xl">✓</span>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Verification</p>
-                <p className="text-lg font-semibold text-gray-900">{stats.isVerified ? 'Verified' : 'Pending'}</p>
-              </div>
-            </div>
-          </div>
+        <div className="flex border-b border-gray-200 mb-8">
+          <button
+            onClick={() => setActiveTab('patients')}
+            className={`py-4 px-6 font-medium text-sm transition-colors border-b-2 ${
+              activeTab === 'patients' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'
+            }`}
+          >
+            Assigned Patients
+          </button>
+          <button
+            onClick={() => setActiveTab('appointments')}
+            className={`py-4 px-6 font-medium text-sm transition-colors border-b-2 ${
+              activeTab === 'appointments' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'
+            }`}
+          >
+            Appointments
+          </button>
         </div>
 
-        {/* Patients List */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Assigned Patients</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Blood Group</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {patients.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-                      No patients assigned yet.
-                    </td>
-                  </tr>
-                ) : (
-                  patients.map((assignment) => (
-                    <tr key={assignment._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                          {assignment.patient?.user?.name || 'N/A'}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {assignment.patient?.user?.email || 'N/A'}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                          {assignment.patient?.user?.bloodGroup || 'N/A'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(assignment.assignedDate).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          assignment.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {assignment.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => fetchPatientDetails(assignment.patient._id)}
-                          className="text-blue-600 hover:text-blue-900 mr-4"
-                        >
-                          View Details
-                        </button>
-                      </td>
+        {activeTab === 'patients' ? (
+          <>
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                    <span className="text-white text-xl">👥</span>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-500">Active Patients</p>
+                    <p className="text-2xl font-semibold text-gray-900">{stats.activePatientsCount}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 bg-green-500 rounded-md p-3">
+                    <span className="text-white text-xl">📋</span>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-500">Total Assigned</p>
+                    <p className="text-2xl font-semibold text-gray-900">{stats.totalPatientsAssigned}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 bg-yellow-500 rounded-md p-3">
+                    <span className="text-white text-xl">⚠️</span>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-500">Needs Transfusion</p>
+                    <p className="text-2xl font-semibold text-gray-900">{stats.patientsNeedingTransfusionSoon}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className={`flex-shrink-0 ${stats.isVerified ? 'bg-green-500' : 'bg-red-500'} rounded-md p-3`}>
+                    <span className="text-white text-xl">✓</span>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-500">Verification</p>
+                    <p className="text-lg font-semibold text-gray-900">{stats.isVerified ? 'Verified' : 'Pending'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Patients List */}
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900">Assigned Patients</h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Blood Group</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {patients.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
+                          No patients assigned yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      patients.map((assignment) => (
+                        <tr key={assignment._id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {assignment.patient?.user?.name || 'N/A'}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {assignment.patient?.user?.email || 'N/A'}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                              {assignment.patient?.user?.bloodGroup || 'N/A'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(assignment.assignedDate).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              assignment.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {assignment.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button
+                              onClick={() => fetchPatientDetails(assignment.patient._id)}
+                              className="text-blue-600 hover:text-blue-900 mr-4"
+                            >
+                              View Details
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6 font-display">Patient Appointments</h2>
+            <AppointmentList role="doctor" />
           </div>
-        </div>
+        )}
 
         {/* Patient Details Modal */}
         {selectedPatient && patientDetails && (

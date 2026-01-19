@@ -5,6 +5,7 @@ import PatientRequestForm from './PatientRequestForm';
 import PatientRequestHistory from './PatientRequestHistory';
 import StatCard from '../components/StatCard';
 import HealthMetricsForm from '../components/HealthMetricsForm';
+import AppointmentList from '../components/AppointmentList';
 
 const PatientDashboard = () => {
   const { user, logout, updateUser } = useAuth();
@@ -143,6 +144,7 @@ const PatientDashboard = () => {
                 { id: 'health', label: 'Health Reports' },
                 { id: 'request', label: 'Create Request' },
                 { id: 'history', label: 'Request History' },
+                { id: 'appointments', label: 'My Appointments' },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -392,6 +394,13 @@ const PatientDashboard = () => {
           <PatientRequestHistory
             onRequestCancelled={() => { }}
           />
+        )}
+        
+        {activeTab === 'appointments' && (
+          <div className="card">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 font-display">My Scheduled Consultations</h2>
+            <AppointmentList role="patient" />
+          </div>
         )}
       </div>
     </div>

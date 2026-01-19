@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { askChatbot, getChatHistory } = require('../controllers/chatbotController');
+const { askChatbot, getChatHistory, getSuggestions } = require('../controllers/chatbotController');
 const { protect } = require('../middleware/authMiddleware');
 
 // All routes require authentication
@@ -15,6 +15,11 @@ router.post('/ask', askChatbot);
 // @desc    Get chat history
 // @access  Private
 router.get('/history', getChatHistory);
+
+// @route   GET /api/chatbot/suggestions
+// @desc    Get initial suggestions
+// @access  Private
+router.get('/suggestions', getSuggestions);
 
 module.exports = router;
 
