@@ -5,6 +5,8 @@ const Donor = require('../models/donorModel');
 const Patient = require('../models/patientModel');
 const Request = require('../models/requestModel');
 const DonorHistory = require('../models/donorHistoryModel');
+const Doctor = require('../models/doctorModel');
+const Appointment = require('../models/appointmentModel');
 const connectDB = require('../config/db');
 
 dotenv.config({ path: require('path').resolve(__dirname, '../.env') });
@@ -63,6 +65,8 @@ const seedData = async () => {
     await Patient.deleteMany({});
     await Request.deleteMany({});
     await DonorHistory.deleteMany({});
+    await Doctor.deleteMany({});
+    await Appointment.deleteMany({});
     console.log('✅ Data cleared');
 
     // Admin
@@ -78,6 +82,46 @@ const seedData = async () => {
       isActive: true
     });
     console.log('✅ Admin created');
+
+    // 3 Doctors
+    const doctorData = [
+      { name: 'Dr. Sameer Joshi', email: 'doctor1@thalai.com', specialization: 'Pediatric Hematology', license: 'MCI-12345', exp: 12 },
+      { name: 'Dr. Aditi Verma', email: 'doctor2@thalai.com', specialization: 'Clinical Hematology', license: 'MCI-67890', exp: 8 },
+      { name: 'Dr. Rajesh Khanna', email: 'doctor3@thalai.com', specialization: 'Transfusion Medicine', license: 'MCI-99887', exp: 15 }
+    ];
+
+    const doctors = [];
+    for (let i = 0; i < doctorData.length; i++) {
+        const d = doctorData[i];
+        const user = await User.create({
+            name: d.name,
+            email: d.email,
+            password: 'password123',
+            role: 'doctor',
+            bloodGroup: 'B+',
+            phone: `+91-900000000${i+1}`,
+            address: { street: `Clinic ${i+1}`, city: 'Mumbai', state: 'Maharashtra', zipCode: '400001' },
+            dateOfBirth: new Date('1975-05-10'),
+            isActive: true
+        });
+
+        const doctor = await Doctor.create({
+            user: user._id,
+            specialization: d.specialization,
+            licenseNumber: d.license,
+            qualification: 'MBBS, MD (Hematology)',
+            experience: d.exp,
+            hospital: {
+                name: 'Thalassemia Care Center',
+                address: { street: 'Main Road', city: 'Mumbai', state: 'Maharashtra', zipCode: '400001' }
+            },
+            isVerified: true,
+            verifiedBy: admin._id,
+            verificationDate: new Date()
+        });
+        doctors.push(user);
+    }
+    console.log(`✅ ${doctors.length} doctors created`);
 
     // 10 Patients
     const patientData = [
@@ -120,7 +164,7 @@ const seedData = async () => {
         });
       }
 
-      await Patient.create({
+      const patient = await Patient.create({
         user: user._id,
         transfusionHistory: transfusions,
         lastTransfusionDate: transfusions[0].date,
@@ -129,9 +173,15 @@ const seedData = async () => {
         currentHbDate: new Date()
       });
 
+      // Assign patients to doctors (roughly 3-4 per doctor)
+      const assignedDoctorUser = doctors[i % doctors.length];
+      const doctorDoc = await Doctor.findOne({ user: assignedDoctorUser._id });
+      await doctorDoc.assignPatient(patient._id, admin._id, 'Assigned during seeding');
+      await doctorDoc.save();
+
       patients.push(user);
     }
-    console.log(`✅ ${patients.length} patients created`);
+    console.log(`✅ ${patients.length} patients created & assigned to doctors`);
 
     // 10 Donors
     const donorData = [
@@ -218,19 +268,52 @@ const seedData = async () => {
     await Request.insertMany(requests);
     console.log(`✅ ${requests.length} requests created`);
 
+    // Appointments
+    const appointments = [];
+    // 5 Patient Appointments
+    for (let i = 0; i < 5; i++) {
+        appointments.push({
+            user: patients[i]._id,
+            doctor: doctors[i % doctors.length]._id,
+            userRole: 'patient',
+            date: new Date(Date.now() + (i + 1) * 24 * 60 * 60 * 1000),
+            time: `0${9 + i}:00`,
+            reason: 'Regular thalassemia checkup and blood level review',
+            status: i < 2 ? 'scheduled' : 'pending',
+            notes: i === 0 ? 'Bring latest reports' : ''
+        });
+    }
+    // 5 Donor Appointments
+    for (let i = 0; i < 5; i++) {
+        appointments.push({
+            user: donors[i]._id,
+            doctor: doctors[i % doctors.length]._id,
+            userRole: 'donor',
+            date: new Date(Date.now() + (i + 5) * 24 * 60 * 60 * 1000),
+            time: `${10 + i}:30`,
+            reason: 'Health clearance for upcoming blood donation',
+            status: 'pending'
+        });
+    }
+    await Appointment.insertMany(appointments);
+    console.log(`✅ ${appointments.length} appointments created`);
+
     console.log('\n📊 SEED SUMMARY');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log(`👤 Users: ${1 + patients.length + donors.length}`);
+    console.log(`👤 Users: ${1 + doctors.length + patients.length + donors.length}`);
     console.log(`   - Admin: 1`);
+    console.log(`   - Doctors: ${doctors.length}`);
     console.log(`   - Patients: ${patients.length}`);
     console.log(`   - Donors: ${donors.length}`);
     console.log(`🩸 Donors: Verified ${donors.filter(d => d.verified).length}, Eligible ${donors.filter(d => d.eligible).length}`);
     console.log(`📋 Requests: ${requests.length}`);
+    console.log(`📅 Appointments: ${appointments.length}`);
     console.log(` Medical Reports: ${(patients.length + donors.length) * 10}`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
     console.log('🔑 CREDENTIALS:');
     console.log('Admin: admin@thalai.com / password123');
+    console.log('Doctors: doctor1-3@thalai.com / password123');
     console.log('Patients: patient1-10@thalai.com / password123');
     console.log('Donors: donor1-10@thalai.com / password123\n');
 
@@ -253,6 +336,8 @@ const destroyData = async () => {
     await Patient.deleteMany({});
     await Request.deleteMany({});
     await DonorHistory.deleteMany({});
+    await Doctor.deleteMany({});
+    await Appointment.deleteMany({});
 
     console.log('✅ All data destroyed!');
     process.exit(0);

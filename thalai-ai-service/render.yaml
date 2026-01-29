@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: thalai-ai-service
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: FLASK_ENV
+        value: production
+      - key: BACKEND_URL
+        sync: false

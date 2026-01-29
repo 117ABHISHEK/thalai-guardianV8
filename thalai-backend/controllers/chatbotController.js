@@ -21,32 +21,33 @@ const askChatbot = async (req, res) => {
     // Generate response
     const result = chatbotService.generateResponse(
       message,
-      req.user._id,
-      req.user.role
+      req.user || null
     );
 
     // Get recommendations
     const recommendations = chatbotService.getRecommendations(
       result.intent,
-      req.user.role
+      req.user?.role || 'guest'
     );
 
     // Generate or use provided session ID
     const chatSessionId = sessionId || uuidv4();
 
-    // Save conversation log
-    await ChatbotLog.create({
-      userId: req.user._id,
-      sessionId: chatSessionId,
-      userMessage: message,
-      botResponse: result.response,
-      intent: result.intent,
-      confidence: result.confidence,
-      metadata: {
-        userRole: req.user.role,
-        timestamp: new Date(),
-      },
-    });
+    // Save conversation log if user is logged in
+    if (req.user) {
+      await ChatbotLog.create({
+        userId: req.user._id,
+        sessionId: chatSessionId,
+        userMessage: message,
+        botResponse: result.response,
+        intent: result.intent,
+        confidence: result.confidence,
+        metadata: {
+          userRole: req.user.role,
+          timestamp: new Date(),
+        },
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -104,8 +105,32 @@ const getChatHistory = async (req, res) => {
   }
 };
 
+/**
+ * @route   GET /api/chatbot/suggestions
+ * @desc    Get initial suggestions for chatbot
+ * @access  Private
+ */
+const getSuggestions = (req, res) => {
+  try {
+    const suggestions = chatbotService.getInitialSuggestions(req.user || null);
+    res.status(200).json({
+      success: true,
+      data: {
+        suggestions,
+      },
+    });
+  } catch (error) {
+    console.error('Get suggestions error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching suggestions',
+    });
+  }
+};
+
 module.exports = {
   askChatbot,
   getChatHistory,
+  getSuggestions,
 };
 

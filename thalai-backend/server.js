@@ -16,6 +16,11 @@ const matchRoutes = require('./routes/matchRoutes');
 const externalRoutes = require('./routes/externalRoutes');
 const chatbotRoutes = require('./routes/chatbotRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const doctorRoutes = require('./routes/doctorRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
+const connectionRoutes = require('./routes/connectionRoutes');
+
+// Force restart for new routes
 
 // Initialize Express App
 const app = express();
@@ -24,8 +29,23 @@ const app = express();
 connectDB();
 
 // CORS Configuration
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.some(allowed => origin.startsWith(allowed))) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200,
 };
@@ -61,6 +81,9 @@ app.use('/api/match', matchRoutes);
 app.use('/api/external', externalRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/doctor', doctorRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/connections', connectionRoutes);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {

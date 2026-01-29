@@ -1,5 +1,6 @@
 const Request = require('../models/requestModel');
 const User = require('../models/userModel');
+const { sendRequestStatusNotification } = require('../services/notificationService');
 
 // @route   POST /api/requests
 // @desc    Create a new blood request
@@ -72,6 +73,12 @@ const createRequest = async (req, res) => {
       notes,
       status: 'pending',
     });
+
+    // Trigger automatic matching in background
+    const { processRequestMatching } = require('../services/matchService');
+    processRequestMatching(request._id).catch(err => 
+      console.error('Initial matching error:', err.message)
+    );
 
     // Populate patient details
     await request.populate('patientId', 'name email bloodGroup phone');
@@ -224,6 +231,9 @@ const cancelRequest = async (req, res) => {
     request.cancelledBy = req.user._id;
 
     await request.save();
+
+    // Notify patient
+    await sendRequestStatusNotification(request._id, 'cancelled');
 
     // Populate details
     await request.populate('patientId', 'name email');

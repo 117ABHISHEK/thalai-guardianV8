@@ -31,6 +31,15 @@ const DonorMatchResults = () => {
     }
   };
 
+  const handleConnect = async (donorId) => {
+    try {
+      await api.post('/connections/request', { targetUserId: donorId, notes: 'Matched through Thalassemia match results' });
+      alert('Friend request sent to donor!');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to send friend request');
+    }
+  };
+
   const getScoreColor = (score) => {
     if (score >= 80) return '#28a745';
     if (score >= 60) return '#ffc107';
@@ -140,6 +149,12 @@ const DonorMatchResults = () => {
                     }}
                   >
                     📞 Contact
+                  </button>
+                  <button
+                    style={styles.friendButton}
+                    onClick={() => handleConnect(match.userId)}
+                  >
+                    🤝 Add as Friend
                   </button>
                 </div>
               </div>
@@ -284,6 +299,15 @@ const styles = {
   contactButton: {
     padding: '10px 20px',
     backgroundColor: '#28a745',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '14px',
+  },
+  friendButton: {
+    padding: '10px 20px',
+    backgroundColor: '#6c757d',
     color: 'white',
     border: 'none',
     borderRadius: '4px',

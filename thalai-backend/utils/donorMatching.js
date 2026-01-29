@@ -3,7 +3,7 @@ const User = require('../models/userModel');
 const DonorHistory = require('../models/donorHistoryModel');
 const axios = require('axios');
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:5001';
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
 
 /**
  * Calculate location score based on distance

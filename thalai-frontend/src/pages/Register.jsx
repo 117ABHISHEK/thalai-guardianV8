@@ -19,6 +19,11 @@ const Register = () => {
     state: '',
     zipCode: '',
     dateOfBirth: '',
+    // Doctor-specific fields
+    licenseNumber: '',
+    specialization: 'Hematology',
+    qualification: '',
+    experience: 0,
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -81,6 +86,14 @@ const Register = () => {
       return;
     }
 
+    // Validate doctor-specific fields
+    if (formData.role === 'doctor') {
+      if (!formData.licenseNumber || !formData.specialization || !formData.qualification) {
+        setError('License number, specialization, and qualification are required for doctors');
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -98,6 +111,11 @@ const Register = () => {
           zipCode: formData.zipCode || undefined,
         },
         dateOfBirth: formData.dateOfBirth || undefined,
+        // Doctor-specific fields
+        licenseNumber: formData.role === 'doctor' ? formData.licenseNumber : undefined,
+        specialization: formData.role === 'doctor' ? formData.specialization : undefined,
+        qualification: formData.role === 'doctor' ? formData.qualification : undefined,
+        experience: formData.role === 'doctor' ? formData.experience : undefined,
       };
 
       const response = await register(userData);
@@ -236,6 +254,7 @@ const Register = () => {
                     >
                       <option value="patient">Patient</option>
                       <option value="donor">Donor</option>
+                      <option value="doctor">Doctor</option>
                       <option value="admin">Admin</option>
                     </select>
                   </div>
@@ -354,6 +373,72 @@ const Register = () => {
                     />
                   </div>
                 </div>
+
+                {/* Doctor-specific fields */}
+                {formData.role === 'doctor' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Medical License Number <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="licenseNumber"
+                        value={formData.licenseNumber}
+                        onChange={handleChange}
+                        required
+                        className="input-field"
+                        placeholder="Enter license number"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Specialization <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="specialization"
+                          value={formData.specialization}
+                          onChange={handleChange}
+                          required
+                          className="input-field"
+                          placeholder="e.g., Hematology"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Experience (years)
+                        </label>
+                        <input
+                          type="number"
+                          name="experience"
+                          value={formData.experience}
+                          onChange={handleChange}
+                          min="0"
+                          className="input-field"
+                          placeholder="Years of experience"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Qualification <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="qualification"
+                        value={formData.qualification}
+                        onChange={handleChange}
+                        required
+                        className="input-field"
+                        placeholder="e.g., MBBS, MD"
+                      />
+                    </div>
+                  </>
+                )}
 
                 <div className="flex gap-4">
                   <button

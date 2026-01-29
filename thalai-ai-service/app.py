@@ -16,7 +16,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+
+# CORS Configuration - Allow multiple origins
+allowed_origins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    os.getenv('FRONTEND_URL'),
+    os.getenv('BACKEND_URL'),
+]
+allowed_origins = [origin for origin in allowed_origins if origin]
+
+CORS(app, origins=allowed_origins, supports_credentials=True)
 
 # Global variables for model
 model = None
@@ -203,6 +213,72 @@ def model_info_endpoint():
         'metrics': model_info.get('metrics'),
         'feature_importance': model_info.get('feature_importance'),
     })
+
+@app.route('/predict-availability', methods=['POST'])
+def predict_availability():
+    """
+    Predict donor availability score based on history and demographics
+    
+    Request Body:
+    {
+        "donorId": "donor_123",
+        "age": 30,
+        "donationFrequency": 5,
+        "lastDonationDate": "2023-11-20",
+        "region": "Maharashtra",
+        "healthFlags": []
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        # Extract data with defaults
+        age = int(data.get('age', 30))
+        freq = int(data.get('donationFrequency', 0))
+        last_date_str = data.get('lastDonationDate')
+        
+        # Base score
+        score = 60.0
+        
+        # Frequency factor (more experienced donors are more reliable)
+        score += min(freq * 2.5, 20.0)
+        
+        # Age factor (optimal age range 25-45)
+        if 25 <= age <= 45:
+            score += 10.0
+        elif age > 45:
+            score += 5.0
+        
+        # Recency factor
+        if last_date_str:
+            try:
+                last_date = datetime.strptime(last_date_str.split('T')[0], '%Y-%m-%d')
+                days_since = (datetime.now() - last_date).days
+                
+                if days_since < 56:
+                    score = 10.0  # Not eligible yet
+                elif 56 <= days_since <= 120:
+                    score += 10.0  # Optimal window
+                elif days_since > 120:
+                    score -= min((days_since - 120) / 30, 15.0)  # Declining interest
+            except:
+                pass
+                
+        # Cap score between 0 and 100
+        final_score = max(0, min(100.0, score))
+        
+        return jsonify({
+            'donorId': data.get('donorId'),
+            'availabilityScore': final_score,
+            'method': 'heuristic',
+            'explanation': f'Availability score {final_score:.1f} calculated based on age, frequency ({freq}), and donation history.'
+        })
+        
+    except Exception as e:
+        print(f"Availability prediction error: {e}")
+        return jsonify({
+            'error': f'Prediction failed: {str(e)}'
+        }), 500
 
 @app.route('/predict-next-transfusion', methods=['POST'])
 def predict_next_transfusion():

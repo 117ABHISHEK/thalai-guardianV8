@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { getStats } from '../api/admin';
 import StatsCharts from '../components/StatsCharts';
 import StatCard from '../components/StatCard';
+import AppointmentList from '../components/AppointmentList';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -112,6 +113,12 @@ const AdminDashboard = () => {
 
         {/* Charts */}
         {stats && <StatsCharts stats={stats} />}
+
+        {/* Appointments Log */}
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Appointment Logs</h2>
+          <AppointmentList role="admin" />
+        </div>
 
         {/* Quick Actions */}
         <div className="card mt-8">

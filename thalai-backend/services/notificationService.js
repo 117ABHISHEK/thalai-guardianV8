@@ -1,4 +1,5 @@
 const twilio = require('twilio');
+const nodemailer = require('nodemailer');
 const Notification = require('../models/notificationModel');
 const User = require('../models/userModel');
 const Donor = require('../models/donorModel');
@@ -12,6 +13,15 @@ const fromNumber = process.env.TWILIO_PHONE_NUMBER;
 const client = accountSid && authToken 
   ? twilio(accountSid, authToken)
   : null;
+
+// Nodemailer configuration
+const transporter = nodemailer.createTransport({
+  service: process.env.EMAIL_SERVICE || 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 /**
  * Send SMS notification
@@ -53,6 +63,31 @@ const sendSMS = async (phoneNumber, message) => {
 };
 
 /**
+ * Send email notification
+ */
+const sendEmail = async (to, subject, text) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.warn('Email credentials not configured. Email not sent.');
+      return { success: false, error: 'Email not configured' };
+    }
+
+    const mailOptions = {
+      from: `"ThalAI Guardian" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      text,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('Email sending error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * Send notification and log it
  */
 const sendNotification = async (userId, type, title, message, options = {}) => {
@@ -62,33 +97,34 @@ const sendNotification = async (userId, type, title, message, options = {}) => {
       return { success: false, message: 'User not found' };
     }
 
+    const channel = options.channel || 'in_app';
     const notification = await Notification.create({
       userId,
       type,
       title,
       message,
-      channel: options.channel || 'sms',
-      phoneNumber: user.phone || options.phoneNumber,
+      channel,
+      phoneNumber: user.phone,
       metadata: options.metadata || {},
       status: 'pending',
     });
 
-    // Send SMS if phone number available
-    if (user.phone && (options.channel === 'sms' || !options.channel)) {
+    let sentSuccessfully = true;
+
+    // Send SMS
+    if (user.phone && (channel === 'sms' || channel === 'all')) {
       const smsResult = await sendSMS(user.phone, `${title}\n\n${message}`);
-      
-      notification.status = smsResult.success ? 'sent' : 'failed';
-      notification.sentAt = new Date();
-      notification.messageId = smsResult.messageId;
-      
-      if (!smsResult.success) {
-        notification.errorMessage = smsResult.error;
-      }
-    } else {
-      notification.status = 'sent';
-      notification.sentAt = new Date();
+      if (!smsResult.success) sentSuccessfully = false;
     }
 
+    // Send Email
+    if (user.email && (channel === 'email' || channel === 'all')) {
+      const emailResult = await sendEmail(user.email, title, message);
+      if (!emailResult.success) sentSuccessfully = false;
+    }
+
+    notification.status = sentSuccessfully ? 'sent' : 'failed';
+    notification.sentAt = new Date();
     await notification.save();
 
     return {
@@ -275,12 +311,81 @@ const sendAdminAlert = async (message, metadata = {}) => {
   }
 };
 
+/**
+ * Send appointment notification
+ */
+const sendAppointmentNotification = async (userId, appointment, action) => {
+  const titles = {
+    requested: '📅 Appointment Requested',
+    scheduled: '✅ Appointment Scheduled',
+    completed_pending: '🏥 Completion Verification Needed',
+    completed: '🎉 Appointment Completed!',
+    cancelled: '❌ Appointment Cancelled',
+  };
+
+  const messages = {
+    requested: `A new appointment has been requested for ${new Date(appointment.date).toLocaleDateString()} at ${appointment.time}.`,
+    scheduled: `Your appointment on ${new Date(appointment.date).toLocaleDateString()} at ${appointment.time} has been scheduled.`,
+    completed_pending: `Doctor has marked your visit on ${new Date(appointment.date).toLocaleDateString()} as complete. Please verify.`,
+    completed: `Your appointment on ${new Date(appointment.date).toLocaleDateString()} has been successfully completed.`,
+    cancelled: `Your appointment on ${new Date(appointment.date).toLocaleDateString()} has been cancelled.`,
+  };
+
+  return await sendNotification(
+    userId,
+    `appointment_${action}`,
+    titles[action] || 'Appointment Update',
+    messages[action] || 'Your appointment details have been updated.',
+    { channel: 'all', metadata: { appointmentId: appointment._id } }
+  );
+};
+
+/**
+ * Send connection notification
+ */
+const sendConnectionNotification = async (userId, otherUserName, action) => {
+  const titles = {
+    request: '🤝 New Friend Request',
+    accepted: '✨ Connection Accepted',
+  };
+
+  const messages = {
+    request: `${otherUserName} wants to connect with you in the ThalAI Guardian circle.`,
+    accepted: `You and ${otherUserName} are now connected. You can now coordinate checkups!`,
+  };
+
+  return await sendNotification(
+    userId,
+    `connection_${action}`,
+    titles[action] || 'Connection Update',
+    messages[action] || 'Your connection status has been updated.',
+    { channel: 'all' }
+  );
+};
+
+/**
+ * Send checkup suggestion notification
+ */
+const sendCheckupSuggestionNotification = async (donorId, patientName) => {
+  return await sendNotification(
+    donorId,
+    'checkup_suggested',
+    '🏥 Health Checkup Suggested',
+    `${patientName} has suggested you perform a quick health checkup for a potential upcoming transfusion.`,
+    { channel: 'all' }
+  );
+};
+
 module.exports = {
   sendSMS,
+  sendEmail,
   sendNotification,
   sendDonorMatchNotification,
   sendRequestStatusNotification,
   sendUrgentRequestBroadcast,
   sendAdminAlert,
+  sendAppointmentNotification,
+  sendConnectionNotification,
+  sendCheckupSuggestionNotification,
 };
 

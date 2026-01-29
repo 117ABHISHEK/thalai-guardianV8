@@ -23,5 +23,13 @@ router.get('/donors', getPublicDonors);
 // @access  Public
 router.get('/requests', getPublicRequests);
 
+// @route   GET /api/public/doctors
+// @desc    Get list of verified doctors
+// @access  Public
+router.get('/doctors', (req, res, next) => {
+  const { getPublicDoctors } = require('../controllers/publicController');
+  getPublicDoctors(req, res, next);
+});
+
 module.exports = router;
 

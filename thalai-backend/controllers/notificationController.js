@@ -108,6 +108,7 @@ const markAsRead = async (req, res) => {
     }
 
     notification.deliveredAt = new Date();
+    notification.isRead = true;
     await notification.save();
 
     res.status(200).json({

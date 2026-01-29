@@ -1,7 +1,6 @@
 const Request = require('../models/requestModel');
 const MatchLog = require('../models/matchLogModel');
-const { findMatchingDonors } = require('../utils/donorMatching');
-const notificationService = require('../services/notificationService');
+const { processRequestMatching } = require('../services/matchService');
 
 /**
  * @route   POST /api/match/find
@@ -19,11 +18,8 @@ const findMatches = async (req, res) => {
       });
     }
 
-    // Get the request
-    const request = await Request.findById(requestId).populate(
-      'patientId',
-      'name email bloodGroup'
-    );
+    // Get the request to check permissions
+    const request = await Request.findById(requestId);
 
     if (!request) {
       return res.status(404).json({
@@ -34,7 +30,7 @@ const findMatches = async (req, res) => {
 
     // Check if user has permission
     if (
-      request.patientId._id.toString() !== req.user._id.toString() &&
+      request.patientId.toString() !== req.user._id.toString() &&
       req.user.role !== 'admin'
     ) {
       return res.status(403).json({
@@ -43,53 +39,24 @@ const findMatches = async (req, res) => {
       });
     }
 
-    // Find matching donors
-    const matches = await findMatchingDonors(request, { limit: 20 });
+    // Use service to find and process matches
+    const matches = await processRequestMatching(requestId);
 
-    // Save match logs
-    const matchLogs = await Promise.all(
-      matches.map((match) =>
-        MatchLog.create({
-          requestId: request._id,
-          donorId: match.donorId,
-          matchScore: match.matchScore,
-          scoreBreakdown: match.scoreBreakdown,
-          status: 'pending',
-        })
-      )
-    );
-
-    // Send notifications to top 3 donors
-    if (matches.length > 0) {
-      const topDonors = matches.slice(0, 3);
-      for (const match of topDonors) {
-        try {
-          await notificationService.sendDonorMatchNotification(
-            match.donorId,
-            request._id,
-            match.matchScore
-          );
-        } catch (error) {
-          console.error('Error sending notification:', error);
-        }
-      }
+    if (matches === null) {
+      return res.status(500).json({
+        success: false,
+        message: 'Error processing matches',
+      });
     }
 
     res.status(200).json({
       success: true,
-      message: 'Matches found successfully',
+      message: 'Matches found and donors notified',
       data: {
-        request: {
-          id: request._id,
-          bloodGroup: request.bloodGroup,
-          urgency: request.urgency,
-          unitsRequired: request.unitsRequired,
-        },
         matches: matches.map((match) => ({
           donorId: match.donorId,
+          userId: match.donor?._id,
           name: match.donor?.name,
-          email: match.donor?.email,
-          phone: match.donor?.phone,
           bloodGroup: match.donor?.bloodGroup,
           matchScore: match.matchScore,
           scoreBreakdown: match.scoreBreakdown,

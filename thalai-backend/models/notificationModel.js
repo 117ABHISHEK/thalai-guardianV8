@@ -16,6 +16,13 @@ const notificationSchema = new mongoose.Schema(
         'urgent_request',
         'admin_alert',
         'system',
+        'appointment_requested',
+        'appointment_scheduled',
+        'appointment_completed_pending',
+        'appointment_completed',
+        'connection_request',
+        'connection_accepted',
+        'checkup_suggested'
       ],
       required: true,
     },
@@ -29,8 +36,12 @@ const notificationSchema = new mongoose.Schema(
     },
     channel: {
       type: String,
-      enum: ['sms', 'email', 'push', 'in_app'],
-      default: 'sms',
+      enum: ['sms', 'email', 'push', 'in_app', 'all'],
+      default: 'in_app',
+    },
+    isRead: {
+      type: Boolean,
+      default: false,
     },
     phoneNumber: {
       type: String,

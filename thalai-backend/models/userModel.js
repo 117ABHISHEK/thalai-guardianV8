@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['patient', 'donor', 'admin'],
+      enum: ['patient', 'donor', 'admin', 'doctor'],
       required: [true, 'Role is required'],
     },
     bloodGroup: {

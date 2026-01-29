@@ -5,9 +5,15 @@ import PatientRequestForm from './PatientRequestForm';
 import PatientRequestHistory from './PatientRequestHistory';
 import StatCard from '../components/StatCard';
 import HealthMetricsForm from '../components/HealthMetricsForm';
+import AppointmentList from '../components/AppointmentList';
+import ConnectionList from '../components/ConnectionList';
+import NotificationList from '../components/NotificationList';
+
+import { useLocation } from 'react-router-dom';
 
 const PatientDashboard = () => {
   const { user, logout, updateUser } = useAuth();
+  const location = useLocation();
   const [profile, setProfile] = useState(null);
   const [patientProfile, setPatientProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,6 +21,15 @@ const PatientDashboard = () => {
   const [formData, setFormData] = useState({});
   const [message, setMessage] = useState('');
   const [activeTab, setActiveTab] = useState('profile');
+
+  useEffect(() => {
+    // Check for tab in query params
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [location]);
 
   useEffect(() => {
     window.setPatientTab = setActiveTab;
@@ -143,6 +158,9 @@ const PatientDashboard = () => {
                 { id: 'health', label: 'Health Reports' },
                 { id: 'request', label: 'Create Request' },
                 { id: 'history', label: 'Request History' },
+                { id: 'appointments', label: 'My Appointments' },
+                { id: 'connections', label: 'My Circles' },
+                { id: 'notifications', label: 'Notifications' },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -392,6 +410,27 @@ const PatientDashboard = () => {
           <PatientRequestHistory
             onRequestCancelled={() => { }}
           />
+        )}
+        
+        {activeTab === 'appointments' && (
+          <div className="card">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 font-display">My Scheduled Consultations</h2>
+            <AppointmentList role="patient" />
+          </div>
+        )}
+
+        {activeTab === 'connections' && (
+          <div className="card">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 font-display">Blood Donor Circles</h2>
+            <ConnectionList role="patient" />
+          </div>
+        )}
+
+        {activeTab === 'notifications' && (
+          <div className="card max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 font-display">Your Notifications</h2>
+            <NotificationList />
+          </div>
         )}
       </div>
     </div>

@@ -328,7 +328,7 @@ npm test         # Run tests
 npm start        # Start development server
 npm run build    # Build for production
 npm test         # Run tests
-```
+```                                  
 
 **AI Service**:
 

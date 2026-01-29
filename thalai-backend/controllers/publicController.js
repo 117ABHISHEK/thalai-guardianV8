@@ -169,9 +169,47 @@ const getPublicRequests = async (req, res) => {
   }
 };
 
+const Doctor = require('../models/doctorModel');
+
+/**
+ * @route   GET /api/public/doctors
+ * @desc    Get list of verified doctors
+ * @access  Public
+ */
+const getPublicDoctors = async (req, res) => {
+  try {
+    const doctors = await Doctor.find({ isVerified: true })
+      .populate('user', 'name email phone')
+      .select('specialization qualification hospital experience');
+
+    const formattedDoctors = doctors
+      .filter((doc) => doc.user)
+      .map((doc) => ({
+        id: doc.user._id,
+        name: doc.user.name,
+        specialization: doc.specialization,
+        qualification: doc.qualification,
+        hospital: doc.hospital?.name || 'N/A',
+        experience: doc.experience,
+      }));
+
+    res.status(200).json({
+      success: true,
+      data: formattedDoctors,
+    });
+  } catch (error) {
+    console.error('Get public doctors error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
+  }
+};
+
 module.exports = {
   getPublicStats,
   getPublicDonors,
   getPublicRequests,
+  getPublicDoctors,
 };
 

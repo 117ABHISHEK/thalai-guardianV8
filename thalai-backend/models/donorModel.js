@@ -195,8 +195,7 @@ const donorSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for faster queries
-donorSchema.index({ user: 1 });
+// Indexes for faster queries (user already indexed via unique: true)
 donorSchema.index({ availabilityStatus: 1 });
 donorSchema.index({ isVerified: 1 });
 donorSchema.index({ eligibilityStatus: 1 });
