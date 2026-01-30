@@ -364,8 +364,17 @@ const sendConnectionNotification = async (userId, otherUserName, action) => {
 };
 
 /**
- * Send match accepted notification
+ * Send checkup suggestion notification
  */
+const sendCheckupSuggestionNotification = async (userId, suggesterName) => {
+  return await sendNotification(
+    userId,
+    'checkup_suggestion',
+    '🩺 Health Checkup Suggestion',
+    `${suggesterName} suggested that you should schedule a regular health checkup.`,
+    { channel: 'all' }
+  );
+};
 const sendMatchAcceptedNotification = async (matchId) => {
   try {
     const MatchLog = require('../models/matchLogModel');

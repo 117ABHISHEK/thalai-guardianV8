@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { findMatches, getTopMatches } = require('../controllers/matchController');
+const { findMatches, getTopMatches, getMyMatches, updateMatchStatus } = require('../controllers/matchController');
 const { protect } = require('../middleware/authMiddleware');
 
 // All routes require authentication

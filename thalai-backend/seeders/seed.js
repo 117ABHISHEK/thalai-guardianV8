@@ -7,6 +7,7 @@ const Request = require('../models/requestModel');
 const DonorHistory = require('../models/donorHistoryModel');
 const Doctor = require('../models/doctorModel');
 const Appointment = require('../models/appointmentModel');
+const Connection = require('../models/connectionModel');
 const connectDB = require('../config/db');
 
 dotenv.config({ path: require('path').resolve(__dirname, '../.env') });
@@ -67,6 +68,7 @@ const seedData = async () => {
     await DonorHistory.deleteMany({});
     await Doctor.deleteMany({});
     await Appointment.deleteMany({});
+    await Connection.deleteMany({});
     console.log('✅ Data cleared');
 
     // Admin
@@ -166,6 +168,8 @@ const seedData = async () => {
 
       const patient = await Patient.create({
         user: user._id,
+        heightCm: Math.floor(140 + Math.random() * 30),
+        weightKg: Math.floor(35 + Math.random() * 25),
         transfusionHistory: transfusions,
         lastTransfusionDate: transfusions[0].date,
         medicalReports: generatePatientReports(10),
@@ -214,7 +218,7 @@ const seedData = async () => {
 
       const lastDonationDays = d.eligible ? 95 + Math.floor(Math.random() * 100) : 45;
 
-      await Donor.create({
+      const donor = await Donor.create({
         user: user._id,
         dob: user.dateOfBirth,
         heightCm: Math.floor(160 + Math.random() * 25),
@@ -235,7 +239,29 @@ const seedData = async () => {
         notes: d.verified ? 'Verified donor' : 'Pending verification'
       });
 
-      donors.push({ ...user.toObject(), verified: d.verified, eligible: d.eligible });
+      // Add donation history for verified donors
+      if (d.verified) {
+        const historyCount = Math.floor(1 + Math.random() * 3);
+        const history = [];
+        for (let j = 0; j < historyCount; j++) {
+          history.push({
+            donorId: donor._id,
+            donationDate: new Date(Date.now() - (lastDonationDays + (j + 1) * 100) * 24 * 60 * 60 * 1000),
+            bloodGroup: user.bloodGroup,
+            unitsDonated: 1,
+            location: {
+              hospital: `${d.city} Blood Bank`,
+              city: d.city,
+              state: 'India'
+            },
+            healthStatus: 'excellent',
+            notes: `Regular donation #${historyCount - j}`
+          });
+        }
+        await DonorHistory.insertMany(history);
+      }
+
+      donors.push({ ...user.toObject(), verified: d.verified, eligible: d.eligible, donorProfileId: donor._id });
     }
     console.log(`✅ ${donors.length} donors created`);
 
@@ -298,6 +324,32 @@ const seedData = async () => {
     await Appointment.insertMany(appointments);
     console.log(`✅ ${appointments.length} appointments created`);
 
+    // Connections
+    const connections = [];
+    // 5 Active Connections
+    for (let i = 0; i < 5; i++) {
+        connections.push({
+            patient: patients[i]._id,
+            donor: donors[i]._id,
+            requester: patients[i]._id,
+            status: 'active',
+            notes: 'Long-term support connection',
+            lastInteraction: new Date()
+        });
+    }
+    // 3 Pending Connections
+    for (let i = 5; i < 8; i++) {
+        connections.push({
+            patient: patients[i]._id,
+            donor: donors[i]._id,
+            requester: patients[i]._id,
+            status: 'pending',
+            notes: 'Recently matched'
+        });
+    }
+    await Connection.insertMany(connections);
+    console.log(`✅ ${connections.length} connections created`);
+
     console.log('\n📊 SEED SUMMARY');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log(`👤 Users: ${1 + doctors.length + patients.length + donors.length}`);
@@ -338,6 +390,7 @@ const destroyData = async () => {
     await DonorHistory.deleteMany({});
     await Doctor.deleteMany({});
     await Appointment.deleteMany({});
+    await Connection.deleteMany({});
 
     console.log('✅ All data destroyed!');
     process.exit(0);

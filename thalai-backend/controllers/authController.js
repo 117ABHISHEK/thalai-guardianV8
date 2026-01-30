@@ -4,6 +4,7 @@ const Patient = require('../models/patientModel');
 const Doctor = require('../models/doctorModel');
 const { computeEligibility, validateDonorRegistration } = require('../services/eligibilityService');
 const logger = require('../utils/logger');
+const { updateTransfusionPrediction, getPredictionStatus: getPatientPrediction } = require('../utils/aiPrediction');
 
 // Helper validation functions
 const validateDonorAge = (dob) => {
@@ -513,7 +514,6 @@ const getProfile = async (req, res) => {
   }
 };
 
-const { updateTransfusionPrediction } = require('../utils/aiPrediction');
 
 // @route   PUT /api/auth/profile
 // @desc    Update user profile
@@ -636,7 +636,6 @@ const updateProfile = async (req, res) => {
   }
 };
 
-const { updateTransfusionPrediction, getPredictionStatus: getPatientPrediction } = require('../utils/aiPrediction');
 
 // @route   GET /api/auth/prediction-status
 // @desc    Get current prediction status for logged-in patient

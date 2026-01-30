@@ -10,9 +10,11 @@ Python Flask microservice for predicting next transfusion date for thalassemia p
 
 ```bash
 python -m venv venv
+venv\Scripts\activate
 ```
 
 Activate the environment based on your shell:
+
 - **Windows (PowerShell):** `.\venv\Scripts\Activate.ps1`
 - **Windows (CMD):** `venv\Scripts\activate.bat`
 - **Linux/macOS:** `source venv/bin/activate`
@@ -30,6 +32,7 @@ python train_model.py
 ```
 
 This will:
+
 - Generate synthetic transfusion history data
 - Prepare training features
 - Train LightGBM model
@@ -53,6 +56,7 @@ GET /health
 ```
 
 Response:
+
 ```json
 {
   "status": "healthy",
@@ -77,12 +81,13 @@ POST /predict-next-transfusion
 ```
 
 **Request Body:**
+
 ```json
 {
   "patientId": "patient_123",
   "history": [
-    {"date": "2024-01-15", "units": 2, "hb_value": 8.5},
-    {"date": "2024-02-20", "units": 2, "hb_value": 8.2}
+    { "date": "2024-01-15", "units": 2, "hb_value": 8.5 },
+    { "date": "2024-02-20", "units": 2, "hb_value": 8.2 }
   ],
   "lastHb": 8.0,
   "age": 25,
@@ -93,6 +98,7 @@ POST /predict-next-transfusion
 ```
 
 **Response:**
+
 ```json
 {
   "predictedNextDate": "2024-03-15",
@@ -107,6 +113,7 @@ POST /predict-next-transfusion
 
 **Rule-Based Fallback:**
 If model is not available or insufficient data, falls back to rule-based prediction:
+
 ```json
 {
   "predictedNextDate": "2024-03-15",
@@ -119,6 +126,7 @@ If model is not available or insufficient data, falls back to rule-based predict
 ## Model Features
 
 **Input Features:**
+
 - `mean_interval_days` - Average days between transfusions
 - `hb_trend` - Hemoglobin trend (slope)
 - `units_per_transfusion_avg` - Average units per transfusion
@@ -132,6 +140,7 @@ If model is not available or insufficient data, falls back to rule-based predict
 - `last_units` - Last transfusion units
 
 **Target:**
+
 - `target_days_to_next` - Days until next transfusion (predicted)
 
 ## Training
@@ -144,12 +153,14 @@ The model is trained using LightGBM gradient boosting:
 - **Feature Engineering:** Automatic from transfusion history
 
 **Training Command:**
+
 ```bash
 python train_model.py
 ```
 
 **Model Evaluation:**
 After training, check:
+
 - `models/model_info.json` - Model metrics and feature importance
 - Console output - MAE, RMSE, R², coverage metrics
 
@@ -162,6 +173,7 @@ When ML model is unavailable or insufficient data:
 3. **Multiple Transfusions:** Mean interval adjusted by current Hb level
 
 **Hb-Based Adjustments:**
+
 - Hb < 8.0 g/dL: -3 days (sooner transfusion)
 - Hb > 10.0 g/dL: +3 days (can wait longer)
 
@@ -174,19 +186,19 @@ PORT=8000  # Flask server port (default: 8000)
 ## Integration with Node.js Backend
 
 ```javascript
-const axios = require('axios');
+const axios = require("axios");
 
-const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:8000';
+const ML_SERVICE_URL = process.env.ML_SERVICE_URL || "http://localhost:8000";
 
 async function predictNextTransfusion(patientData) {
   try {
     const response = await axios.post(
       `${ML_SERVICE_URL}/predict-next-transfusion`,
-      patientData
+      patientData,
     );
     return response.data;
   } catch (error) {
-    console.error('ML prediction error:', error);
+    console.error("ML prediction error:", error);
     return null;
   }
 }
@@ -230,6 +242,7 @@ curl -X POST http://localhost:8000/predict-next-transfusion \
 ## Model Retraining
 
 Retrain model when:
+
 - New real data is available
 - Model performance degrades
 - Patient patterns change
@@ -242,16 +255,19 @@ python train_model.py  # Retrain with updated data
 ## Troubleshooting
 
 **Model not loading:**
+
 - Check `models/transfusion_predictor.pkl` exists
 - Run `python train_model.py` to generate model
 - Service will use rule-based fallback if model unavailable
 
 **Prediction errors:**
+
 - Check input format matches expected schema
 - Ensure `history` array is properly formatted
 - Check date formats are YYYY-MM-DD
 
 **Low confidence:**
+
 - More training data may be needed
 - Check feature quality
 - Consider feature engineering improvements
