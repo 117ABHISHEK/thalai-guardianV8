@@ -326,13 +326,27 @@ const DoctorDashboard = () => {
                           : 'N/A'}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Predicted Next Transfusion</p>
-                      <p className="text-sm font-medium">
-                        {patientDetails.predictedNextTransfusionDate
-                          ? new Date(patientDetails.predictedNextTransfusionDate).toLocaleDateString()
-                          : 'N/A'}
-                      </p>
+                    <div className="col-span-2">
+                      <p className="text-sm text-gray-500">AI Prediction Status</p>
+                      {patientDetails.predictedNextTransfusionDate ? (
+                        <div className="mt-1 bg-blue-50 border border-blue-100 rounded-md p-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-semibold text-blue-700">
+                              Next: {new Date(patientDetails.predictedNextTransfusionDate).toLocaleDateString()}
+                            </span>
+                            <span className="text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">
+                              {Math.round((patientDetails.predictionConfidence || 0) * 100)}% Confidence
+                            </span>
+                          </div>
+                          {patientDetails.predictionExplanation && (
+                            <p className="mt-1 text-xs text-blue-600 italic">
+                              {patientDetails.predictionExplanation}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-sm font-medium text-gray-400 italic">No prediction available yet</p>
+                      )}
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Total Transfusions</p>

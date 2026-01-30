@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getUserRequests, cancelRequest } from '../api/requests';
 import { findMatches } from '../api/match';
+import RequestMatchesModal from '../components/RequestMatchesModal';
 
 const PatientRequestHistory = ({ onRequestCancelled }) => {
   const { user } = useAuth();
@@ -12,6 +13,8 @@ const PatientRequestHistory = ({ onRequestCancelled }) => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [findingMatches, setFindingMatches] = useState({});
+  const [selectedRequestId, setSelectedRequestId] = useState(null);
+  const [showMatchesModal, setShowMatchesModal] = useState(false);
 
   useEffect(() => {
     fetchRequests();
@@ -52,6 +55,21 @@ const PatientRequestHistory = ({ onRequestCancelled }) => {
     } catch (err) {
       setError(err.message || 'Failed to cancel request');
       setTimeout(() => setError(''), 5000);
+    }
+  };
+
+  const handleFindMatches = async (requestId) => {
+    try {
+      setFindingMatches((prev) => ({ ...prev, [requestId]: true }));
+      const response = await findMatches(requestId);
+      setMessage(response.data.message || 'Matching donors found and notified!');
+      setTimeout(() => setMessage(''), 5000);
+      fetchRequests();
+    } catch (err) {
+      setError(err.message || 'Failed to find matches');
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setFindingMatches((prev) => ({ ...prev, [requestId]: false }));
     }
   };
 
@@ -182,6 +200,15 @@ const PatientRequestHistory = ({ onRequestCancelled }) => {
                                 : '🔍 Find Matches'}
                             </button>
                             <button
+                              onClick={() => {
+                                setSelectedRequestId(request._id);
+                                setShowMatchesModal(true);
+                              }}
+                              style={styles.viewMatchesButton}
+                            >
+                              👁️ View Matches
+                            </button>
+                            <button
                               onClick={() => handleCancel(request._id)}
                               style={styles.cancelButton}
                             >
@@ -210,6 +237,13 @@ const PatientRequestHistory = ({ onRequestCancelled }) => {
             </tbody>
           </table>
         </div>
+      )}
+
+      {showMatchesModal && (
+        <RequestMatchesModal
+          requestId={selectedRequestId}
+          onClose={() => setShowMatchesModal(false)}
+        />
       )}
     </div>
   );
@@ -278,6 +312,15 @@ const styles = {
   findMatchesButton: {
     padding: '6px 12px',
     backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '12px',
+  },
+  viewMatchesButton: {
+    padding: '6px 12px',
+    backgroundColor: '#28a745',
     color: 'white',
     border: 'none',
     borderRadius: '4px',

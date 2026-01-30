@@ -92,34 +92,66 @@ def rule_based_prediction(history, last_hb, age, weight_kg, current_date):
             'method': 'rule_based',
         }
     
-    # Calculate mean interval from history
     intervals = []
     for i in range(1, len(sorted_history)):
         prev_date = datetime.strptime(sorted_history[i-1]['date'], '%Y-%m-%d')
         curr_date = datetime.strptime(sorted_history[i]['date'], '%Y-%m-%d')
         interval = (curr_date - prev_date).days
-        intervals.append(interval)
+        if interval > 0:  # Ignore same-day or invalid intervals
+            intervals.append(interval)
     
-    mean_interval = np.mean(intervals)
+    if len(intervals) > 0:
+        mean_interval = int(np.mean(intervals))
+        # Adjust based on recent Hb
+        if last_hb < 8.0:
+            mean_interval = max(14, int(mean_interval * 0.8))  # Shorter interval for low Hb
+        elif last_hb > 10.0:
+            mean_interval = min(35, int(mean_interval * 1.2))  # Longer interval for higher Hb
+        
+        last_date = datetime.strptime(sorted_history[-1]['date'], '%Y-%m-%d')
+        next_date = last_date + timedelta(days=mean_interval)
+        
+        # Calculate urgency based on days until next transfusion
+        days_until = (next_date - datetime.strptime(current_date, '%Y-%m-%d')).days
+        if days_until <= 3:
+            urgency = 'urgent'
+        elif days_until <= 7:
+            urgency = 'soon'
+        else:
+            urgency = 'normal'
+        
+        return {
+            'predictedNextDate': next_date.strftime('%Y-%m-%d'),
+            'confidence': min(0.75, 0.5 + (len(intervals) * 0.05)),  # Higher confidence with more data
+            'explanation': f'Rule-based prediction: {mean_interval}-day average interval from {len(intervals)} previous transfusions. Current Hb: {last_hb:.1f} g/dL',
+            'method': 'rule_based',
+            'urgency': urgency,
+            'factors': {
+                'avgInterval': mean_interval,
+                'lastHb': last_hb,
+                'historyCount': len(sorted_history)
+            }
+        }
     
-    # Adjust based on last Hb
-    if last_hb < 8.0:
-        adjustment = -3  # Need sooner transfusion
-    elif last_hb > 10.0:
-        adjustment = 3  # Can wait longer
-    else:
-        adjustment = 0
-    
-    predicted_interval = max(7, mean_interval + adjustment)  # Minimum 7 days
-    
+    # Fallback: single transfusion case
+    interval_days = 21
     last_date = datetime.strptime(sorted_history[-1]['date'], '%Y-%m-%d')
-    next_date = last_date + timedelta(days=int(predicted_interval))
+    next_date = last_date + timedelta(days=interval_days)
+    
+    days_until = (next_date - datetime.strptime(current_date, '%Y-%m-%d')).days
+    if days_until <= 3:
+        urgency = 'urgent'
+    elif days_until <= 7:
+        urgency = 'soon'
+    else:
+        urgency = 'normal'
     
     return {
         'predictedNextDate': next_date.strftime('%Y-%m-%d'),
-        'confidence': 0.75,
-        'explanation': f'Rule-based prediction: {int(predicted_interval)}-day interval (mean: {mean_interval:.1f} days, adjusted for Hb {last_hb:.1f} g/dL)',
+        'confidence': 0.5,
+        'explanation': f'Rule-based prediction: Default {interval_days}-day interval (limited history)',
         'method': 'rule_based',
+        'urgency': urgency,
     }
 
 def prepare_features(history, last_hb, age, weight_kg, comorbidities, current_date):

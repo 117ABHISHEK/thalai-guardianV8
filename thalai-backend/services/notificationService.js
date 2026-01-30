@@ -364,16 +364,54 @@ const sendConnectionNotification = async (userId, otherUserName, action) => {
 };
 
 /**
- * Send checkup suggestion notification
+ * Send match accepted notification
  */
-const sendCheckupSuggestionNotification = async (donorId, patientName) => {
-  return await sendNotification(
-    donorId,
-    'checkup_suggested',
-    '🏥 Health Checkup Suggested',
-    `${patientName} has suggested you perform a quick health checkup for a potential upcoming transfusion.`,
-    { channel: 'all' }
-  );
+const sendMatchAcceptedNotification = async (matchId) => {
+  try {
+    const MatchLog = require('../models/matchLogModel');
+    const match = await MatchLog.findById(matchId)
+      .populate({
+        path: 'requestId',
+        populate: { path: 'patientId' }
+      })
+      .populate({
+        path: 'donorId',
+        populate: { path: 'user' }
+      });
+
+    if (!match || !match.requestId || !match.donorId) {
+      return { success: false, message: 'Match or related entities not found' };
+    }
+
+    const patient = match.requestId.patientId;
+    const donor = match.donorId.user;
+
+    const message = `🎉 Good news! A donor has accepted your blood request.
+
+Donor: ${donor.name}
+Blood Group: ${donor.bloodGroup}
+Phone: ${donor.phone}
+
+You can now contact the donor to coordinate. Thank you for using ThalAI Guardian! ❤️`;
+
+    return await sendNotification(
+      patient._id,
+      'match_accepted',
+      'Donor Accepted Your Request!',
+      message,
+      {
+        channel: 'all',
+        metadata: {
+          matchId,
+          requestId: match.requestId._id,
+          donorId: match.donorId._id,
+        },
+      }
+    );
+  } catch (error) {
+    console.error('Send match accepted notification error:', error);
+    return { success: false, error: error.message };
+  }
 };
 
 module.exports = {
@@ -387,5 +425,6 @@ module.exports = {
   sendAppointmentNotification,
   sendConnectionNotification,
   sendCheckupSuggestionNotification,
+  sendMatchAcceptedNotification,
 };
 

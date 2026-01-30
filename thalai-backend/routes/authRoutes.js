@@ -5,6 +5,8 @@ const {
   login,
   getProfile,
   updateProfile,
+  getPredictionStatus,
+  triggerPrediction,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -27,6 +29,16 @@ router.get('/profile', protect, getProfile);
 // @desc    Update user profile
 // @access  Private
 router.put('/profile', protect, updateProfile);
+
+// @route   GET /api/auth/prediction-status
+// @desc    Get prediction status for patient
+// @access  Private (Patient only)
+router.get('/prediction-status', protect, getPredictionStatus);
+
+// @route   POST /api/auth/trigger-prediction
+// @desc    Manually trigger prediction update
+// @access  Private (Patient only)
+router.post('/trigger-prediction', protect, triggerPrediction);
 
 module.exports = router;
 

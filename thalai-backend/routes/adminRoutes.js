@@ -10,6 +10,7 @@ const {
   assignPatientToDoctor,
   unassignPatientFromDoctor,
   getPatients,
+  getAIStatus,
 } = require('../controllers/adminController');
 const { protect } = require('../middleware/authMiddleware');
 const { allowRoles } = require('../middleware/roleMiddleware');
@@ -62,6 +63,11 @@ router.post('/doctors/unassign-patient', unassignPatientFromDoctor);
 // @desc    Get list of all patients
 // @access  Private/Admin
 router.get('/patients', getPatients);
+
+// @route   GET /api/admin/ai-status
+// @desc    Get AI service health and status
+// @access  Private/Admin
+router.get('/ai-status', getAIStatus);
 
 module.exports = router;
 

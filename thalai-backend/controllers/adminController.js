@@ -600,6 +600,46 @@ const getPatients = async (req, res) => {
   }
 };
 
+/**
+ * @route   GET /api/admin/ai-status
+ * @desc    Get AI service health and status
+ * @access  Private/Admin
+ */
+const getAIStatus = async (req, res) => {
+  try {
+    const axios = require('axios');
+    const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+    
+    let health = { status: 'offline' };
+    try {
+      const response = await axios.get(`${AI_SERVICE_URL}/health`, { timeout: 3000 });
+      health = response.data;
+    } catch (err) {
+      health = { status: 'offline', error: err.message };
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        health,
+        serviceUrl: AI_SERVICE_URL,
+        lastChecked: new Date(),
+        predictionStats: {
+          totalPredictionsToday: 0, // Placeholder
+          activeModels: ['Transfusion RNN', 'Blood Availability XGB'],
+        }
+      },
+    });
+  } catch (error) {
+    console.error('Get AI status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getDonors,
   verifyDonor,
@@ -610,4 +650,5 @@ module.exports = {
   assignPatientToDoctor,
   unassignPatientFromDoctor,
   getPatients,
+  getAIStatus,
 };

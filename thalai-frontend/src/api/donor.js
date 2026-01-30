@@ -29,4 +29,22 @@ export const getDonorProfile = async () => {
     throw error.response?.data || { message: 'Failed to fetch donor profile' };
   }
 };
+// Get donor matches (requests that donor has been matched with)
+export const getMyMatches = async () => {
+  try {
+    const response = await api.get('/match/my-matches');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Failed to fetch matches' };
+  }
+};
 
+// Update match status (accept/reject)
+export const updateMatchStatus = async (matchId, statusData) => {
+  try {
+    const response = await api.put(`/match/status/${matchId}`, statusData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Failed to update match status' };
+  }
+};

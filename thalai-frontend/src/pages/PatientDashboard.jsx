@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getProfile, updateProfile } from '../api/auth';
+import { getPredictionStatus, triggerPrediction } from '../api/patient';
 import PatientRequestForm from './PatientRequestForm';
 import PatientRequestHistory from './PatientRequestHistory';
 import StatCard from '../components/StatCard';
@@ -8,6 +9,8 @@ import HealthMetricsForm from '../components/HealthMetricsForm';
 import AppointmentList from '../components/AppointmentList';
 import ConnectionList from '../components/ConnectionList';
 import NotificationList from '../components/NotificationList';
+import TransfusionPrediction from '../components/TransfusionPrediction';
+import TransfusionHistory from '../components/TransfusionHistory';
 
 import { useLocation } from 'react-router-dom';
 
@@ -16,6 +19,8 @@ const PatientDashboard = () => {
   const location = useLocation();
   const [profile, setProfile] = useState(null);
   const [patientProfile, setPatientProfile] = useState(null);
+  const [prediction, setPrediction] = useState(null);
+  const [predictionLoading, setPredictionLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({});
@@ -40,7 +45,41 @@ const PatientDashboard = () => {
 
   useEffect(() => {
     fetchProfile();
+    fetchPrediction();
   }, []);
+
+  const fetchPrediction = async () => {
+    try {
+      setPredictionLoading(true);
+      const response = await getPredictionStatus();
+      if (response.data.success) {
+        setPrediction(response.data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch prediction:', error);
+      // Don't show error to user, just log it
+    } finally {
+      setPredictionLoading(false);
+    }
+  };
+
+  const handleRefreshPrediction = async () => {
+    try {
+      setPredictionLoading(true);
+      const response = await triggerPrediction();
+      if (response.data.success) {
+        setPrediction(response.data.data);
+        setMessage('Prediction updated successfully!');
+        setTimeout(() => setMessage(''), 3000);
+      }
+    } catch (error) {
+      console.error('Failed to trigger prediction:', error);
+      setMessage(error.response?.data?.message || 'Failed to update prediction');
+      setTimeout(() => setMessage(''), 3000);
+    } finally {
+      setPredictionLoading(false);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -109,8 +148,27 @@ const PatientDashboard = () => {
       await fetchProfile(); // Refresh data
       setMessage('Health metrics updated successfully!');
       setTimeout(() => setMessage(''), 3000);
+      
+      // Trigger prediction update in background
+      fetchPrediction();
     } catch (error) {
       setMessage(error.message || 'Failed to update health metrics');
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
+  const handleAddTransfusion = async (record) => {
+    try {
+      const newHistory = [...(patientProfile.transfusionHistory || []), record];
+      await updateProfile({ transfusionHistory: newHistory, currentHb: record.hb_value });
+      await fetchProfile();
+      setMessage('Transfusion record added successfully!');
+      setTimeout(() => setMessage(''), 3000);
+      
+      // Refresh prediction
+      fetchPrediction();
+    } catch (error) {
+      setMessage(error.message || 'Failed to add transfusion record');
       setTimeout(() => setMessage(''), 3000);
     }
   };
@@ -149,6 +207,13 @@ const PatientDashboard = () => {
           </div>
         )}
 
+        {/* Transfusion Prediction */}
+        <TransfusionPrediction 
+          prediction={prediction}
+          onRefresh={handleRefreshPrediction}
+          loading={predictionLoading}
+        />
+
         {/* Tabs */}
         <div className="bg-white rounded-lg shadow-sm mb-6">
           <div className="border-b border-gray-200">
@@ -158,6 +223,7 @@ const PatientDashboard = () => {
                 { id: 'health', label: 'Health Reports' },
                 { id: 'request', label: 'Create Request' },
                 { id: 'history', label: 'Request History' },
+                { id: 'transfusion', label: 'Transfusion History' },
                 { id: 'appointments', label: 'My Appointments' },
                 { id: 'connections', label: 'My Circles' },
                 { id: 'notifications', label: 'Notifications' },
@@ -410,6 +476,16 @@ const PatientDashboard = () => {
           <PatientRequestHistory
             onRequestCancelled={() => { }}
           />
+        )}
+
+        {activeTab === 'transfusion' && (
+          <div className="card">
+            <TransfusionHistory
+              history={patientProfile?.transfusionHistory || []}
+              onAdd={handleAddTransfusion}
+              loading={predictionLoading}
+            />
+          </div>
         )}
         
         {activeTab === 'appointments' && (

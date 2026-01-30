@@ -29,4 +29,12 @@ export const getStats = async () => {
     throw error.response?.data || { message: 'Failed to fetch statistics' };
   }
 };
-
+// Get AI service status
+export const getAIStatus = async () => {
+  try {
+    const response = await api.get('/admin/ai-status');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Failed to fetch AI status' };
+  }
+};

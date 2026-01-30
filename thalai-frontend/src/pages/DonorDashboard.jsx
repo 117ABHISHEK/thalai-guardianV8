@@ -8,6 +8,7 @@ import HealthMetricsForm from '../components/HealthMetricsForm';
 import AppointmentList from '../components/AppointmentList';
 import ConnectionList from '../components/ConnectionList';
 import NotificationList from '../components/NotificationList';
+import MatchedRequests from '../components/MatchedRequests';
 
 import { useLocation } from 'react-router-dom';
 
@@ -186,6 +187,7 @@ const DonorDashboard = () => {
             <nav className="flex -mb-px">
               {[
                 { id: 'overview', label: 'Overview' },
+                { id: 'matches', label: 'Match Requests' },
                 { id: 'profile', label: 'Profile' },
                 { id: 'health', label: 'Health Reports' },
                 { id: 'appointments', label: 'My Appointments' },
@@ -423,6 +425,13 @@ const DonorDashboard = () => {
               </div>
             </div>
           </>
+        )}
+
+        {activeTab === 'matches' && (
+          <div className="card">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Blood Request Matches</h2>
+            <MatchedRequests />
+          </div>
         )}
 
         {activeTab === 'profile' && (

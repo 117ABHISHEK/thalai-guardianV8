@@ -16,5 +16,15 @@ router.post('/find', findMatches);
 // @access  Private
 router.get('/top', getTopMatches);
 
+// @route   GET /api/match/my-matches
+// @desc    Get all match requests for the logged-in donor
+// @access  Private (Donor only)
+router.get('/my-matches', getMyMatches);
+
+// @route   PUT /api/match/status/:matchId
+// @desc    Update match status (accept/reject)
+// @access  Private (Donor only)
+router.put('/status/:matchId', updateMatchStatus);
+
 module.exports = router;
 

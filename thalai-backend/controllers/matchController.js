@@ -1,6 +1,8 @@
 const Request = require('../models/requestModel');
 const MatchLog = require('../models/matchLogModel');
+const Donor = require('../models/donorModel');
 const { processRequestMatching } = require('../services/matchService');
+const notificationService = require('../services/notificationService');
 
 /**
  * @route   POST /api/match/find
@@ -128,8 +130,120 @@ const getTopMatches = async (req, res) => {
   }
 };
 
+/**
+ * @route   GET /api/match/my-matches
+ * @desc    Get all match requests for the logged-in donor
+ * @access  Private (Donor only)
+ */
+const getMyMatches = async (req, res) => {
+  try {
+    const donor = await Donor.findOne({ user: req.user._id });
+
+    if (!donor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Donor profile not found',
+      });
+    }
+
+    const matches = await MatchLog.find({ donorId: donor._id })
+      .populate({
+        path: 'requestId',
+        populate: {
+          path: 'patientId',
+          select: 'name email phone address',
+        },
+      })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        matches: matches.map(match => ({
+          matchId: match._id,
+          request: match.requestId,
+          matchScore: match.matchScore,
+          status: match.status,
+          createdAt: match.createdAt,
+        })),
+        total: matches.length,
+      },
+    });
+  } catch (error) {
+    console.error('Get my matches error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @route   PUT /api/match/update-status/:matchId
+ * @desc    Update match status (accept/reject)
+ * @access  Private (Donor only)
+ */
+const updateMatchStatus = async (req, res) => {
+  try {
+    const { matchId } = req.params;
+    const { status, notes } = req.body;
+
+    if (!['accepted', 'rejected'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status. Must be accepted or rejected',
+      });
+    }
+
+    const donor = await Donor.findOne({ user: req.user._id });
+    if (!donor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Donor profile not found',
+      });
+    }
+
+    const match = await MatchLog.findOne({ _id: matchId, donorId: donor._id });
+
+    if (!match) {
+      return res.status(404).json({
+        success: false,
+        message: 'Match log not found or access denied',
+      });
+    }
+
+    match.status = status;
+    match.notes = notes || match.notes;
+    match.respondedAt = new Date();
+    await match.save();
+
+    // If accepted, notify the patient
+    if (status === 'accepted') {
+      notificationService.sendMatchAcceptedNotification(match._id).catch(err => 
+        console.error('Failed to send match accepted notification:', err.message)
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Match successfully ${status}`,
+      data: match,
+    });
+  } catch (error) {
+    console.error('Update match status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   findMatches,
   getTopMatches,
+  getMyMatches,
+  updateMatchStatus,
 };
 

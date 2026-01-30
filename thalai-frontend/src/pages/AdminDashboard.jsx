@@ -5,6 +5,7 @@ import { getStats } from '../api/admin';
 import StatsCharts from '../components/StatsCharts';
 import StatCard from '../components/StatCard';
 import AppointmentList from '../components/AppointmentList';
+import AIStatusWidget from '../components/AIStatusWidget';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -109,6 +110,11 @@ const AdminDashboard = () => {
             icon="📊"
             color="blue"
           />
+        </div>
+
+        {/* AI Health Status */}
+        <div className="mb-8">
+          <AIStatusWidget />
         </div>
 
         {/* Charts */}
