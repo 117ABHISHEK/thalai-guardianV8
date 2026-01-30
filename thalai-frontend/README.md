@@ -5,16 +5,19 @@ React frontend for the ThalAI Guardian system.
 ## Setup
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
 
 2. Create a `.env` file (optional):
+
 ```
 VITE_API_URL=http://localhost:5000/api
 ```
 
 3. Start the development server:
+
 ```bash
 npm run dev
 ```
@@ -54,6 +57,10 @@ thalai-frontend/
 - ✅ Protected Routes based on roles
 - ✅ User Profile Management
 - ✅ Donor Availability Management
+- ✅ **AI Transfusion Prediction UI** (Countdown, Urgency, Explanation)
+- ✅ **Real-time Donor Matching UI** (Score Breakdown, Match Acceptance)
+- ✅ **Admin AI Monitoring** (Service Health Widget)
+- ✅ **Transfusion Logging** (Patient History)
 - ✅ Auto-logout on token expiration
 - ✅ JWT token stored in localStorage
 
@@ -80,4 +87,3 @@ thalai-frontend/
 - React Router v6
 - Axios
 - Vite
-

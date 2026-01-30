@@ -3,7 +3,7 @@
 ## AI-Powered Thalassemia Patient Management & Blood Donation Platform
 
 [![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](FINAL_STATUS.md)
-[![Version](https://img.shields.io/badge/Version-2.0.4-blue)](FINAL_STATUS.md)
+[![Version](https://img.shields.io/badge/Version-2.1.0-blue)](FINAL_STATUS.md)
 [![Tests](https://img.shields.io/badge/Tests-34%2F34%20Passing-brightgreen)](TEST_SIMULATION_REPORT.md)
 [![Documentation](https://img.shields.io/badge/Documentation-Complete-green)](DOCUMENTATION_INDEX.md)
 
@@ -11,16 +11,17 @@
 
 ## 🎯 Project Overview
 
-ThalAI Guardian is a comprehensive blood donor eligibility and patient management system designed specifically for thalassemia patients. The system combines intelligent donor screening, AI-powered transfusion prediction, and robust patient management to ensure safe and efficient blood donation processes.
+ThalAI Guardian is a comprehensive blood donor eligibility and patient management system designed specifically for thalassemia patients. The system combines intelligent donor screening, **AI-powered transfusion prediction**, **automated donor matching**, and robust patient management to ensure safe and efficient blood donation processes.
 
 ### Key Features
 
-✅ **Enhanced Donor Eligibility System** - 6 comprehensive validation checks  
-✅ **Blood Report Validation** - Automated screening of vital parameters  
-✅ **AI Transfusion Prediction** - ML-powered prediction of transfusion needs  
-✅ **Height/Weight Tracking** - Historical health metrics per medical report  
-✅ **Admin Verification Workflow** - Complete donor verification process  
-✅ **Robust Error Handling** - Graceful degradation and detailed logging
+✅ **AI Transfusion Prediction v2** - Real-time prediction with urgency levels (Urgent, Soon, Normal), confidence scores, and countdown timers.  
+✅ **Advanced Donor Matching** - Intelligent matching using AI compatibility scores (0-100%) based on blood group, location, and medical eligibility.  
+✅ **Donor Response Flow** - Donors can Accept/Decline requests directly; patients receive instant notifications with donor contact info.  
+✅ **Smart Chatbot v2** - Contextual, role-based suggestions with NLP support for diet, iron overload, and emergency protocols.  
+✅ **Admin Health Dashboard** - Real-time monitoring of AI service health, active models, and system-wide statistics.  
+✅ **Transfusion History Tracking** - Comprehensive logging of past transfusions to improve AI prediction accuracy.  
+✅ **Enhanced Donor Eligibility System** - 6 comprehensive validation checks (+ automated blood report screening).
 
 ---
 
@@ -63,13 +64,15 @@ NODE_ENV=development
 PORT=5000
 MONGO_URI=mongodb://localhost:27017/thalai-guardian
 JWT_SECRET=your_jwt_secret_key
+AI_SERVICE_URL=http://localhost:8000
 LOG_LEVEL=info
 ```
 
 **Frontend (.env)**:
 
 ```env
-REACT_APP_API_URL=http://localhost:5000
+VITE_API_URL=http://localhost:5000/api
+VITE_AI_SERVICE_URL=http://localhost:8000
 ```
 
 ### Seed Database
@@ -105,7 +108,7 @@ python app.py
 
 ### Access Application
 
-- **Frontend**: http://localhost:3000
+- **Frontend**: http://localhost:5173 (Vite default)
 - **Backend API**: http://localhost:5000
 - **AI Service**: http://localhost:8000
 
@@ -150,9 +153,9 @@ Dashboard: /patient-dashboard
 
 **Frontend**:
 
-- React.js
+- React.js (Vite)
 - React Router
-- Axios
+- Axios / AuthContext
 - Tailwind CSS
 
 **Backend**:
@@ -162,13 +165,15 @@ Dashboard: /patient-dashboard
 - MongoDB with Mongoose
 - JWT Authentication
 - Winston Logging
+- Twilio & Nodemailer (Notification System)
 
 **AI Service**:
 
 - Python
 - Flask
-- Scikit-learn
-- Pandas/NumPy
+- Scikit-learn / LightGBM
+- Pandas / NumPy
+- Synthetic Data Generator
 
 ### Project Structure
 
@@ -176,36 +181,35 @@ Dashboard: /patient-dashboard
 thalai-guardianV8/
 ├── thalai-frontend/          # React frontend application
 │   ├── src/
-│   │   ├── components/       # Reusable components
-│   │   ├── pages/           # Page components
-│   │   ├── api/             # API integration
-│   │   └── App.js           # Main app component
+│   │   ├── components/       # UI Widgets (Prediction, Matching, History)
+│   │   ├── pages/           # Dashboards (Patient, Donor, Admin, Doctor)
+│   │   ├── api/             # API services (Patient, Donor, Match, Admin)
+│   │   └── App.jsx           # Main entry point
 │   └── package.json
 │
 ├── thalai-backend/           # Node.js backend API
-│   ├── controllers/         # Request handlers
-│   ├── models/              # MongoDB schemas
-│   ├── routes/              # API routes
-│   ├── services/            # Business logic
+│   ├── controllers/         # Logic handlers (Auth, Match, Notification)
+│   ├── models/              # Schemas (User, Patient, Request, MatchLog)
+│   ├── routes/              # Express routing
+│   ├── services/            # Core logic (Notification, Matching, Chatbot)
 │   ├── middleware/          # Auth & validation
-│   ├── utils/               # Utilities & logging
+│   ├── utils/               # AI Prediction bridge & Helpers
 │   ├── seeders/             # Database seeding
 │   ├── logs/                # Application logs
 │   └── package.json
 │
 ├── thalai-ai-service/        # Python AI service
-│   ├── app.py               # Flask application
-│   ├── model_training.py    # ML model training
-│   ├── synthetic_data_generator.py
+│   ├── app.py               # Flask API (Rule-based & ML Predictions)
+│   ├── training/            # Model training scripts
 │   └── requirements.txt
 │
-└── Documentation/            # Complete documentation
+└── ReadmeDoc/                # Complete documentation
     ├── FINAL_STATUS.md      # ⭐ Current status
-    ├── DOCUMENTATION_INDEX.md
+    ├── PRODUCTION_CHECKLIST.md
+    ├── DEPLOYMENT_GUIDE.md
     ├── DONOR_ELIGIBILITY_SYSTEM.md
     ├── DATABASE_SCHEMA_VERIFICATION.md
     ├── SEED_DOCUMENTATION.md
-    ├── TEST_SIMULATION_REPORT.md
     └── ... (11 total docs)
 ```
 
@@ -213,47 +217,23 @@ thalai-guardianV8/
 
 ## 🎯 Core Features
 
-### 1. Donor Eligibility System
+### 1. AI Transfusion Prediction v2
 
-**6 Comprehensive Checks**:
+- **Dynamic Intervals**: Predicts next transfusion based on history, average intervals, and current Hb.
+- **Urgency Classification**: Categorizes needs as `Urgent` (≤3 days), `Soon` (≤7 days), or `Normal`.
+- **Confidence Rating**: Higher confidence assigned as more data points are logged.
+- **Explanatory UI**: Shows _why_ a prediction was made (e.g., "based on 15-day average").
 
-1. ✅ **Age Validation** - Must be 18+ years
-2. ✅ **Donation Interval** - 90-day minimum between donations
-3. ✅ **Medical History** - No contraindications
-4. ✅ **Blood Report Validation** - 5 vital parameters within safe ranges
-5. ✅ **Health Clearance** - Admin approval required
-6. ✅ **Verification Status** - Account verified by admin
+### 2. Intelligent Donor Matching
 
-**Blood Report Parameters**:
+- **Automated Alerts**: Notifies top matches via SMS/Notification when a request is created.
+- **Match Score**: Calculated based on blood type, city distance, and donor health score.
+- **Contact Bridge**: Once a donor accepts, patients get a "Call Donor" button to coordinate privately.
 
-- Hemoglobin: 12.5-20 g/dL
-- BP Systolic: 90-180 mmHg
-- BP Diastolic: 60-100 mmHg
-- Pulse Rate: 50-110 bpm
-- Temperature: 35.5-37.5°C
-- Report Age: < 90 days
+### 3. Smart Chatbot Helper
 
-### 2. Patient Management
-
-- Complete transfusion history tracking
-- Medical reports with thalassemia parameters
-- Height/weight tracking per report
-- Blood request creation and management
-- AI-powered transfusion prediction
-
-### 3. Admin Operations
-
-- Donor verification workflow
-- Health clearance management
-- Blood request oversight
-- System statistics and analytics
-- User management
-
-### 4. AI Transfusion Prediction
-
-- Machine learning model for predicting transfusion needs
-- Based on historical data and health metrics
-- Helps in proactive blood inventory management
+- **24/7 Support**: Provides instant answers on diet, symptoms, and donor eligibility.
+- **Action Buttons**: Directly links to "Book Appointment" or "Create Request" based on conversation.
 
 ---
 
@@ -261,15 +241,13 @@ thalai-guardianV8/
 
 Comprehensive documentation is available in the project root:
 
-- **[FINAL_STATUS.md](FINAL_STATUS.md)** - ⭐ Start here for complete status
-- **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** - Navigation guide
-- **[DONOR_ELIGIBILITY_SYSTEM.md](DONOR_ELIGIBILITY_SYSTEM.md)** - Eligibility system details
-- **[DATABASE_SCHEMA_VERIFICATION.md](DATABASE_SCHEMA_VERIFICATION.md)** - Database documentation
-- **[SEED_DOCUMENTATION.md](SEED_DOCUMENTATION.md)** - Seed data guide
-- **[TEST_SIMULATION_REPORT.md](TEST_SIMULATION_REPORT.md)** - Complete test results
-- **[ALL_FIXES_SUMMARY.md](ALL_FIXES_SUMMARY.md)** - All fixes applied
+- **[FINAL_STATUS.md](ReadmeDoc/FINAL_STATUS.md)** - ⭐ Start here for complete status
+- **[PRODUCTION_CHECKLIST.md](ReadmeDoc/PRODUCTION_CHECKLIST.md)** - Guide for Render/Vercel deployment
+- **[DONOR_ELIGIBILITY_SYSTEM.md](ReadmeDoc/DONOR_ELIGIBILITY_SYSTEM.md)** - Eligibility system details
+- **[DATABASE_SCHEMA_VERIFICATION.md](ReadmeDoc/DATABASE_SCHEMA_VERIFICATION.md)** - Database documentation
+- **[SEED_DOCUMENTATION.md](ReadmeDoc/SEED_DOCUMENTATION.md)** - Seed data guide
 
-See [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) for complete list.
+See [DOCUMENTATION_INDEX.md](ReadmeDoc/DOCUMENTATION_INDEX.md) for complete list.
 
 ---
 
@@ -328,7 +306,7 @@ npm test         # Run tests
 npm start        # Start development server
 npm run build    # Build for production
 npm test         # Run tests
-```                                  
+```
 
 **AI Service**:
 
@@ -375,12 +353,12 @@ See [ALL_FIXES_SUMMARY.md](ALL_FIXES_SUMMARY.md) for complete troubleshooting gu
 
 | Component     | Status       | Port  |
 | ------------- | ------------ | ----- |
-| Frontend      | ✅ Running   | 3000  |
+| Frontend      | ✅ Running   | 5173  |
 | Backend API   | ✅ Running   | 5000  |
 | AI Service    | ✅ Running   | 8000  |
 | MongoDB       | ✅ Connected | 27017 |
-| Documentation | ✅ Complete  | -     |
-| Tests         | ✅ Passing   | 100%  |
+| Dashboard UI  | ✅ Premium   | -     |
+| Notifications | ✅ Active    | -     |
 
 ---
 
@@ -434,8 +412,8 @@ For issues or questions:
 
 ---
 
-**Version**: 2.0.4  
+**Version**: 2.1.0  
 **Status**: ✅ Production Ready  
-**Last Updated**: 2025-11-28
+**Last Updated**: 2026-01-30
 
-🎊 **ALL SYSTEMS OPERATIONAL** 🎊
+🎊 **ALL SYSTEMS OPERATIONAL & INTELLIGENT** 🎊
