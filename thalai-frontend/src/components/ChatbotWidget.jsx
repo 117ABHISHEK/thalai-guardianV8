@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/auth';
+import { MessageCircle, Bot, Send, X, RefreshCw } from 'lucide-react';
 
 const ChatbotWidget = () => {
   const { user } = useAuth();
@@ -174,7 +175,7 @@ const ChatbotWidget = () => {
           className="fixed bottom-6 right-6 w-16 h-16 bg-health-blue text-white rounded-full shadow-lg hover:rotate-12 hover:scale-110 transition-all duration-300 z-50 flex items-center justify-center text-3xl animate-bounce-slow"
           title="Open Chatbot"
         >
-          <span className="mb-1">💬</span>
+          <MessageCircle className="w-8 h-8" />
         </button>
       )}
 
@@ -184,8 +185,8 @@ const ChatbotWidget = () => {
           {/* Header */}
           <div className="bg-gradient-to-r from-health-blue to-blue-600 text-white p-5 rounded-t-xl flex justify-between items-center shadow-md">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-xl shadow-inner animate-spin-slow">
-                🩸
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-inner animate-spin-slow">
+                <Bot className="w-6 h-6 text-health-blue" />
               </div>
               <div>
                 <h3 className="text-lg font-bold">ThalAI Guardian</h3>

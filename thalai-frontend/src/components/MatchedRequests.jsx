@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getMyMatches, updateMatchStatus } from '../api/donor';
+import { Search, Heart } from 'lucide-react';
 
 const MatchedRequests = () => {
   const [matches, setMatches] = useState([]);
@@ -58,8 +59,8 @@ const MatchedRequests = () => {
       )}
 
       {matches.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-          <div className="text-4xl mb-4">🔍</div>
+        <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center">
+          <Search className="w-12 h-12 text-gray-300 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900">No Matched Requests Yet</h3>
           <p className="text-gray-500 max-w-sm mx-auto mt-2">
             When a patient's blood request matches your profile and location, it will appear here. Keep your availability active!
@@ -148,7 +149,7 @@ const MatchedRequests = () => {
                     </>
                   ) : match.status === 'accepted' ? (
                     <div className="bg-green-50 text-green-700 p-4 rounded-xl border border-green-100 flex flex-col items-center">
-                      <span className="text-2xl mb-1">🕊️</span>
+                      <Heart className="w-8 h-8 mb-1 fill-green-500" />
                       <p className="font-bold text-sm">Accepted!</p>
                       <p className="text-xs mt-1 text-center">Patient will be notified to contact you.</p>
                     </div>

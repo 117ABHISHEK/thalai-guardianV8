@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/auth';
 import { useNavigate } from 'react-router-dom';
+import { Calendar } from 'lucide-react';
 
 const BookAppointment = () => {
   const { user } = useAuth();
@@ -65,7 +66,7 @@ const BookAppointment = () => {
     <div className="max-w-4xl mx-auto p-6">
       <div className="card bg-white p-8 rounded-2xl shadow-xl">
         <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-          <span className="text-health-blue">📅</span> Book a Consultation
+          <Calendar className="w-8 h-8 text-health-blue" /> Book a Consultation
         </h2>
 
         {message && (

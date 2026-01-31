@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Droplets } from 'lucide-react';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -19,8 +20,8 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="bg-health-blue text-white p-2 rounded-lg">
-              <span className="text-xl font-bold">🩸</span>
+            <div className="bg-health-blue text-white p-2 rounded-lg flex items-center justify-center">
+              <Droplets className="w-6 h-6" />
             </div>
             <span className="text-xl font-bold text-gray-900">ThalAI Guardian</span>
           </Link>

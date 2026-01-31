@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { getDoctorStats, getAssignedPatients, getPatientDetails, updatePatientNotes as apiUpdateNotes, updatePatientMedicalData } from '../api/doctor';
 import AppointmentList from '../components/AppointmentList';
 import NotificationList from '../components/NotificationList';
+import { Users, ClipboardList, AlertTriangle, Check } from 'lucide-react';
 
 const DoctorDashboard = () => {
   const location = useLocation();
@@ -148,7 +149,7 @@ const DoctorDashboard = () => {
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 bg-blue-500 rounded-md p-3">
-                    <span className="text-white text-xl">👥</span>
+                    <Users className="w-6 h-6 text-white" />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-500">Active Patients</p>
@@ -160,7 +161,7 @@ const DoctorDashboard = () => {
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 bg-green-500 rounded-md p-3">
-                    <span className="text-white text-xl">📋</span>
+                    <ClipboardList className="w-6 h-6 text-white" />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-500">Total Assigned</p>
@@ -172,7 +173,7 @@ const DoctorDashboard = () => {
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 bg-yellow-500 rounded-md p-3">
-                    <span className="text-white text-xl">⚠️</span>
+                    <AlertTriangle className="w-6 h-6 text-white" />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-500">Needs Transfusion</p>
@@ -184,7 +185,7 @@ const DoctorDashboard = () => {
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center">
                   <div className={`flex-shrink-0 ${stats.isVerified ? 'bg-green-500' : 'bg-red-500'} rounded-md p-3`}>
-                    <span className="text-white text-xl">✓</span>
+                    <Check className="w-6 h-6 text-white" />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-500">Verification</p>

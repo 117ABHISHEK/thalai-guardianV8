@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { createRequest } from '../api/requests';
 import { getUserRequests } from '../api/requests';
+import { AlertTriangle } from 'lucide-react';
 
 const PatientRequestForm = ({ onRequestCreated }) => {
   const { user } = useAuth();
@@ -128,7 +129,9 @@ const PatientRequestForm = ({ onRequestCreated }) => {
     return (
       <div className="card">
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-          <h3 className="text-xl font-bold text-yellow-800 mb-3">⚠️ Active Request Exists</h3>
+          <h3 className="text-xl font-bold text-yellow-800 mb-3 flex items-center gap-2">
+            <AlertTriangle className="w-6 h-6" /> Active Request Exists
+          </h3>
           <p className="text-yellow-700 mb-4">
             You already have an active blood request. Please cancel it before creating a new one.
           </p>

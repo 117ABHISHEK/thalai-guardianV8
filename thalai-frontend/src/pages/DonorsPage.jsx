@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getPublicDonors } from '../api/public';
 import TablePreview from '../components/TablePreview';
 import StatCard from '../components/StatCard';
+import { Droplets, CheckCircle, Heart } from 'lucide-react';
 
 const DonorsPage = () => {
   const [donors, setDonors] = useState([]);
@@ -80,19 +81,19 @@ const DonorsPage = () => {
           <StatCard
             title="Total Donors"
             value={donors.length}
-            icon="🩸"
+            icon={<Droplets className="w-8 h-8" />}
             color="teal"
           />
           <StatCard
             title="Available Now"
             value={availableCount}
-            icon="✅"
+            icon={<CheckCircle className="w-8 h-8" />}
             color="green"
           />
           <StatCard
             title="Total Donations"
             value={donors.reduce((sum, d) => sum + (d.totalDonations || 0), 0)}
-            icon="❤️"
+            icon={<Heart className="w-8 h-8" />}
             color="red"
           />
         </div>

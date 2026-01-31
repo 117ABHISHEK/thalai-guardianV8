@@ -1,4 +1,5 @@
 import StatCard from '../components/StatCard';
+import { Users, Droplets, ClipboardList, AlertCircle } from 'lucide-react';
 
 const PublicStats = ({ stats }) => {
   if (!stats) return null;
@@ -12,27 +13,27 @@ const PublicStats = ({ stats }) => {
         <StatCard
           title="Total Patients"
           value={stats.totalPatients || 0}
-          icon="👥"
+          icon={<Users className="w-8 h-8" />}
           color="blue"
         />
         <StatCard
           title="Verified Donors"
           value={stats.verifiedDonors || 0}
-          icon="🩸"
+          icon={<Droplets className="w-8 h-8" />}
           color="teal"
           subtitle={`${stats.activeDonors || 0} currently available`}
         />
         <StatCard
           title="Total Requests"
           value={stats.totalRequests || 0}
-          icon="📋"
+          icon={<ClipboardList className="w-8 h-8" />}
           color="green"
           subtitle={`${stats.pendingRequests || 0} pending`}
         />
         <StatCard
           title="Urgent Requests"
           value={stats.urgentRequests || 0}
-          icon="🚨"
+          icon={<AlertCircle className="w-8 h-8" />}
           color="red"
           subtitle="Need immediate attention"
         />

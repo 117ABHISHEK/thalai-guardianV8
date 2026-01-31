@@ -6,6 +6,7 @@ import StatsCharts from '../components/StatsCharts';
 import StatCard from '../components/StatCard';
 import AppointmentList from '../components/AppointmentList';
 import AIStatusWidget from '../components/AIStatusWidget';
+import { Users, Droplets, CheckCircle, Clock, Check, BarChart, UserCheck, ClipboardList, RefreshCw } from 'lucide-react';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -77,37 +78,37 @@ const AdminDashboard = () => {
           <StatCard
             title="Total Patients"
             value={stats?.totalPatients || 0}
-            icon="👥"
+            icon={<Users className="w-8 h-8" />}
             color="blue"
           />
           <StatCard
             title="Total Donors"
             value={stats?.totalDonors || 0}
-            icon="🩸"
+            icon={<Droplets className="w-8 h-8" />}
             color="teal"
           />
           <StatCard
             title="Verified Donors"
             value={stats?.verifiedDonors || 0}
-            icon="✅"
+            icon={<CheckCircle className="w-8 h-8" />}
             color="green"
           />
           <StatCard
             title="Pending Requests"
             value={stats?.pendingRequests || 0}
-            icon="⏳"
+            icon={<Clock className="w-8 h-8" />}
             color="orange"
           />
           <StatCard
             title="Completed Requests"
             value={stats?.completedRequests || 0}
-            icon="✓"
+            icon={<Check className="w-8 h-8" />}
             color="green"
           />
           <StatCard
             title="Available Donors"
             value={stats?.donorStats?.availableDonors || 0}
-            icon="📊"
+            icon={<BarChart className="w-8 h-8" />}
             color="blue"
           />
         </div>
@@ -132,23 +133,23 @@ const AdminDashboard = () => {
           <div className="grid md:grid-cols-3 gap-4">
             <button
               onClick={() => navigate('/admin/donor-verification')}
-              className="p-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105"
+              className="p-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 flex flex-col items-center justify-center"
             >
-              <div className="text-3xl mb-2">👤</div>
+              <UserCheck className="w-10 h-10 mb-2" />
               <div className="font-semibold">Verify Donors</div>
             </button>
             <button
               onClick={() => navigate('/admin/requests')}
-              className="p-6 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all transform hover:scale-105"
+              className="p-6 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all transform hover:scale-105 flex flex-col items-center justify-center"
             >
-              <div className="text-3xl mb-2">📋</div>
+              <ClipboardList className="w-10 h-10 mb-2" />
               <div className="font-semibold">Manage Requests</div>
             </button>
             <button
               onClick={fetchStats}
-              className="p-6 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105"
+              className="p-6 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105 flex flex-col items-center justify-center"
             >
-              <div className="text-3xl mb-2">🔄</div>
+              <RefreshCw className="w-10 h-10 mb-2" />
               <div className="font-semibold">Refresh Stats</div>
             </button>
           </div>

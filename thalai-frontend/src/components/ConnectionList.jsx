@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api/auth';
+import { Mail, Phone } from 'lucide-react';
 
 const ConnectionList = ({ role }) => {
   const [connections, setConnections] = useState([]);
@@ -127,10 +128,10 @@ const ConnectionList = ({ role }) => {
                     
                     <div className="space-y-2 mb-6">
                       <div className="flex items-center gap-2 text-xs text-gray-600">
-                        <span>📧</span> {otherUser?.email}
+                        <Mail className="w-3.5 h-3.5" /> {otherUser?.email}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-gray-600">
-                        <span>📱</span> {otherUser?.phone}
+                        <Phone className="w-3.5 h-3.5" /> {otherUser?.phone}
                       </div>
                     </div>
 

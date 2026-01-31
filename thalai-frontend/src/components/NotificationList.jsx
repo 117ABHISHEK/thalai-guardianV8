@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api/auth';
+import { Calendar, Handshake, Droplets, Hospital, AlertCircle, Bell } from 'lucide-react';
 
 const NotificationList = () => {
   const [notifications, setNotifications] = useState([]);
@@ -33,12 +34,13 @@ const NotificationList = () => {
   };
 
   const getIcon = (type) => {
-    if (type.startsWith('appointment')) return '📅';
-    if (type.startsWith('connection')) return '🤝';
-    if (type === 'donor_match') return '🩸';
-    if (type === 'checkup_suggested') return '🏥';
-    if (type === 'urgent_request') return '🚨';
-    return '🔔';
+    const className = "w-6 h-6 text-health-blue";
+    if (type.startsWith('appointment')) return <Calendar className={className} />;
+    if (type.startsWith('connection')) return <Handshake className={className} />;
+    if (type === 'donor_match') return <Droplets className={className} />;
+    if (type === 'checkup_suggested') return <Hospital className={className} />;
+    if (type === 'urgent_request') return <AlertCircle className={className} />;
+    return <Bell className={className} />;
   };
 
   if (loading) return <div className="text-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-health-blue mx-auto"></div></div>;

@@ -6,6 +6,7 @@ import StatCard from '../components/StatCard';
 import PublicStats from './PublicStats';
 import DonorPreview from './DonorPreview';
 import RequestPreview from './RequestPreview';
+import { Search, Zap, Shield } from 'lucide-react';
 
 const HomeDashboard = () => {
   const { isAuthenticated } = useAuth();
@@ -81,21 +82,27 @@ const HomeDashboard = () => {
         </h2>
         <div className="grid md:grid-cols-3 gap-8">
           <div className="card text-center animate-slide-up">
-            <div className="text-4xl mb-4">🔍</div>
+            <div className="flex justify-center mb-4 text-health-blue">
+              <Search className="w-12 h-12" />
+            </div>
             <h3 className="text-xl font-bold mb-2">Smart Matching</h3>
             <p className="text-gray-600">
               AI-powered algorithm matches patients with compatible donors based on location, availability, and history.
             </p>
           </div>
           <div className="card text-center animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            <div className="text-4xl mb-4">⚡</div>
+            <div className="flex justify-center mb-4 text-health-blue">
+              <Zap className="w-12 h-12" />
+            </div>
             <h3 className="text-xl font-bold mb-2">Fast Response</h3>
             <p className="text-gray-600">
               Real-time notifications ensure urgent requests get immediate attention from nearby donors.
             </p>
           </div>
           <div className="card text-center animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            <div className="text-4xl mb-4">🛡️</div>
+            <div className="flex justify-center mb-4 text-health-blue">
+              <Shield className="w-12 h-12" />
+            </div>
             <h3 className="text-xl font-bold mb-2">Verified Donors</h3>
             <p className="text-gray-600">
               All donors are verified and tracked to ensure safe and reliable blood donations.

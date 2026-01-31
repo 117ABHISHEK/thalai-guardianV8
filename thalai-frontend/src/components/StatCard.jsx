@@ -23,7 +23,7 @@ const StatCard = ({ title, value, icon, color = 'blue', trend, subtitle }) => {
             </p>
           )}
         </div>
-        <div className={`${colorClasses[color]} p-4 rounded-full text-white text-2xl`}>
+        <div className={`${colorClasses[color]} p-4 rounded-full text-white text-2xl flex items-center justify-center w-14 h-14`}>
           {icon}
         </div>
       </div>

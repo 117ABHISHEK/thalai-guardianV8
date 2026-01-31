@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api/auth';
+import { Calendar } from 'lucide-react';
 
 const AppointmentList = ({ role }) => {
   const [appointments, setAppointments] = useState([]);
@@ -83,8 +84,8 @@ const AppointmentList = ({ role }) => {
     <div className="bg-white rounded-xl shadow-premium overflow-hidden border border-gray-100">
       <div className="overflow-x-auto">
         {appointments.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 bg-gray-50/50">
-            <div className="text-3xl mb-2">📅</div>
+          <div className="text-center py-12 text-gray-500 bg-gray-50/50 flex flex-col items-center">
+            <Calendar className="w-12 h-12 text-gray-300 mb-2" />
             No appointments found.
           </div>
         ) : (

@@ -11,6 +11,7 @@ import NotificationList from '../components/NotificationList';
 import MatchedRequests from '../components/MatchedRequests';
 
 import { useLocation } from 'react-router-dom';
+import { Heart, CheckCircle, PauseCircle, Calendar, XCircle, Clock, ClipboardList } from 'lucide-react';
 
 const DonorDashboard = () => {
   const { user, logout, updateUser } = useAuth();
@@ -217,13 +218,13 @@ const DonorDashboard = () => {
                 <StatCard
                   title="Total Donations"
                   value={availability.totalDonations || 0}
-                  icon="❤️"
+                  icon={<Heart className="w-8 h-8" />}
                   color="red"
                 />
                 <StatCard
                   title="Availability Status"
                   value={availability.availabilityStatus ? 'Available' : 'Unavailable'}
-                  icon={availability.availabilityStatus ? '✅' : '⏸️'}
+                  icon={availability.availabilityStatus ? <CheckCircle className="w-8 h-8" /> : <PauseCircle className="w-8 h-8" />}
                   color={availability.availabilityStatus ? 'green' : 'orange'}
                 />
                 <StatCard
@@ -233,7 +234,7 @@ const DonorDashboard = () => {
                       ? new Date(availability.lastDonationDate).toLocaleDateString()
                       : 'Never'
                   }
-                  icon="📅"
+                  icon={<Calendar className="w-8 h-8" />}
                   color="blue"
                 />
               </div>
@@ -257,16 +258,16 @@ const DonorDashboard = () => {
                   <div className="flex items-center gap-3">
                     <span className="text-gray-700 font-medium">Current Status:</span>
                     <span
-                      className={`px-4 py-2 rounded-full font-semibold text-sm ${donorProfile.eligibilityStatus === 'eligible'
+                      className={`px-4 py-2 rounded-full font-semibold text-sm flex items-center gap-2 ${donorProfile.eligibilityStatus === 'eligible'
                           ? 'bg-green-100 text-green-800'
                           : donorProfile.eligibilityStatus === 'ineligible'
                             ? 'bg-red-100 text-red-800'
                             : 'bg-yellow-100 text-yellow-800'
                         }`}
                     >
-                      {donorProfile.eligibilityStatus === 'eligible' && '✅ Eligible'}
-                      {donorProfile.eligibilityStatus === 'ineligible' && '❌ Ineligible'}
-                      {donorProfile.eligibilityStatus === 'deferred' && '⏳ Pending Review'}
+                      {donorProfile.eligibilityStatus === 'eligible' && <><CheckCircle className="w-4 h-4" /> Eligible</>}
+                      {donorProfile.eligibilityStatus === 'ineligible' && <><XCircle className="w-4 h-4" /> Ineligible</>}
+                      {donorProfile.eligibilityStatus === 'deferred' && <><Clock className="w-4 h-4" /> Pending Review</>}
                     </span>
                   </div>
 
@@ -293,36 +294,36 @@ const DonorDashboard = () => {
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2 pt-2">
                     {donorProfile.isVerified ? (
                       <div className="flex items-center gap-2 text-sm text-green-700">
-                        <span>✅</span>
+                        <CheckCircle className="w-4 h-4" />
                         <span>Verified</span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-sm text-yellow-700">
-                        <span>⏳</span>
+                        <Clock className="w-4 h-4" />
                         <span>Pending Verification</span>
                       </div>
                     )}
 
                     {donorProfile.healthClearance ? (
                       <div className="flex items-center gap-2 text-sm text-green-700">
-                        <span>✅</span>
+                        <CheckCircle className="w-4 h-4" />
                         <span>Health Cleared</span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-sm text-yellow-700">
-                        <span>⏳</span>
+                        <Clock className="w-4 h-4" />
                         <span>Clearance Pending</span>
                       </div>
                     )}
 
                     {donorProfile.medicalReports && donorProfile.medicalReports.length > 0 ? (
                       <div className="flex items-center gap-2 text-sm text-green-700">
-                        <span>✅</span>
+                        <CheckCircle className="w-4 h-4" />
                         <span>Reports Submitted</span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-sm text-red-700">
-                        <span>❌</span>
+                        <XCircle className="w-4 h-4" />
                         <span>No Reports</span>
                       </div>
                     )}
@@ -418,7 +419,7 @@ const DonorDashboard = () => {
                         <h3 className="font-semibold text-blue-900">View Eligibility Profile</h3>
                         <p className="text-sm text-blue-700">Check your donation eligibility status</p>
                       </div>
-                      <span className="text-2xl">📋</span>
+                      <ClipboardList className="w-8 h-8 text-blue-500" />
                     </div>
                   </Link>
                 </div>
