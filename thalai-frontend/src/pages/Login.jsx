@@ -39,13 +39,9 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex overflow-hidden font-body">
+    <div className="min-h-screen bg-transparent flex overflow-hidden font-body animate-slide-up">
       {/* Visual Side (Hidden on Mobile) */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-slate-900 items-center justify-center p-12">
-        <div 
-          className="absolute inset-0 opacity-40 bg-cover bg-center"
-          style={{ backgroundImage: 'url("/auth-bg.png")' }}
-        />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent" />
         
         <div className="relative z-10 max-w-lg text-white space-y-8 animate-reveal">

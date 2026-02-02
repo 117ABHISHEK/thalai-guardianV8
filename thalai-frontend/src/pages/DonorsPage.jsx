@@ -82,7 +82,7 @@ const DonorsPage = () => {
   const availableCount = donors.filter((d) => d.isAvailable).length;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] font-body py-20 pb-40">
+    <div className="min-h-screen bg-transparent font-body py-20 pb-40 animate-slide-up">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Page Title Section */}

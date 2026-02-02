@@ -68,7 +68,7 @@ const PatientDashboard = () => {
       const response = await triggerPrediction();
       if (response.data.success) {
         setPrediction(response.data.data);
-        setMessage('Prediction updated successfully!');
+        setMessage(response.data.message || 'Prediction updated successfully!');
         setTimeout(() => setMessage(''), 3000);
       }
     } catch (error) {
@@ -191,9 +191,9 @@ const PatientDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] font-body pb-20">
+    <div className="min-h-screen bg-transparent font-body pb-20">
       {/* Premium Header */}
-      <div className="bg-white border-b border-slate-100 sticky top-20 z-40">
+      <div className="glass border-b border-slate-100 sticky top-20 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="animate-reveal">
@@ -252,10 +252,10 @@ const PatientDashboard = () => {
         {message && (
           <div className="mb-8 animate-reveal">
             <div className={`p-4 rounded-[24px] flex items-center gap-3 border shadow-sm ${
-              message.includes('success') ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-rose-50 border-rose-100 text-rose-700'
+              message.toLowerCase().match(/success|added|updated/) ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-rose-50 border-rose-100 text-rose-700'
             }`}>
-              <div className={`p-1.5 rounded-full ${message.includes('success') ? 'bg-emerald-200' : 'bg-rose-200'}`}>
-                {message.includes('success') ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+              <div className={`p-1.5 rounded-full ${message.toLowerCase().match(/success|added|updated/) ? 'bg-emerald-200 text-emerald-700' : 'bg-rose-200 text-rose-700'}`}>
+                {message.toLowerCase().match(/success|added|updated/) ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
               </div>
               <span className="font-bold text-sm tracking-tight">{message}</span>
             </div>

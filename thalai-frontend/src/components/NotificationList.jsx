@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getNotifications, markAsRead } from '../api/notifications';
 import api from '../api/auth';
 import { Calendar, Handshake, Droplets, Hospital, AlertCircle, Bell, MoreHorizontal, Trash2, CheckCircle } from 'lucide-react';
 
@@ -14,8 +15,8 @@ const NotificationList = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await api.get('/notifications');
-      setNotifications(response.data.data.notifications);
+      const response = await getNotifications();
+      setNotifications(response.data.notifications);
     } catch (err) {
       setError('Failed to load notifications');
     } finally {
@@ -23,12 +24,14 @@ const NotificationList = () => {
     }
   };
 
-  const markAsRead = async (id) => {
+  const handleMarkAsRead = async (id) => {
     try {
-      await api.put(`/notifications/${id}/read`);
+      await markAsRead(id);
       setNotifications(notifications.map(n => 
         n._id === id ? { ...n, isRead: true } : n
       ));
+      // Dispatch event to update navbar count
+      window.dispatchEvent(new Event('notificationsUpdated'));
     } catch (err) {
       console.error('Failed to mark as read');
     }
@@ -48,6 +51,7 @@ const NotificationList = () => {
     try {
       await api.put('/notifications/read-all');
       setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+      window.dispatchEvent(new Event('notificationsUpdated'));
     } catch (err) {
       console.error('Failed to mark all as read');
     }
@@ -63,7 +67,7 @@ const NotificationList = () => {
     return <Bell className={className} />;
   };
 
-  if (loading) return <div className="text-center p-24"><div className="w-12 h-12 border-4 border-sky-100 border-t-sky-500 rounded-full animate-spin mx-auto"></div></div>;
+  if (loading) return <div className="text-center p-24 bg-transparent"><div className="w-12 h-12 border-4 border-sky-100 border-t-sky-500 rounded-full animate-spin mx-auto"></div></div>;
 
   return (
     <div className="space-y-6">
@@ -81,7 +85,7 @@ const NotificationList = () => {
         notifications.map(n => (
           <div 
             key={n._id} 
-            onClick={() => !n.isRead && markAsRead(n._id)}
+            onClick={() => !n.isRead && handleMarkAsRead(n._id)}
             className={`p-6 rounded-[32px] border transition-all cursor-pointer relative overflow-visible ${
               n.isRead ? 'bg-white border-slate-100 opacity-60' : 'bg-white border-sky-100 shadow-xl shadow-sky-500/5'
             }`}
@@ -102,7 +106,7 @@ const NotificationList = () => {
                      <div className="fixed inset-0 z-40" onClick={() => setActiveDropdown(null)} />
                      <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-[24px] shadow-2xl border border-slate-100 p-2 z-50 animate-reveal text-left">
                         <button 
-                          onClick={() => markAsRead(n._id)}
+                          onClick={() => handleMarkAsRead(n._id)}
                           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all"
                         >
                            <CheckCircle className="w-4 h-4" /> Finalize Signal

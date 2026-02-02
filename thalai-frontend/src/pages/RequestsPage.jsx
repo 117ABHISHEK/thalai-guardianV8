@@ -90,7 +90,7 @@ const RequestsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-sky-100 border-t-sky-500 rounded-full animate-spin" />
       </div>
     );
@@ -109,7 +109,7 @@ const RequestsPage = () => {
   })) || [];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] font-body py-20 pb-40">
+    <div className="min-h-screen bg-transparent font-body py-20 pb-40 animate-slide-up">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header Section */}

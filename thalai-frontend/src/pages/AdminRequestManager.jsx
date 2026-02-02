@@ -80,7 +80,7 @@ const AdminRequestManager = () => {
   };
 
   if (loading && requests.length === 0) return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-transparent">
        <div className="w-12 h-12 border-4 border-sky-500/20 border-t-sky-500 rounded-full animate-spin" />
     </div>
   );
@@ -88,8 +88,8 @@ const AdminRequestManager = () => {
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
   return (
-    <div className="min-h-screen bg-slate-50/50 py-12 px-6 lg:px-12 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-sky-500/5 rounded-full blur-[100px] -z-10" />
+    <div className="min-h-screen bg-transparent py-12 px-6 lg:px-12 relative overflow-hidden animate-slide-up">
+      {/* Local administrative blur removed */}
 
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12 animate-reveal">

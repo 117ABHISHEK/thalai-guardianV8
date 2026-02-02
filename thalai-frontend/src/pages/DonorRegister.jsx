@@ -112,7 +112,7 @@ const DonorRegister = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex overflow-hidden font-body">
+    <div className="min-h-screen bg-transparent flex overflow-hidden font-body animate-slide-up">
       {/* Narrative Side */}
       <div className="hidden lg:flex lg:w-1/3 relative bg-slate-900 flex-col justify-between p-12">
         <div className="absolute inset-0 opacity-20 pointer-events-none">

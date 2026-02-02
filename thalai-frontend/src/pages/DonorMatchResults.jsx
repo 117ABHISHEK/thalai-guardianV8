@@ -51,7 +51,7 @@ const DonorMatchResults = () => {
   };
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-transparent">
        <div className="flex flex-col items-center">
           <div className="w-16 h-16 border-4 border-sky-500/10 border-t-sky-500 rounded-full animate-spin mb-6" />
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 animate-pulse">Running Neural Optimization...</p>
@@ -60,8 +60,8 @@ const DonorMatchResults = () => {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50/50 py-16 px-6 lg:px-12 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-sky-500/5 rounded-full blur-[120px] -z-10" />
+    <div className="min-h-screen bg-transparent py-16 px-6 lg:px-12 relative overflow-hidden animate-slide-up">
+      {/* Neural background removed to reveal global system */}
       
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-end mb-12 animate-reveal">

@@ -29,15 +29,9 @@ const HomeDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white font-body overflow-x-hidden">
+    <div className="min-h-screen bg-transparent font-body overflow-x-hidden">
       {/* Hero Section */}
       <section className="relative pt-16 pb-32 lg:pt-32 lg:pb-48 overflow-hidden">
-        {/* Abstract Background Elements */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl -z-10">
-           <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-sky-100/50 rounded-full blur-[120px] animate-pulse" />
-           <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-rose-50/50 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
-        </div>
-
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
            <div className="text-center space-y-8 animate-reveal">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-50 border border-sky-100 text-sky-600 text-xs font-black uppercase tracking-widest shadow-sm">

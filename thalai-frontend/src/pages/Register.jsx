@@ -32,8 +32,22 @@ const Register = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [direction, setDirection] = useState('right');
 
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+
+  const handleNext = (e) => {
+    e.preventDefault();
+    if (validateStep1()) {
+      setDirection('right');
+      setStep(2);
+    }
+  };
+
+  const handleBack = () => {
+    setDirection('left');
+    setStep(1);
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -114,13 +128,9 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex overflow-hidden font-body">
+    <div className="min-h-screen bg-transparent flex overflow-hidden font-body animate-slide-up">
       {/* Visual Side */}
       <div className="hidden lg:flex lg:w-2/5 relative bg-slate-900 items-center justify-center p-12">
-        <div 
-          className="absolute inset-0 opacity-40 bg-cover bg-center"
-          style={{ backgroundImage: 'url("/auth-bg.png")' }}
-        />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent" />
         
         <div className="relative z-10 w-full space-y-8 animate-reveal">
@@ -166,22 +176,22 @@ const Register = () => {
                 <p className="text-slate-500 font-medium">Join our healthcare initiative</p>
              </div>
              <div className="flex items-center gap-2 mb-1">
-                <span className={`w-8 h-1.5 rounded-full transition-all ${step === 1 ? 'bg-sky-500 w-12' : 'bg-slate-200'}`} />
-                <span className={`w-8 h-1.5 rounded-full transition-all ${step === 2 ? 'bg-sky-500 w-12' : 'bg-slate-200'}`} />
+                <span className={`w-8 h-1.5 rounded-full transition-all duration-500 ${step === 1 ? 'bg-sky-500 w-12' : 'bg-slate-200'}`} />
+                <span className={`w-8 h-1.5 rounded-full transition-all duration-500 ${step === 2 ? 'bg-sky-500 w-12' : 'bg-slate-200'}`} />
              </div>
           </div>
 
-          <div className="bg-white p-8 lg:p-10 rounded-[40px] shadow-2xl shadow-slate-200/50 border border-slate-100">
+          <div className="bg-white p-8 lg:p-10 rounded-[40px] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden min-h-[500px] flex flex-col">
             {error && (
-              <div className="bg-rose-50 border border-rose-100 text-rose-600 px-4 py-3 rounded-2xl mb-6 text-sm flex items-center gap-2">
+              <div className="bg-rose-50 border border-rose-100 text-rose-600 px-4 py-3 rounded-2xl mb-6 text-sm flex items-center gap-2 animate-fade">
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                 {error}
               </div>
             )}
 
-            <form onSubmit={step === 2 ? handleSubmit : (e) => { e.preventDefault(); if(validateStep1()) setStep(2); }} className="space-y-6">
+            <form onSubmit={step === 2 ? handleSubmit : handleNext} className="space-y-6 flex-1 flex flex-col">
               {step === 1 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-reveal">
+                <div key="step1" className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${direction === 'left' ? 'animate-slide-left' : 'animate-fade'}`}>
                   <div className="md:col-span-2 space-y-2">
                     <label className="input-label">Full Name</label>
                     <div className="relative group">
@@ -259,87 +269,94 @@ const Register = () => {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-reveal">
-                  <div className="space-y-2">
-                    <label className="input-label">Phone Number</label>
-                    <div className="relative group">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
-                      <input
-                        type="tel" name="phone" value={formData.phone} onChange={handleChange}
-                        className="input-field pl-12" placeholder="+1 (555) 000-0000"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="input-label">Date of Birth</label>
-                    <div className="relative group">
-                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors pointer-events-none" />
-                      <input
-                        type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange}
-                        className="input-field pl-12"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="md:col-span-2 space-y-2">
-                    <label className="input-label">Street Address</label>
-                    <div className="relative group">
-                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
-                      <input
-                        type="text" name="street" value={formData.street} onChange={handleChange}
-                        className="input-field pl-12" placeholder="123 Health St."
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4 md:col-span-2">
+                <div key="step2" className="flex-1 flex flex-col animate-slide-right">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="input-label">City</label>
-                      <input type="text" name="city" value={formData.city} onChange={handleChange} className="input-field" placeholder="City" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="input-label">State</label>
-                      <input type="text" name="state" value={formData.state} onChange={handleChange} className="input-field" placeholder="State" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="input-label">Zip</label>
-                      <input type="text" name="zipCode" value={formData.zipCode} onChange={handleChange} className="input-field" placeholder="00000" />
-                    </div>
-                  </div>
-
-                  {formData.role === 'doctor' && (
-                    <div className="md:col-span-2 pt-4 border-t border-slate-100 mt-4 space-y-6">
-                      <h4 className="font-display font-bold text-slate-800 flex items-center gap-2">
-                        <Award className="w-5 h-5 text-amber-500" /> Professional Details
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <label className="input-label">License Number</label>
-                          <input type="text" name="licenseNumber" value={formData.licenseNumber} onChange={handleChange} required className="input-field" placeholder="MED-123456" />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="input-label">Specialization</label>
-                          <input type="text" name="specialization" value={formData.specialization} onChange={handleChange} required className="input-field" placeholder="Hematology" />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="input-label">Qualification</label>
-                          <input type="text" name="qualification" value={formData.qualification} onChange={handleChange} required className="input-field" placeholder="MBBS, MD" />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="input-label">Experience (Years)</label>
-                          <input type="number" name="experience" value={formData.experience} onChange={handleChange} className="input-field" min="0" />
-                        </div>
+                      <label className="input-label">Phone Number</label>
+                      <div className="relative group">
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                        <input
+                          type="tel" name="phone" value={formData.phone} onChange={handleChange}
+                          className="input-field pl-12" placeholder="+1 (555) 000-0000"
+                        />
                       </div>
                     </div>
-                  )}
 
-                  <div className="md:col-span-2 pt-6 flex gap-4">
-                    <button type="button" onClick={() => setStep(1)} className="btn-secondary flex-1">
+                    <div className="space-y-2">
+                      <label className="input-label">Date of Birth</label>
+                      <div className="relative group">
+                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors pointer-events-none" />
+                        <input
+                          type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange}
+                          className="input-field pl-12"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-2 space-y-2">
+                      <label className="input-label">Street Address</label>
+                      <div className="relative group">
+                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                        <input
+                          type="text" name="street" value={formData.street} onChange={handleChange}
+                          className="input-field pl-12" placeholder="123 Health St."
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 md:col-span-2">
+                      <div className="space-y-2">
+                        <label className="input-label">City</label>
+                        <input type="text" name="city" value={formData.city} onChange={handleChange} className="input-field" placeholder="City" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="input-label">State</label>
+                        <input type="text" name="state" value={formData.state} onChange={handleChange} className="input-field" placeholder="State" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="input-label">Zip</label>
+                        <input type="text" name="zipCode" value={formData.zipCode} onChange={handleChange} className="input-field" placeholder="00000" />
+                      </div>
+                    </div>
+
+                    {formData.role === 'doctor' && (
+                      <div className="md:col-span-2 pt-4 border-t border-slate-100 mt-4 space-y-6">
+                        <h4 className="font-display font-bold text-slate-800 flex items-center gap-2">
+                          <Award className="w-5 h-5 text-amber-500" /> Professional Details
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <label className="input-label">License Number</label>
+                            <input type="text" name="licenseNumber" value={formData.licenseNumber} onChange={handleChange} required className="input-field" placeholder="MED-123456" />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="input-label">Specialization</label>
+                            <input type="text" name="specialization" value={formData.specialization} onChange={handleChange} required className="input-field" placeholder="Hematology" />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="input-label">Qualification</label>
+                            <input type="text" name="qualification" value={formData.qualification} onChange={handleChange} required className="input-field" placeholder="MBBS, MD" />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="input-label">Experience (Years)</label>
+                            <input type="number" name="experience" value={formData.experience} onChange={handleChange} className="input-field" min="0" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-auto pt-8 flex gap-4">
+                    <button type="button" onClick={handleBack} className="btn-secondary flex-1 py-4">
                       Back
                     </button>
-                    <button type="submit" disabled={loading} className="btn-primary flex-[2]">
-                      {loading ? 'Creating Account...' : 'Complete Registration'}
+                    <button type="submit" disabled={loading} className="btn-primary flex-[2] py-4">
+                      {loading ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Creating Account...
+                        </>
+                      ) : 'Complete Registration'}
                     </button>
                   </div>
                 </div>

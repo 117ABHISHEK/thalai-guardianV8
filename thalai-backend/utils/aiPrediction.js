@@ -48,16 +48,20 @@ const updateTransfusionPrediction = async (patientId) => {
 
     const requestData = {
       patientId: patientId.toString(),
-      transfusionHistory: transfusionHistory.map(t => ({
+      history: transfusionHistory.map(t => ({
         date: t.date instanceof Date ? t.date.toISOString().split('T')[0] : t.date,
         units: t.units || 1,
         hb_value: t.hb_value || patient.currentHb || 9.0
       })),
-      currentHb: patient.currentHb || 9.0,
+      lastHb: patient.currentHb || 9.0,
       ferritin: patient.medicalReports?.[0]?.ferritin || 1000,
+      sgpt: patient.medicalReports?.[0]?.sgpt || 0,
+      sgot: patient.medicalReports?.[0]?.sgot || 0,
+      creatinine: patient.medicalReports?.[0]?.creatinine || 0,
       age: calculateAge(patient.user.dateOfBirth) || 25,
       weightKg: patient.weightKg || 50,
       thalassemiaType: patient.thalassemiaType || 'beta_major',
+      comorbidities: patient.comorbidities?.map(c => c.condition) || [],
       currentDate: new Date().toISOString().split('T')[0]
     };
 
@@ -105,9 +109,9 @@ const updateTransfusionPrediction = async (patientId) => {
       console.error('AI service request timed out');
       return { success: false, error: 'Prediction timeout' };
     }
-    
-    console.error('AI Prediction error:', error.message);
-    return { success: false, error: error.message };
+    const errorMessage = error.response?.data?.error || error.message;
+    console.error('AI Prediction error:', errorMessage);
+    return { success: false, error: errorMessage };
   }
 };
 

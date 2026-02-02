@@ -60,10 +60,8 @@ const BookAppointment = () => {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50/50 py-16 px-6 lg:px-12 relative overflow-hidden">
-      {/* Decorative Elements */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-sky-500/5 rounded-full blur-[100px] -z-10" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-rose-500/5 rounded-full blur-[100px] -z-10" />
+    <div className="min-h-screen bg-transparent py-16 px-6 lg:px-12 relative overflow-hidden animate-slide-up">
+      {/* Local decorative elements removed for global consistency */}
 
       <div className="max-w-5xl mx-auto">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-400 font-black uppercase tracking-widest text-[10px] mb-8 hover:text-sky-500 transition-colors group">
