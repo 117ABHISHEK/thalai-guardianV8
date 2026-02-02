@@ -2,10 +2,16 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/auth';
+import { 
+  RefreshCw, Phone, Handshake, ArrowLeft, 
+  Target, Zap, Activity, ShieldCheck, 
+  MapPin, User, ChevronRight, Droplets,
+  Search, Info, Sparkles, MessageCircle
+} from 'lucide-react';
 
 const DonorMatchResults = () => {
   const { requestId } = useParams();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [matches, setMatches] = useState([]);
   const [request, setRequest] = useState(null);
@@ -13,9 +19,7 @@ const DonorMatchResults = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (requestId) {
-      findMatches();
-    }
+    if (requestId) findMatches();
   }, [requestId]);
 
   const findMatches = async () => {
@@ -25,7 +29,7 @@ const DonorMatchResults = () => {
       setMatches(response.data.data.matches || []);
       setRequest(response.data.data.request);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to find matches');
+      setError(err.response?.data?.message || 'Neural search failed.');
     } finally {
       setLoading(false);
     }
@@ -33,288 +37,179 @@ const DonorMatchResults = () => {
 
   const handleConnect = async (donorId) => {
     try {
-      await api.post('/connections/request', { targetUserId: donorId, notes: 'Matched through Thalassemia match results' });
-      alert('Friend request sent to donor!');
+      await api.post('/connections/request', { targetUserId: donorId, notes: 'Initiated through precision match results.' });
+      alert('Neural link request broadcasted to the donor.');
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to send friend request');
+      alert(err.response?.data?.message || 'Link failed.');
     }
   };
 
   const getScoreColor = (score) => {
-    if (score >= 80) return '#28a745';
-    if (score >= 60) return '#ffc107';
-    return '#dc3545';
+    if (score >= 80) return 'text-emerald-500 bg-emerald-50 border-emerald-100';
+    if (score >= 60) return 'text-amber-500 bg-amber-50 border-amber-100';
+    return 'text-rose-500 bg-rose-50 border-rose-100';
   };
 
-  if (loading) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.loading}>Finding matching donors...</div>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+       <div className="flex flex-col items-center">
+          <div className="w-16 h-16 border-4 border-sky-500/10 border-t-sky-500 rounded-full animate-spin mb-6" />
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 animate-pulse">Running Neural Optimization...</p>
+       </div>
+    </div>
+  );
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h1>Donor Match Results</h1>
-        <button onClick={logout} style={styles.logoutButton}>
-          Logout
-        </button>
-      </div>
-
-      {error && <div style={styles.error}>{error}</div>}
-
-      {request && (
-        <div style={styles.requestCard}>
-          <h2>Request Details</h2>
-          <div style={styles.requestInfo}>
-            <p><strong>Blood Group:</strong> {request.bloodGroup}</p>
-            <p><strong>Units Required:</strong> {request.unitsRequired}</p>
-            <p><strong>Urgency:</strong> {request.urgency.toUpperCase()}</p>
-          </div>
-        </div>
-      )}
-
-      <div style={styles.matchesCard}>
-        <div style={styles.cardHeader}>
-          <h2>Matched Donors ({matches.length})</h2>
-          <button onClick={findMatches} style={styles.refreshButton}>
-            🔄 Refresh
-          </button>
+    <div className="min-h-screen bg-slate-50/50 py-16 px-6 lg:px-12 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-sky-500/5 rounded-full blur-[120px] -z-10" />
+      
+      <div className="max-w-6xl mx-auto">
+        <div className="flex justify-between items-end mb-12 animate-reveal">
+           <div>
+              <button 
+                onClick={() => navigate(-1)} 
+                className="flex items-center gap-2 text-slate-400 font-black uppercase tracking-widest text-[10px] mb-4 hover:text-sky-500 transition-colors group"
+              >
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to History
+              </button>
+              <h1 className="text-4xl font-display font-black text-slate-900 tracking-tight leading-none mb-4 flex items-center gap-3">
+                 <Target className="w-10 h-10 text-sky-500" /> Neural Match <span className="text-sky-500">Results</span>
+              </h1>
+              <p className="text-slate-500 font-medium">Precision alignment based on location, availability, and AI prediction score.</p>
+           </div>
+           
+           <button onClick={findMatches} className="p-4 bg-white border border-slate-200 rounded-3xl shadow-sm hover:border-sky-200 hover:text-sky-500 transition-all active:scale-95 group">
+              <RefreshCw className="w-6 h-6 group-hover:rotate-180 transition-transform duration-700" />
+           </button>
         </div>
 
-        {matches.length === 0 ? (
-          <div style={styles.noMatches}>
-            <p>No matching donors found at this time.</p>
-            <p style={styles.noMatchesSubtext}>
-              We'll notify you when matches become available.
-            </p>
-          </div>
-        ) : (
-          <div style={styles.matchesList}>
-            {matches.map((match, index) => (
-              <div key={index} style={styles.matchCard}>
-                <div style={styles.matchHeader}>
-                  <div>
-                    <h3 style={styles.donorName}>
-                      {match.name || 'Anonymous Donor'}
-                    </h3>
-                    <p style={styles.donorInfo}>
-                      {match.bloodGroup} • {match.email}
-                    </p>
-                  </div>
-                  <div
-                    style={{
-                      ...styles.scoreBadge,
-                      backgroundColor: getScoreColor(match.matchScore),
-                    }}
-                  >
-                    {match.matchScore}%
-                  </div>
-                </div>
-
-                <div style={styles.scoreBreakdown}>
-                  <div style={styles.scoreItem}>
-                    <span>Location:</span>
-                    <span>{match.scoreBreakdown.locationScore}%</span>
-                  </div>
-                  <div style={styles.scoreItem}>
-                    <span>Availability:</span>
-                    <span>{match.scoreBreakdown.availabilityScore}%</span>
-                  </div>
-                  <div style={styles.scoreItem}>
-                    <span>Frequency:</span>
-                    <span>{match.scoreBreakdown.donationFrequencyScore}%</span>
-                  </div>
-                  <div style={styles.scoreItem}>
-                    <span>AI Prediction:</span>
-                    <span>{match.scoreBreakdown.aiPredictionScore}%</span>
-                  </div>
-                </div>
-
-                {match.phone && (
-                  <div style={styles.contactInfo}>
-                    <strong>Contact:</strong> {match.phone}
-                  </div>
-                )}
-
-                <div style={styles.actions}>
-                  <button
-                    style={styles.contactButton}
-                    onClick={() => {
-                      if (match.phone) {
-                        window.location.href = `tel:${match.phone}`;
-                      }
-                    }}
-                  >
-                    📞 Contact
-                  </button>
-                  <button
-                    style={styles.friendButton}
-                    onClick={() => handleConnect(match.userId)}
-                  >
-                    🤝 Add as Friend
-                  </button>
-                </div>
-              </div>
-            ))}
+        {error && (
+          <div className="p-6 bg-rose-50 border border-rose-100 rounded-[32px] text-rose-600 font-black text-xs uppercase tracking-widest mb-10 animate-reveal flex items-center gap-3">
+             <Info className="w-5 h-5" /> {error}
           </div>
         )}
+
+        <div className="grid lg:grid-cols-4 gap-8">
+           {/* Request Summary Side */}
+           <div className="lg:col-span-1 space-y-6 animate-reveal" style={{ animationDelay: '0.1s' }}>
+              <section className="card-premium bg-slate-900 border-none relative overflow-hidden">
+                 <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                    <Droplets className="w-24 h-24 text-sky-400" />
+                 </div>
+                 <div className="relative z-10 text-white">
+                    <h3 className="text-xl font-display font-black mb-6 border-b border-white/10 pb-4">Target Requirement</h3>
+                    <div className="space-y-6">
+                       <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-xl font-black">{request?.bloodGroup}</div>
+                          <div>
+                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1">Biological Core</p>
+                             <p className="font-bold">{request?.unitsRequired} Units Required</p>
+                          </div>
+                       </div>
+                       <div className="flex items-center gap-4">
+                          <div className={`p-3 rounded-2xl ${request?.urgency === 'critical' ? 'bg-rose-500/20 text-rose-400' : 'bg-white/10 text-slate-300'}`}>
+                             <Zap className="w-6 h-6" />
+                          </div>
+                          <div>
+                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1">Priority Scale</p>
+                             <p className="font-bold uppercase tracking-tight">{request?.urgency} Protocol</p>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+              </section>
+
+              <div className="card-premium p-6 italic text-[11px] text-slate-400 font-medium leading-relaxed">
+                 <Search className="w-4 h-4 mb-2 text-sky-300" />
+                 "Our AI considers historical reliability and real-time location to present the most viable heroes first."
+              </div>
+           </div>
+
+           {/* Matches Grid */}
+           <div className="lg:col-span-3 space-y-6 animate-reveal" style={{ animationDelay: '0.2s' }}>
+              {matches.length === 0 ? (
+                 <div className="py-24 text-center card-premium bg-white border-dashed border-2">
+                    <Activity className="w-16 h-16 text-slate-200 mx-auto mb-6" />
+                    <h3 className="text-xl font-display font-black text-slate-900 mb-2">Zero Alignment Detected</h3>
+                    <p className="text-slate-500 font-medium px-12">No matching donors are currently active in your synchronization region. The network will continue background search automatically.</p>
+                 </div>
+              ) : (
+                 <div className="grid grid-cols-1 gap-6">
+                    {matches.map((match, idx) => (
+                       <div key={idx} className="card-premium group hover:shadow-2xl hover:shadow-slate-200/50 transition-all border border-white overflow-hidden bg-white/80 backdrop-blur-sm">
+                          <div className="flex flex-col md:flex-row gap-8 items-start md:items-center">
+                             {/* Score Wheel (Mobile Friendly Square) */}
+                             <div className={`w-24 h-24 rounded-[32px] border-2 flex flex-col items-center justify-center flex-shrink-0 ${getScoreColor(match.matchScore)}`}>
+                                <span className="text-2xl font-display font-black">{match.matchScore}%</span>
+                                <span className="text-[8px] font-black uppercase tracking-widest text-inherit opacity-70">Alignment</span>
+                             </div>
+
+                             {/* Profile Core */}
+                             <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-3 mb-2">
+                                   <div className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center font-black text-sm text-slate-600">{match.bloodGroup}</div>
+                                   <h3 className="text-2xl font-display font-black text-slate-900 truncate">
+                                      {match.name || `Hero-X${idx}`}
+                                   </h3>
+                                   <span className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[9px] font-black uppercase tracking-widest">
+                                      <ShieldCheck className="w-3 h-3" /> Verified
+                                   </span>
+                                </div>
+                                <div className="flex flex-wrap gap-4 text-slate-500 text-xs font-bold">
+                                   <div className="flex items-center gap-1.5 hover:text-sky-500 transition-colors cursor-pointer">
+                                      <MapPin className="w-3.5 h-3.5" /> 2.4 KM Distance
+                                   </div>
+                                   <div className="flex items-center gap-1.5 hover:text-sky-500 transition-colors cursor-pointer">
+                                      <User className="w-3.5 h-3.5" /> {match.email}
+                                   </div>
+                                </div>
+                             </div>
+
+                             {/* Breakdown Component */}
+                             <div className="grid grid-cols-2 gap-x-8 gap-y-2 p-4 bg-slate-50/50 rounded-2xl border border-slate-100 w-full md:w-auto min-w-[200px]">
+                                {[
+                                   { label: 'LOC', val: match.scoreBreakdown.locationScore },
+                                   { label: 'AVA', val: match.scoreBreakdown.availabilityScore },
+                                   { label: 'FRQ', val: match.scoreBreakdown.donationFrequencyScore },
+                                   { label: 'PRD', val: match.scoreBreakdown.aiPredictionScore }
+                                ].map((stat, i) => (
+                                   <div key={i} className="flex justify-between items-center text-[10px] font-black uppercase text-slate-400">
+                                      <span>{stat.label}</span>
+                                      <span className="text-slate-900 font-display">{stat.val}%</span>
+                                   </div>
+                                ))}
+                             </div>
+                          </div>
+
+                          {/* Quick Secondary Actions */}
+                          <div className="mt-8 pt-8 border-t border-slate-100 flex gap-4">
+                             <button 
+                               onClick={() => match.phone && (window.location.href = `tel:${match.phone}`)}
+                               className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-sky-600 transition-all flex items-center justify-center gap-2 shadow-xl shadow-slate-900/10 active:scale-95 group"
+                             >
+                                <Phone className="w-4 h-4 group-hover:rotate-12 transition-transform" /> 
+                                Immediate Protocol
+                             </button>
+                             <button 
+                               onClick={() => handleConnect(match.userId)}
+                               className="px-6 py-4 bg-white border border-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:border-sky-500 hover:text-sky-500 transition-all active:scale-95 flex items-center gap-2 group shadow-sm"
+                             >
+                                <Handshake className="w-5 h-5 group-hover:scale-110 transition-transform" /> 
+                                Request Sync
+                             </button>
+                             <button className="p-4 bg-slate-100 text-slate-400 rounded-2xl hover:bg-sky-50 hover:text-sky-600 transition-all">
+                                <MessageCircle className="w-5 h-5" />
+                             </button>
+                          </div>
+                       </div>
+                    ))}
+                 </div>
+              )}
+           </div>
+        </div>
       </div>
     </div>
   );
 };
 
-const styles = {
-  container: {
-    minHeight: '100vh',
-    backgroundColor: '#f5f5f5',
-    padding: '20px',
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px',
-  },
-  logoutButton: {
-    padding: '10px 20px',
-    backgroundColor: '#dc3545',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-  },
-  loading: {
-    textAlign: 'center',
-    padding: '40px',
-    fontSize: '18px',
-  },
-  error: {
-    backgroundColor: '#f8d7da',
-    color: '#721c24',
-    padding: '15px',
-    borderRadius: '4px',
-    marginBottom: '20px',
-  },
-  requestCard: {
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    padding: '20px',
-    marginBottom: '20px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-  },
-  requestInfo: {
-    lineHeight: '1.8',
-  },
-  matchesCard: {
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    padding: '20px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-  },
-  cardHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px',
-  },
-  refreshButton: {
-    padding: '8px 16px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-  },
-  noMatches: {
-    textAlign: 'center',
-    padding: '60px 20px',
-    color: '#666',
-  },
-  noMatchesSubtext: {
-    marginTop: '10px',
-    fontSize: '14px',
-  },
-  matchesList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '15px',
-  },
-  matchCard: {
-    border: '1px solid #e0e0e0',
-    borderRadius: '8px',
-    padding: '20px',
-    backgroundColor: '#fafafa',
-  },
-  matchHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '15px',
-  },
-  donorName: {
-    margin: 0,
-    fontSize: '18px',
-    color: '#333',
-  },
-  donorInfo: {
-    margin: '5px 0 0 0',
-    color: '#666',
-    fontSize: '14px',
-  },
-  scoreBadge: {
-    padding: '8px 16px',
-    borderRadius: '20px',
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: '16px',
-  },
-  scoreBreakdown: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(2, 1fr)',
-    gap: '10px',
-    marginBottom: '15px',
-    padding: '15px',
-    backgroundColor: 'white',
-    borderRadius: '6px',
-  },
-  scoreItem: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    fontSize: '14px',
-  },
-  contactInfo: {
-    marginBottom: '15px',
-    padding: '10px',
-    backgroundColor: '#e3f2fd',
-    borderRadius: '4px',
-    fontSize: '14px',
-  },
-  actions: {
-    display: 'flex',
-    gap: '10px',
-  },
-  contactButton: {
-    padding: '10px 20px',
-    backgroundColor: '#28a745',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '14px',
-  },
-  friendButton: {
-    padding: '10px 20px',
-    backgroundColor: '#6c757d',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '14px',
-  },
-};
-
 export default DonorMatchResults;
-

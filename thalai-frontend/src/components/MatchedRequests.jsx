@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getMyMatches, updateMatchStatus } from '../api/donor';
-import { Search, Heart } from 'lucide-react';
+import { Search, Heart, MapPin, Calendar, Clock, Droplets, CheckCircle2, XCircle, ShieldAlert } from 'lucide-react';
 
 const MatchedRequests = () => {
   const [matches, setMatches] = useState([]);
@@ -30,7 +30,6 @@ const MatchedRequests = () => {
       setUpdating(matchId);
       await updateMatchStatus(matchId, { status });
       setMessage(`Match ${status} successfully!`);
-      // Re-fetch matches to update UI
       fetchMatches();
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
@@ -44,120 +43,146 @@ const MatchedRequests = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-health-blue"></div>
+      <div className="flex justify-center items-center py-20">
+        <div className="w-10 h-10 border-4 border-sky-100 border-t-sky-500 rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {message && (
-        <div className={`p-4 rounded-lg ${message.includes('Failed') ? 'bg-red-50 text-red-800' : 'bg-green-50 text-green-800'}`}>
-          {message}
+        <div className={`p-4 rounded-2xl flex items-center gap-3 border animate-reveal ${
+          message.includes('Failed') ? 'bg-rose-50 border-rose-100 text-rose-700' : 'bg-emerald-50 border-emerald-100 text-emerald-700'
+        }`}>
+          <div className={`p-1 rounded-full ${message.includes('Failed') ? 'bg-rose-100' : 'bg-emerald-100'}`}>
+            {message.includes('Failed') ? <XCircle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+          </div>
+          <span className="text-sm font-bold">{message}</span>
         </div>
       )}
 
       {matches.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center">
-          <Search className="w-12 h-12 text-gray-300 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900">No Matched Requests Yet</h3>
-          <p className="text-gray-500 max-w-sm mx-auto mt-2">
-            When a patient's blood request matches your profile and location, it will appear here. Keep your availability active!
+        <div className="flex flex-col items-center justify-center py-24 px-6 bg-slate-50/50 rounded-[40px] border-2 border-dashed border-slate-200 animate-reveal">
+          <div className="p-6 bg-white rounded-3xl shadow-xl shadow-slate-200/50 mb-6">
+            <Search className="w-12 h-12 text-slate-300" />
+          </div>
+          <h3 className="text-2xl font-display font-black text-slate-900 mb-2">No Active Matches</h3>
+          <p className="text-slate-500 text-center max-w-sm font-medium">
+            When a patient's request matches your profile and location, it will appear here instantly.
           </p>
         </div>
       ) : (
-        <div className="grid gap-6">
-          {matches.map((match) => (
-            <div key={match.matchId} className="card border-l-4 border-health-blue shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex flex-col md:flex-row justify-between gap-6">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="bg-red-100 text-red-800 text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
-                      Match Score: {match.matchScore}%
-                    </span>
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
-                      match.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                      match.status === 'accepted' ? 'bg-green-100 text-green-800' : 
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {match.status}
-                    </span>
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    {match.request?.patientId?.name || 'Patient'} Needs Blood
-                  </h3>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    <div className="bg-gray-50 p-2 rounded-lg">
-                      <p className="text-[10px] text-gray-500 uppercase font-bold">Blood Group</p>
-                      <p className="font-bold text-health-blue">{match.request?.bloodGroup}</p>
-                    </div>
-                    <div className="bg-gray-50 p-2 rounded-lg">
-                      <p className="text-[10px] text-gray-500 uppercase font-bold">Units Needed</p>
-                      <p className="font-bold text-gray-900">{match.request?.unitsRequired}</p>
-                    </div>
-                    <div className="bg-gray-50 p-2 rounded-lg">
-                      <p className="text-[10px] text-gray-500 uppercase font-bold">Urgency</p>
-                      <p className={`font-bold ${
-                        match.request?.urgency === 'critical' ? 'text-red-600' : 
-                        match.request?.urgency === 'high' ? 'text-orange-600' : 
-                        'text-blue-600'
-                      }`}>
-                        {match.request?.urgency}
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 p-2 rounded-lg">
-                      <p className="text-[10px] text-gray-500 uppercase font-bold">Location</p>
-                      <p className="font-bold text-gray-900 truncate">
-                        {match.request?.location?.city || 'City'}, {match.request?.location?.state || 'State'}
-                      </p>
+        <div className="grid gap-8">
+          {matches.map((match, idx) => (
+            <div 
+              key={match.matchId} 
+              className="group relative bg-white rounded-[32px] border border-slate-100 p-8 shadow-sm hover:shadow-2xl hover:shadow-slate-200/60 transition-all duration-500 animate-reveal"
+              style={{ animationDelay: `${idx * 0.1}s` }}
+            >
+              {/* URGENCY BADGE */}
+              <div className="absolute -top-3 left-8">
+                <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-lg ${
+                  match.request?.urgency === 'critical' ? 'bg-rose-500 text-white shadow-rose-200' : 
+                  match.request?.urgency === 'high' ? 'bg-orange-500 text-white shadow-orange-200' : 
+                  'bg-sky-500 text-white shadow-sky-200'
+                }`}>
+                  <ShieldAlert className="w-3 h-3" />
+                   {match.request?.urgency} PRIORITY
+                </div>
+              </div>
+
+              <div className="flex flex-col xl:flex-row gap-8">
+                {/* LEFT: PATIENT INFO */}
+                <div className="flex-1 space-y-6">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <h2 className="text-2xl font-display font-black text-slate-900">
+                          {match.request?.patientId?.name || 'Urgent Case'}
+                        </h2>
+                        <span className="px-3 py-1 bg-sky-50 text-sky-600 rounded-lg text-[11px] font-black uppercase tracking-wider border border-sky-100">
+                          Match: {match.matchScore}%
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 text-slate-500 text-sm font-medium">
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="w-4 h-4 text-slate-400" />
+                          {match.request?.location?.city || 'City'}, {match.request?.location?.state || 'State'}
+                        </div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-4 h-4 text-slate-400" />
+                          {new Date(match.request?.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   {match.request?.reason && (
-                    <div className="mb-4">
-                      <p className="text-sm text-gray-600 italic">"{match.request.reason}"</p>
+                    <div className="p-4 bg-slate-50 rounded-2xl italic text-slate-600 text-sm relative">
+                      <span className="absolute -top-2 -left-2 text-4xl text-slate-200 font-serif leading-none opacity-50 block h-full">"</span>
+                      {match.request.reason}
                     </div>
                   )}
 
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span>Requested on: {new Date(match.request?.createdAt).toLocaleDateString()}</span>
-                    <span>•</span>
-                    <span>Matched: {new Date(match.createdAt).toLocaleDateString()}</span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                     {[
+                       { label: 'BLOOD GROUP', value: match.request?.bloodGroup, icon: <Droplets className="w-4 h-4 text-rose-500" />, bg: 'bg-rose-50' },
+                       { label: 'UNITS NEEDED', value: match.request?.unitsRequired, icon: <ShieldAlert className="w-4 h-4 text-amber-500" />, bg: 'bg-amber-50' },
+                       { label: 'STATUS', value: match.status, icon: <Clock className="w-4 h-4 text-blue-500" />, bg: 'bg-blue-50' },
+                       { label: 'MATCHED ON', value: new Date(match.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), icon: <Calendar className="w-4 h-4 text-emerald-500" />, bg: 'bg-emerald-50' }
+                     ].map((stat, i) => (
+                       <div key={i} className="p-3 bg-white border border-slate-100 rounded-2xl shadow-sm group-hover:border-slate-200 transition-colors">
+                          <div className="flex items-center gap-2 mb-1.5">
+                             <div className={`p-1.5 rounded-lg ${stat.bg}`}>{stat.icon}</div>
+                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</span>
+                          </div>
+                          <p className="text-sm font-black text-slate-900 px-1">{stat.value}</p>
+                       </div>
+                     ))}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  {match.status === 'pending' ? (
-                    <>
-                      <button
-                        onClick={() => handleStatusUpdate(match.matchId, 'accepted')}
-                        disabled={updating === match.matchId}
-                        className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-green-200 active:scale-95 disabled:opacity-50"
-                      >
-                        {updating === match.matchId ? 'Updating...' : 'Accept Request'}
-                      </button>
-                      <button
-                        onClick={() => handleStatusUpdate(match.matchId, 'rejected')}
-                        disabled={updating === match.matchId}
-                        className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-6 rounded-xl transition-all active:scale-95 disabled:opacity-50"
-                      >
-                        Decline
-                      </button>
-                    </>
-                  ) : match.status === 'accepted' ? (
-                    <div className="bg-green-50 text-green-700 p-4 rounded-xl border border-green-100 flex flex-col items-center">
-                      <Heart className="w-8 h-8 mb-1 fill-green-500" />
-                      <p className="font-bold text-sm">Accepted!</p>
-                      <p className="text-xs mt-1 text-center">Patient will be notified to contact you.</p>
-                    </div>
-                  ) : (
-                    <div className="bg-gray-50 text-gray-500 p-4 rounded-xl border border-gray-100 italic">
-                      Request Declined
-                    </div>
-                  )}
+                {/* RIGHT: ACTIONS */}
+                <div className="xl:w-64 flex flex-col justify-center gap-3">
+                   {match.status === 'pending' ? (
+                     <>
+                        <button
+                          onClick={() => handleStatusUpdate(match.matchId, 'accepted')}
+                          disabled={updating === match.matchId}
+                          className="btn-primary w-full py-4 text-sm font-black group/btn"
+                        >
+                          {updating === match.matchId ? 'Processing...' : (
+                            <>
+                              Accept Request <Heart className="w-4 h-4 group-hover/btn:fill-white transition-all" />
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleStatusUpdate(match.matchId, 'rejected')}
+                          disabled={updating === match.matchId}
+                          className="w-full py-4 bg-slate-50 hover:bg-rose-50 text-slate-500 hover:text-rose-600 rounded-2xl font-black text-sm transition-all border border-transparent hover:border-rose-100"
+                        >
+                          Decline Case
+                        </button>
+                     </>
+                   ) : match.status === 'accepted' ? (
+                     <div className="h-full flex flex-col items-center justify-center p-6 bg-emerald-50 rounded-[28px] border border-emerald-100 text-center space-y-3">
+                        <div className="p-4 bg-white rounded-2xl shadow-lg shadow-emerald-200/50">
+                           <Heart className="w-10 h-10 text-rose-500 fill-rose-500 animate-pulse" />
+                        </div>
+                        <div>
+                           <p className="text-emerald-800 font-black text-lg">Heros Accepted!</p>
+                           <p className="text-emerald-600/70 text-[11px] font-bold leading-relaxed px-2">Patient circle has been notified. They will reach out soon.</p>
+                        </div>
+                     </div>
+                   ) : (
+                     <div className="h-full flex flex-col items-center justify-center p-6 bg-slate-50 rounded-[28px] border border-slate-200 text-center grayscale opacity-60">
+                         <XCircle className="w-10 h-10 text-slate-400 mb-2" />
+                         <p className="text-slate-500 font-black text-sm">Request Deferred</p>
+                     </div>
+                   )}
                 </div>
               </div>
             </div>

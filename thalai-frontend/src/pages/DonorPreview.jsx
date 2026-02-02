@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 import { getPublicDonors } from '../api/public';
 import TablePreview from '../components/TablePreview';
 
@@ -74,9 +75,9 @@ const DonorPreview = () => {
         <h2 className="text-2xl font-bold text-gray-900">Top Donors</h2>
         <Link
           to="/donors"
-          className="text-health-blue hover:text-blue-700 font-medium text-sm"
+          className="text-health-blue hover:text-blue-700 font-medium text-sm flex items-center gap-1"
         >
-          View All →
+          View All <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
       <TablePreview

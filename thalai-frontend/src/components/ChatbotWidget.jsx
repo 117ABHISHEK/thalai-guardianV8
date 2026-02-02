@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/auth';
-import { MessageCircle, Bot, Send, X, RefreshCw } from 'lucide-react';
+import { MessageCircle, Bot, Send, X, RefreshCw, Minus, Sparkles, Command } from 'lucide-react';
 
 const ChatbotWidget = () => {
   const { user } = useAuth();
@@ -17,236 +17,137 @@ const ChatbotWidget = () => {
 
   useEffect(() => {
     if (isOpen) {
-      // Re-fetch suggestions if user status changed
       fetchSuggestions();
-
       if (messages.length === 0) {
-        // Personalized welcome message
-        const firstName = user?.name ? user.name.split(' ')[0] : 'there';
+        const firstName = user?.name ? user.name.split(' ')[0] : 'Hero';
         setMessages([
           {
             type: 'bot',
-            text: `Hello ${firstName}! I'm the ThalAI Guardian chatbot. I'm here to help you with Thalassemia related queries. How can I help you today?`,
+            text: `Sync complete. Hello ${firstName}! I am your ThalAI Guardian Assistant. I have indexed the latest clinical records. How can I assist your medical journey today?`,
             timestamp: new Date(),
           },
         ]);
       }
     }
-  }, [isOpen, user?._id]); // Corrected to user?._id
+  }, [isOpen, user?._id]);
 
   const fetchSuggestions = async () => {
     try {
       const response = await api.get('/chatbot/suggestions');
-      const suggestions = response.data.data.suggestions || [];
-      setInitialSuggestions(suggestions);
+      setInitialSuggestions(response.data.data.suggestions || []);
     } catch (error) {
       console.error('Failed to fetch suggestions:', error);
     }
   };
 
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   const handleAction = (action) => {
+    const role = user?.role || 'patient';
     switch (action) {
       case 'create_request':
       case 'create_urgent_request':
-        if (user?.role === 'patient') {
-          navigate('/patient-dashboard?tab=request');
-        }
+        navigate('/patient-dashboard?tab=request');
         break;
       case 'update_availability':
         navigate('/donor-dashboard');
         break;
       case 'book_appointment':
-        if (user?.role === 'patient') {
-          navigate('/book-appointment');
-        } else if (user?.role === 'doctor') {
-          navigate('/doctor-dashboard?tab=appointments');
-        } else {
-          navigate('/patient-dashboard?tab=appointments');
-        }
+        navigate('/book-appointment');
         break;
       case 'view_appointments':
-        if (user?.role === 'patient') {
-          navigate('/patient-dashboard?tab=appointments');
-        } else if (user?.role === 'doctor') {
-          navigate('/doctor-dashboard?tab=appointments');
-        }
+        navigate(`/${role}-dashboard?tab=appointments`);
         break;
       case 'history_redirect':
         navigate('/patient-dashboard?tab=history');
         break;
-      default:
-        console.log('Action not implemented:', action);
+      default: console.log('Action not implemented:', action);
     }
     setIsOpen(false);
   };
 
   const handleSend = async (forcedMessage = null, actionTrigger = null) => {
     const textToSend = forcedMessage || inputMessage;
-    
     if (!textToSend.trim() || loading) return;
 
     const userMessage = textToSend.trim();
     if (!forcedMessage) setInputMessage('');
 
-    // Add user message to UI
-    const newUserMessage = {
-      type: 'user',
-      text: userMessage,
-      timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, newUserMessage]);
+    setMessages((prev) => [...prev, { type: 'user', text: userMessage, timestamp: new Date() }]);
 
-    // If it's a direct action (navigation), handle it after showing message
     if (actionTrigger && actionTrigger !== 'message') {
-      setTimeout(() => {
-        handleAction(actionTrigger);
-      }, 500); // Small delay to see the message
+      setTimeout(() => handleAction(actionTrigger), 600);
       return;
     }
+    
     setLoading(true);
-
     try {
-      const response = await api.post('/chatbot/ask', {
-        message: userMessage,
-        sessionId,
-      });
-
-      const botResponse = {
+      const response = await api.post('/chatbot/ask', { message: userMessage, sessionId });
+      if (!sessionId && response.data.data.sessionId) setSessionId(response.data.data.sessionId);
+      setMessages((prev) => [...prev, {
         type: 'bot',
         text: response.data.data.response,
         intent: response.data.data.intent,
         recommendations: response.data.data.recommendations || [],
         timestamp: new Date(),
-      };
-
-      if (!sessionId && response.data.data.sessionId) {
-        setSessionId(response.data.data.sessionId);
-      }
-
-      setMessages((prev) => [...prev, botResponse]);
+      }]);
     } catch (error) {
-      const errorMessage = {
-        type: 'bot',
-        text: 'Sorry, I encountered an error. Please try again.',
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, { type: 'bot', text: 'Intelligence link interrupted. Please retry.', timestamp: new Date() }]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSuggestionClick = (suggestion) => {
-    handleSend(suggestion.text, suggestion.action);
-  };
-
-  const handleClearChat = () => {
-    setMessages([
-      {
-        type: 'bot',
-        text: "Chat cleared! How can I help you now?",
-        timestamp: new Date(),
-      },
-    ]);
-    setSessionId(null);
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
   return (
     <>
-      {/* Chatbot Button */}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-16 h-16 bg-health-blue text-white rounded-full shadow-lg hover:rotate-12 hover:scale-110 transition-all duration-300 z-50 flex items-center justify-center text-3xl animate-bounce-slow"
-          title="Open Chatbot"
-        >
-          <MessageCircle className="w-8 h-8" />
-        </button>
-      )}
+      <button
+        onClick={() => setIsOpen(true)}
+        className={`fixed bottom-8 right-8 w-16 h-16 bg-slate-900 border border-white/10 text-white rounded-[24px] shadow-2xl hover:scale-110 active:scale-95 transition-all duration-500 z-50 flex items-center justify-center group ${isOpen ? 'opacity-0 scale-0 pointer-events-none' : 'opacity-100 scale-100'}`}
+      >
+        <Sparkles className="w-8 h-8 group-hover:text-sky-400 transition-colors" />
+        <span className="absolute -top-1 -right-1 w-4 h-4 bg-sky-500 rounded-full border-2 border-white shadow-sm" />
+      </button>
 
-      {/* Chatbot Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-[400px] h-[650px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden animate-slide-up border border-gray-100">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-health-blue to-blue-600 text-white p-5 rounded-t-xl flex justify-between items-center shadow-md">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-inner animate-spin-slow">
-                <Bot className="w-6 h-6 text-health-blue" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold">ThalAI Guardian</h3>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                  <span className="text-xs opacity-90 font-medium">Online Helper</span>
+        <div className="fixed bottom-8 right-8 w-[420px] h-[700px] bg-white rounded-[40px] shadow-2xl flex flex-col z-100 overflow-hidden animate-reveal border border-slate-100">
+          {/* AI Header */}
+          <div className="bg-slate-900 p-6 flex justify-between items-center relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-8 opacity-10">
+                <Command className="w-24 h-24 text-white" />
+             </div>
+             <div className="flex items-center gap-4 relative z-10">
+                <div className="w-12 h-12 bg-sky-500 rounded-2xl flex items-center justify-center shadow-lg shadow-sky-500/20">
+                   <Bot className="w-7 h-7 text-white" />
                 </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={handleClearChat}
-                className="text-white hover:bg-white/20 p-2 rounded-full transition-colors group"
-                title="Clear Chat"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="text-white hover:bg-white/20 p-2 rounded-full transition-colors flex items-center justify-center"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 bg-gray-50/50 space-y-4">
-            {messages.map((msg, index) => (
-              <div key={index} className="space-y-3">
-                <div className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div
-                    className={`max-w-[85%] p-3.5 rounded-2xl shadow-sm text-sm leading-relaxed ${
-                      msg.type === 'user'
-                        ? 'bg-health-blue text-white rounded-tr-none'
-                        : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'
-                    }`}
-                  >
-                    {msg.text.split('\n').map((line, i) => (
-                      <span key={i}>
-                        {line}
-                        <br />
-                      </span>
-                    ))}
+                <div>
+                  <h3 className="text-white font-display font-black tracking-tight leading-none mb-1.5">Intelligence Core</h3>
+                  <div className="flex items-center gap-2">
+                     <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                     <span className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Neural Link Active</span>
                   </div>
                 </div>
+             </div>
+             <div className="flex items-center gap-2 relative z-10">
+                <button onClick={() => setMessages([{ type: 'bot', text: "Memory banks cleared. Resetting session context.", timestamp: new Date() }])} className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-all"><RefreshCw className="w-4 h-4 text-white" /></button>
+                <button onClick={() => setIsOpen(false)} className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-all"><Minus className="w-4 h-4 text-white" /></button>
+             </div>
+          </div>
 
-                {/* Recommendations as Bubbles */}
-                {msg.type === 'bot' && msg.recommendations && msg.recommendations.length > 0 && (
-                  <div className="flex flex-wrap gap-2 px-1">
+          {/* Neural Messages Area */}
+          <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30 space-y-6 no-scrollbar backdrop-blur-sm">
+            {messages.map((msg, index) => (
+              <div key={index} className={`flex flex-col ${msg.type === 'user' ? 'items-end' : 'items-start'} animate-reveal`}>
+                <div className={`max-w-[85%] p-4 rounded-3xl text-sm font-medium leading-relaxed shadow-sm ${
+                  msg.type === 'user' ? 'bg-sky-500 text-white rounded-tr-lg' : 'bg-white text-slate-700 border border-slate-100 rounded-tl-lg'
+                }`}>
+                  {msg.text}
+                </div>
+                {msg.type === 'bot' && msg.recommendations?.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2 w-full">
                     {msg.recommendations.map((rec, idx) => (
-                      <button
-                        key={idx}
-                        className="px-4 py-2 bg-white border border-blue-200 rounded-full text-xs font-semibold text-health-blue hover:bg-health-blue hover:text-white hover:border-health-blue transition-all duration-200 shadow-sm transform hover:-translate-y-0.5 active:scale-95"
-                        onClick={() => handleSuggestionClick(rec)}
-                      >
+                      <button key={idx} onClick={() => handleSend(rec.text, rec.action)} className="px-4 py-2 bg-white border border-slate-100 rounded-2xl text-[10px] font-black text-sky-600 uppercase tracking-widest hover:bg-sky-50 transition-all shadow-sm">
                         {rec.text}
                       </button>
                     ))}
@@ -254,57 +155,36 @@ const ChatbotWidget = () => {
                 )}
               </div>
             ))}
-
-            {/* Initial Suggestions (only if few messages exist) */}
-            {messages.length === 1 && initialSuggestions.length > 0 && (
-              <div className="pt-2 animate-fade-in">
-                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider ml-1 mb-2">Frequently Asked</p>
-                <div className="flex flex-wrap gap-2 px-1">
-                  {initialSuggestions.map((suggestion, idx) => (
-                    <button
-                      key={idx}
-                      className="px-4 py-2 bg-white border border-gray-200 rounded-full text-xs font-semibold text-gray-600 hover:border-health-blue hover:text-health-blue transition-all duration-200 shadow-sm transform hover:-translate-y-0.5 active:scale-95"
-                      onClick={() => handleSuggestionClick(suggestion)}
-                    >
-                      {suggestion.text}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {loading && (
-              <div className="flex justify-start">
-                <div className="bg-white border border-gray-100 text-gray-400 rounded-2xl rounded-tl-none shadow-sm p-4 flex gap-1.5">
-                  <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce"></span>
-                  <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
-                  <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
-                </div>
+              <div className="flex gap-2 p-4 bg-white/50 rounded-2xl border border-slate-100 w-fit">
+                 <div className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-bounce" />
+                 <div className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                 <div className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Area */}
-          <div className="p-4 bg-white border-t border-gray-100 flex gap-2 items-center">
-            <input
-              type="text"
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="How can I help you today?..."
-              className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-health-blue/20 focus:bg-white transition-all"
-              disabled={loading}
-            />
-            <button
-              onClick={() => handleSend()}
-              disabled={loading || !inputMessage.trim()}
-              className="w-11 h-11 bg-health-blue hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-health-blue/20 flex items-center justify-center transition-all disabled:opacity-50 disabled:grayscale disabled:shadow-none transform active:scale-90"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform rotate-90" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-              </svg>
-            </button>
+          {/* Command Input Area */}
+          <div className="p-6 bg-white border-t border-slate-100">
+            <div className="flex gap-3 items-center bg-slate-50 border border-slate-100 rounded-2xl p-2 pl-4 transition-all focus-within:bg-white focus-within:border-sky-200 focus-within:shadow-xl focus-within:shadow-sky-500/5">
+              <input
+                type="text"
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                placeholder="Initialize medical query..."
+                className="flex-1 bg-transparent border-none text-sm font-bold text-slate-900 focus:outline-none placeholder:text-slate-400 placeholder:font-medium"
+                disabled={loading}
+              />
+              <button
+                onClick={() => handleSend()}
+                disabled={loading || !inputMessage.trim()}
+                className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-sky-600 transition-all disabled:opacity-30 disabled:grayscale"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -313,6 +193,3 @@ const ChatbotWidget = () => {
 };
 
 export default ChatbotWidget;
-
-
-

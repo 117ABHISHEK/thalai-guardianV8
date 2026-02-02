@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getProfile, updateProfile } from '../api/auth';
 import { getDonorAvailability, updateDonorAvailability } from '../api/donor';
@@ -10,8 +10,11 @@ import ConnectionList from '../components/ConnectionList';
 import NotificationList from '../components/NotificationList';
 import MatchedRequests from '../components/MatchedRequests';
 
-import { useLocation } from 'react-router-dom';
-import { Heart, CheckCircle, PauseCircle, Calendar, XCircle, Clock, ClipboardList } from 'lucide-react';
+import { 
+  Heart, CheckCircle, PauseCircle, Calendar, XCircle, 
+  Clock, ClipboardList, ArrowRight, User, Settings,
+  ShieldCheck, Activity, Users, Bell, UserCheck
+} from 'lucide-react';
 
 const DonorDashboard = () => {
   const { user, logout, updateUser } = useAuth();
@@ -32,9 +35,7 @@ const DonorDashboard = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tab = params.get('tab');
-    if (tab) {
-      setActiveTab(tab);
-    }
+    if (tab) setActiveTab(tab);
   }, [location]);
 
   useEffect(() => {
@@ -48,27 +49,25 @@ const DonorDashboard = () => {
         getDonorAvailability(),
       ]);
       setProfile(profileRes.data.user);
-      if (profileRes.data.donor) {
-        setDonorProfile(profileRes.data.donor);
-      }
+      if (profileRes.data.donor) setDonorProfile(profileRes.data.donor);
       setAvailability(availabilityRes.data.donor);
+      
+      const u = profileRes.data.user;
       setFormData({
-        name: profileRes.data.user.name || '',
-        phone: profileRes.data.user.phone || '',
-        street: profileRes.data.user.address?.street || '',
-        city: profileRes.data.user.address?.city || '',
-        state: profileRes.data.user.address?.state || '',
-        zipCode: profileRes.data.user.address?.zipCode || '',
-        dateOfBirth: profileRes.data.user.dateOfBirth
-          ? new Date(profileRes.data.user.dateOfBirth).toISOString().split('T')[0]
-          : '',
-        bloodGroup: profileRes.data.user.bloodGroup || '',
+        name: u.name || '',
+        phone: u.phone || '',
+        street: u.address?.street || '',
+        city: u.address?.city || '',
+        state: u.address?.state || '',
+        zipCode: u.address?.zipCode || '',
+        dateOfBirth: u.dateOfBirth ? new Date(u.dateOfBirth).toISOString().split('T')[0] : '',
+        bloodGroup: u.bloodGroup || '',
       });
+      
+      const d = availabilityRes.data.donor;
       setAvailabilityForm({
-        availabilityStatus: availabilityRes.data.donor?.availabilityStatus || false,
-        lastDonationDate: availabilityRes.data.donor?.lastDonationDate
-          ? new Date(availabilityRes.data.donor.lastDonationDate).toISOString().split('T')[0]
-          : '',
+        availabilityStatus: d?.availabilityStatus || false,
+        lastDonationDate: d?.lastDonationDate ? new Date(d.lastDonationDate).toISOString().split('T')[0] : '',
       });
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -77,51 +76,8 @@ const DonorDashboard = () => {
     }
   };
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleAvailabilityChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setAvailabilityForm({
-      ...availabilityForm,
-      [name]: type === 'checkbox' ? checked : value,
-    });
-  };
-
-  const handleProfileSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const updateData = {
-        name: formData.name,
-        phone: formData.phone,
-        address: {
-          street: formData.street,
-          city: formData.city,
-          state: formData.state,
-          zipCode: formData.zipCode,
-        },
-        dateOfBirth: formData.dateOfBirth,
-        bloodGroup: formData.bloodGroup,
-      };
-
-      const response = await updateProfile(updateData);
-      setProfile(response.data.user);
-      updateUser(response.data.user);
-      setEditing(false);
-      setMessage('Profile updated successfully!');
-      setTimeout(() => setMessage(''), 3000);
-    } catch (error) {
-      setMessage(error.message || 'Failed to update profile');
-      setTimeout(() => setMessage(''), 3000);
-    }
-  };
-
   const handleAvailabilitySubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     try {
       const response = await updateDonorAvailability({
         availabilityStatus: availabilityForm.availabilityStatus,
@@ -136,456 +92,250 @@ const DonorDashboard = () => {
     }
   };
 
-  const handleHealthMetricsUpdate = async (data) => {
+  const handleHealthMetricsUpdate = async (metrics) => {
     try {
-      await updateProfile(data);
-      await fetchData(); // Refresh data
-      setMessage('Health metrics updated successfully!');
+      setLoading(true);
+      const { updateDonorHealthData } = await import('../api/donor');
+      await updateDonorHealthData(metrics);
+      setMessage('Health metrics synchronized!');
+      fetchData();
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
-      setMessage(error.message || 'Failed to update health metrics');
+      setMessage(error.message || 'Failed to sync health data');
       setTimeout(() => setMessage(''), 3000);
+    } finally {
+      setLoading(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-health-blue"></div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-sky-100 border-t-sky-500 rounded-full animate-spin" />
       </div>
     );
   }
 
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: Activity },
+    { id: 'matches', label: 'Matches', icon: Heart },
+    { id: 'appointments', label: 'Visits', icon: Calendar },
+    { id: 'connections', label: 'Circles', icon: Users },
+    { id: 'health', label: 'Health', icon: ClipboardList },
+    { id: 'notifications', label: 'Alerts', icon: Bell },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Donor Dashboard</h1>
-              <p className="text-gray-600 mt-1">Welcome back, {user?.name}</p>
+    <div className="min-h-screen bg-[#F8FAFC] font-body">
+      {/* Premium Header */}
+      <div className="bg-white border-b border-slate-100 sticky top-20 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="animate-reveal">
+              <h1 className="text-4xl font-display font-black text-slate-900 tracking-tight">
+                Donor <span className="text-sky-500">Dashboard</span>
+              </h1>
+              <p className="text-slate-500 font-medium mt-1.5 flex items-center gap-2">
+                Welcome back, <span className="text-slate-900 font-bold">{user?.name}</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              </p>
             </div>
+            
+            <div className="flex items-center gap-3 animate-reveal" style={{ animationDelay: '0.1s' }}>
+                <div className="px-5 py-3 bg-white border border-slate-200 rounded-2xl shadow-sm flex items-center gap-4">
+                   <div className="text-right">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Blood Group</p>
+                      <p className="text-xl font-display font-black text-rose-500">{user?.bloodGroup}</p>
+                   </div>
+                   <div className="h-10 w-[1px] bg-slate-100" />
+                   <div className="text-right">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</p>
+                      <p className={`text-sm font-bold ${donorProfile?.isVerified ? 'text-emerald-500' : 'text-amber-500'}`}>
+                        {donorProfile?.isVerified ? 'Verified' : 'Pending'}
+                      </p>
+                   </div>
+                </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Improved Tabs */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-6 py-4 border-b-2 font-bold text-sm transition-all whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'border-sky-500 text-sky-600 bg-sky-50/50'
+                    : 'border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-sky-500' : 'text-slate-400'}`} />
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {message && (
-          <div
-            className={`mb-6 p-4 rounded-lg ${message.includes('success')
-              ? 'bg-green-50 text-green-800 border border-green-200'
-              : 'bg-red-50 text-red-800 border border-red-200'
-              }`}
-          >
-            {message}
+          <div className="mb-8 animate-reveal">
+            <div className={`p-4 rounded-[20px] flex items-center gap-3 border shadow-sm ${
+              message.includes('success') 
+                ? 'bg-emerald-50 border-emerald-100 text-emerald-700' 
+                : 'bg-rose-50 border-rose-100 text-rose-700'
+            }`}>
+              <div className={`p-1.5 rounded-full ${message.includes('success') ? 'bg-emerald-200' : 'bg-rose-200'}`}>
+                {message.includes('success') ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+              </div>
+              <span className="font-bold text-sm tracking-tight">{message}</span>
+            </div>
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-sm mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="flex -mb-px">
-              {[
-                { id: 'overview', label: 'Overview' },
-                { id: 'matches', label: 'Match Requests' },
-                { id: 'profile', label: 'Profile' },
-                { id: 'health', label: 'Health Reports' },
-                { id: 'appointments', label: 'My Appointments' },
-                { id: 'connections', label: 'My Circles' },
-                { id: 'notifications', label: 'Notifications' },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-6 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
-                    ? 'border-health-blue text-health-blue'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
-
         {activeTab === 'overview' && (
-          <>
-            {/* Stats Cards */}
-            {availability && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <StatCard
-                  title="Total Donations"
-                  value={availability.totalDonations || 0}
-                  icon={<Heart className="w-8 h-8" />}
-                  color="red"
-                />
-                <StatCard
-                  title="Availability Status"
-                  value={availability.availabilityStatus ? 'Available' : 'Unavailable'}
-                  icon={availability.availabilityStatus ? <CheckCircle className="w-8 h-8" /> : <PauseCircle className="w-8 h-8" />}
-                  color={availability.availabilityStatus ? 'green' : 'orange'}
-                />
-                <StatCard
-                  title="Last Donation"
-                  value={
-                    availability.lastDonationDate
-                      ? new Date(availability.lastDonationDate).toLocaleDateString()
-                      : 'Never'
-                  }
-                  icon={<Calendar className="w-8 h-8" />}
-                  color="blue"
-                />
-              </div>
-            )}
+          <div className="space-y-10">
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <StatCard
+                title="Donations Saved"
+                value={availability?.totalDonations || 0}
+                icon={<Heart className="w-6 h-6" />}
+                color="red"
+                subtitle="Lives impacted through your care"
+              />
+              <StatCard
+                title="Availability"
+                value={availability?.availabilityStatus ? 'Active' : 'Offline'}
+                icon={availability?.availabilityStatus ? <CheckCircle className="w-6 h-6" /> : <PauseCircle className="w-6 h-6" />}
+                color={availability?.availabilityStatus ? 'green' : 'orange'}
+                subtitle={availability?.availabilityStatus ? 'You are visible to patients' : 'You are currently hidden'}
+              />
+              <StatCard
+                title="Last Visited"
+                value={availability?.lastDonationDate ? new Date(availability.lastDonationDate).toLocaleDateString() : 'New Hero'}
+                icon={<Calendar className="w-6 h-6" />}
+                color="blue"
+                subtitle="Your last contribution date"
+              />
+            </div>
 
-            {/* Eligibility Status Card */}
-            {donorProfile && (
-              <div className="card mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-bold text-gray-900">Eligibility Status</h2>
-                  <Link
-                    to="/donor-profile"
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    View Full Details →
-                  </Link>
+            <div className="grid lg:grid-cols-2 gap-10">
+              {/* Eligibility Section */}
+              <div className="card-premium">
+                <div className="flex items-center justify-between mb-8">
+                   <div>
+                      <h2 className="text-2xl font-display font-black text-slate-900">Eligibility Profile</h2>
+                      <p className="text-slate-500 text-sm font-medium">Verification and health checks</p>
+                   </div>
+                   <Link to="/donor-profile" className="p-3 bg-white shadow-sm border border-slate-100 rounded-2xl hover:text-sky-500 transition-all group">
+                      <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                   </Link>
                 </div>
 
-                <div className="space-y-4">
-                  {/* Overall Status */}
-                  <div className="flex items-center gap-3">
-                    <span className="text-gray-700 font-medium">Current Status:</span>
-                    <span
-                      className={`px-4 py-2 rounded-full font-semibold text-sm flex items-center gap-2 ${donorProfile.eligibilityStatus === 'eligible'
-                          ? 'bg-green-100 text-green-800'
-                          : donorProfile.eligibilityStatus === 'ineligible'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                    >
-                      {donorProfile.eligibilityStatus === 'eligible' && <><CheckCircle className="w-4 h-4" /> Eligible</>}
-                      {donorProfile.eligibilityStatus === 'ineligible' && <><XCircle className="w-4 h-4" /> Ineligible</>}
-                      {donorProfile.eligibilityStatus === 'deferred' && <><Clock className="w-4 h-4" /> Pending Review</>}
-                    </span>
-                  </div>
-
-                  {/* Eligibility Reason */}
-                  {donorProfile.eligibilityReason && (
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <p className="text-sm text-gray-700">
-                        <span className="font-medium">Reason:</span> {donorProfile.eligibilityReason}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Next Possible Donation Date */}
-                  {donorProfile.nextPossibleDonationDate && (
-                    <div className="bg-blue-50 p-3 rounded-lg">
-                      <p className="text-sm text-blue-900">
-                        <span className="font-medium">Next Possible Donation:</span>{' '}
-                        {new Date(donorProfile.nextPossibleDonationDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Quick Checks Summary */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 pt-2">
-                    {donorProfile.isVerified ? (
-                      <div className="flex items-center gap-2 text-sm text-green-700">
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Verified</span>
+                <div className="space-y-6">
+                   <div className="flex items-center justify-between p-5 bg-slate-50 rounded-3xl border border-slate-100">
+                      <div className="flex items-center gap-4">
+                         <div className={`p-3 rounded-2xl bg-white shadow-sm ${
+                           donorProfile?.eligibilityStatus === 'eligible' ? 'text-emerald-500' : 
+                           donorProfile?.eligibilityStatus === 'ineligible' ? 'text-rose-500' : 'text-amber-500'
+                         }`}>
+                            <ShieldCheck className="w-6 h-6" />
+                         </div>
+                         <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Health Status</p>
+                            <p className="text-lg font-bold text-slate-800 capitalize">{donorProfile?.eligibilityStatus || 'Pending'}</p>
+                         </div>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-sm text-yellow-700">
-                        <Clock className="w-4 h-4" />
-                        <span>Pending Verification</span>
+                      <div className={`px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest border ${
+                         donorProfile?.eligibilityStatus === 'eligible' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 
+                         'bg-rose-50 border-rose-100 text-rose-600'
+                      }`}>
+                         {donorProfile?.eligibilityStatus === 'eligible' ? 'Confirmed' : 'Requirement'}
                       </div>
-                    )}
+                   </div>
 
-                    {donorProfile.healthClearance ? (
-                      <div className="flex items-center gap-2 text-sm text-green-700">
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Health Cleared</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-sm text-yellow-700">
-                        <Clock className="w-4 h-4" />
-                        <span>Clearance Pending</span>
-                      </div>
-                    )}
-
-                    {donorProfile.medicalReports && donorProfile.medicalReports.length > 0 ? (
-                      <div className="flex items-center gap-2 text-sm text-green-700">
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Reports Submitted</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-sm text-red-700">
-                        <XCircle className="w-4 h-4" />
-                        <span>No Reports</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Call to Action */}
-                  {donorProfile.eligibilityStatus !== 'eligible' && (
-                    <div className="pt-3 border-t">
-                      <p className="text-sm text-gray-600 mb-2">
-                        To become eligible for donation:
-                      </p>
-                      <ul className="text-sm text-gray-700 space-y-1 ml-4">
-                        {!donorProfile.isVerified && (
-                          <li>• Wait for admin verification</li>
-                        )}
-                        {!donorProfile.healthClearance && (
-                          <li>• Submit medical reports for health clearance</li>
-                        )}
-                        {(!donorProfile.medicalReports || donorProfile.medicalReports.length === 0) && (
-                          <li>• Upload recent blood report (within 90 days)</li>
-                        )}
-                      </ul>
-                    </div>
-                  )}
+                   <div className="grid grid-cols-2 gap-4">
+                      {[
+                        { label: 'Identity', status: donorProfile?.isVerified, icon: UserCheck },
+                        { label: 'Medical', status: donorProfile?.healthClearance, icon: ClipboardList },
+                        { label: 'Reports', status: donorProfile?.medicalReports?.length > 0, icon: Activity }
+                      ].map((item, i) => (
+                        <div key={i} className="p-4 bg-white border border-slate-100 rounded-2xl flex items-center gap-3">
+                           <item.icon className={`w-5 h-5 ${item.status ? 'text-emerald-500' : 'text-slate-300'}`} />
+                           <span className={`text-sm font-bold ${item.status ? 'text-slate-900' : 'text-slate-400'}`}>{item.label}</span>
+                           {item.status ? <CheckCircle className="w-3.5 h-3.5 ml-auto text-emerald-500" /> : <Clock className="w-3.5 h-3.5 ml-auto text-slate-200" />}
+                        </div>
+                      ))}
+                   </div>
                 </div>
               </div>
-            )}
 
-            <div className="grid lg:grid-cols-2 gap-8">
-              {/* Availability Card */}
-              <div className="card">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Donor Availability</h2>
-                <form onSubmit={handleAvailabilitySubmit} className="space-y-6">
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="availabilityStatus"
-                      checked={availabilityForm.availabilityStatus}
-                      onChange={handleAvailabilityChange}
-                      className="h-5 w-5 text-health-blue focus:ring-health-blue border-gray-300 rounded"
-                    />
-                    <label className="ml-3 text-gray-700 font-medium">
-                      I am available for donation
+              {/* Quick Availability Actions */}
+              <div className="card-premium">
+                <div className="mb-8">
+                  <h2 className="text-2xl font-display font-black text-slate-900">Preferences</h2>
+                  <p className="text-slate-500 text-sm font-medium">Control your public visibility</p>
+                </div>
+
+                <form onSubmit={handleAvailabilitySubmit} className="space-y-8">
+                  <div className="flex items-center justify-between p-6 bg-sky-50/50 rounded-3xl border border-sky-100 transition-all hover:bg-sky-50">
+                    <div className="flex items-center gap-4">
+                      <div className={`p-4 rounded-2xl bg-white shadow-sm ${availabilityForm.availabilityStatus ? 'text-sky-500' : 'text-slate-400'}`}>
+                         <Activity className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="font-black text-slate-900 text-lg tracking-tight">Public Presence</p>
+                        <p className="text-sm text-slate-500 font-medium">{availabilityForm.availabilityStatus ? 'You are visible as active' : 'Hidden from searches'}</p>
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        name="availabilityStatus"
+                        checked={availabilityForm.availabilityStatus}
+                        onChange={(e) => {
+                          setAvailabilityForm({ ...availabilityForm, availabilityStatus: e.target.checked });
+                          // Auto trigger save for a snappy feeling
+                          setTimeout(() => document.getElementById('avail-submit').click(), 100);
+                        }}
+                        className="sr-only peer" 
+                      />
+                      <div className="w-14 h-8 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-sky-500"></div>
                     </label>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Last Donation Date
-                    </label>
+                  <div className="space-y-2">
+                    <label className="input-label">Recorded Last Donation</label>
                     <input
                       type="date"
                       name="lastDonationDate"
                       value={availabilityForm.lastDonationDate}
-                      onChange={handleAvailabilityChange}
+                      onChange={(e) => setAvailabilityForm({ ...availabilityForm, lastDonationDate: e.target.value })}
                       className="input-field"
                     />
                   </div>
 
-                  {availability && (
-                    <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Total Donations:</span>
-                        <span className="font-semibold text-gray-900">{availability.totalDonations || 0}</span>
-                      </div>
-                      {availability.lastDonationDate && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Last Donation:</span>
-                          <span className="font-semibold text-gray-900">
-                            {new Date(availability.lastDonationDate).toLocaleDateString()}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <button type="submit" className="w-full btn-primary">
-                    Update Availability
-                  </button>
+                  <button id="avail-submit" type="submit" className="hidden">Save</button>
+                  
+                  <div className="p-4 bg-slate-50 rounded-2xl text-xs font-bold text-slate-500 flex gap-3 italic">
+                    <Clock className="w-4 h-4 flex-shrink-0" />
+                    Updating this helps our AI accurately predict your next possible donation date.
+                  </div>
                 </form>
               </div>
-
-              {/* Quick Links Card */}
-              <div className="card">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
-                <div className="space-y-4">
-                  <Link
-                    to="/donor-profile"
-                    className="block w-full p-4 bg-blue-50 border border-blue-100 rounded-lg hover:bg-blue-100 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold text-blue-900">View Eligibility Profile</h3>
-                        <p className="text-sm text-blue-700">Check your donation eligibility status</p>
-                      </div>
-                      <ClipboardList className="w-8 h-8 text-blue-500" />
-                    </div>
-                  </Link>
-                </div>
-              </div>
             </div>
-          </>
-        )}
-
-        {activeTab === 'matches' && (
-          <div className="card">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Blood Request Matches</h2>
-            <MatchedRequests />
           </div>
         )}
 
-        {activeTab === 'profile' && (
-          <div className="card">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">My Profile</h2>
-              <div className="flex gap-2">
-                {!editing && (
-                  <button
-                    onClick={() => setEditing(true)}
-                    className="btn-primary"
-                  >
-                    Edit Profile
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {editing ? (
-              <form onSubmit={handleProfileSubmit} className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Name
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      className="input-field"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Blood Group
-                    </label>
-                    <select
-                      name="bloodGroup"
-                      value={formData.bloodGroup}
-                      onChange={handleChange}
-                      className="input-field"
-                      required
-                    >
-                      <option value="A+">A+</option>
-                      <option value="A-">A-</option>
-                      <option value="B+">B+</option>
-                      <option value="B-">B-</option>
-                      <option value="AB+">AB+</option>
-                      <option value="AB-">AB-</option>
-                      <option value="O+">O+</option>
-                      <option value="O-">O-</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone
-                    </label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className="input-field"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Date of Birth
-                    </label>
-                    <input
-                      type="date"
-                      name="dateOfBirth"
-                      value={formData.dateOfBirth}
-                      onChange={handleChange}
-                      className="input-field"
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <button type="submit" className="btn-primary">
-                    Save Changes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditing(false);
-                      fetchData();
-                    }}
-                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-6 rounded-lg transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Name</p>
-                    <p className="text-lg font-semibold text-gray-900">{profile?.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Email</p>
-                    <p className="text-lg font-semibold text-gray-900">{profile?.email}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Blood Group</p>
-                    <p className="text-lg font-semibold text-health-blue">{profile?.bloodGroup}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Phone</p>
-                    <p className="text-lg font-semibold text-gray-900">{profile?.phone || 'Not provided'}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'health' && (
-          <div className="card">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Health Reports & Metrics</h2>
-            <HealthMetricsForm
-              initialData={donorProfile}
-              onSave={handleHealthMetricsUpdate}
-              loading={loading}
-              role="donor"
-            />
-          </div>
-        )}
-
-        {activeTab === 'appointments' && (
-          <div className="card">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">My Appointments</h2>
-            <AppointmentList role="donor" />
-          </div>
-        )}
-
-        {activeTab === 'connections' && (
-          <div className="card">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Patient Circles</h2>
-            <ConnectionList role="donor" />
-          </div>
-        )}
-
-        {activeTab === 'notifications' && (
-          <div className="card max-w-2xl mx-auto">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Notifications</h2>
-            <NotificationList />
-          </div>
-        )}
+        {activeTab === 'matches' && <div className="animate-reveal"><MatchedRequests /></div>}
+        {activeTab === 'appointments' && <div className="animate-reveal"><div className="card-premium h-full"><AppointmentList role="donor" /></div></div>}
+        {activeTab === 'connections' && <div className="animate-reveal"><div className="card-premium"><ConnectionList role="donor" /></div></div>}
+        {activeTab === 'health' && <div className="animate-reveal"><div className="card-premium"><HealthMetricsForm initialData={donorProfile} onSave={handleHealthMetricsUpdate} loading={loading} role="donor" /></div></div>}
+        {activeTab === 'notifications' && <div className="animate-reveal max-w-2xl mx-auto"><div className="card-premium"><NotificationList /></div></div>}
       </div>
     </div>
   );

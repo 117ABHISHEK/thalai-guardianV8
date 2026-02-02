@@ -13,3 +13,10 @@ export const getPredictionStatus = async () => {
 export const triggerPrediction = async () => {
   return await api.post('/auth/trigger-prediction');
 };
+
+/**
+ * Update patient medical data via profile update
+ */
+export const updatePatientMedicalData = async (data) => {
+  return await api.put('/auth/profile', data);
+};

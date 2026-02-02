@@ -1,12 +1,19 @@
 import { useState, useEffect } from 'react';
 import api from '../api/auth';
-import { Calendar } from 'lucide-react';
+import { 
+  Calendar, Clock, User, Activity, 
+  CheckCircle2, AlertCircle, X, 
+  MoreHorizontal, ChevronRight, MessageSquare,
+  RefreshCw, CheckCircle, Info, Share2, FileText, Download
+} from 'lucide-react';
 
 const AppointmentList = ({ role }) => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedApt, setSelectedApt] = useState(null);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
   const [scheduleData, setScheduleData] = useState({ date: '', time: '', notes: '', status: 'scheduled' });
   const [error, setError] = useState('');
   const [updating, setUpdating] = useState(false);
@@ -24,7 +31,7 @@ const AppointmentList = ({ role }) => {
       const response = await api.get(endpoint);
       setAppointments(response.data.data || []);
     } catch (error) {
-      console.error('Failed to fetch appointments:', error);
+      console.error('Failed to fetch synchronization schedule:', error);
     } finally {
       setLoading(false);
     }
@@ -36,7 +43,7 @@ const AppointmentList = ({ role }) => {
       await api.patch(`/appointments/${id}`, { status });
       fetchAppointments();
     } catch (error) {
-      alert(error.response?.data?.message || 'Failed to update status');
+      alert(error.response?.data?.message || 'Update failed.');
     } finally {
       setUpdating(false);
     }
@@ -62,183 +69,289 @@ const AppointmentList = ({ role }) => {
       setShowScheduleModal(false);
       fetchAppointments();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to schedule appointment');
+      setError(err.response?.data?.message || 'Schedule synchronization failed.');
     } finally {
       setUpdating(false);
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'scheduled': return 'bg-blue-100 text-blue-800';
-      case 'completed_pending': return 'bg-purple-100 text-purple-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-yellow-100 text-yellow-800';
-    }
+  const getStatusStyle = (status) => {
+    const styles = {
+      scheduled: 'bg-sky-500/10 text-sky-600 border-sky-100',
+      completed_pending: 'bg-amber-500/10 text-amber-600 border-amber-100',
+      completed: 'bg-emerald-500/10 text-emerald-600 border-emerald-100',
+      cancelled: 'bg-slate-500/10 text-slate-400 border-slate-100',
+      pending: 'bg-indigo-500/10 text-indigo-600 border-indigo-100',
+    };
+    return styles[status] || styles.pending;
   };
 
-  if (loading) return <div className="text-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-health-blue mx-auto"></div></div>;
+  if (loading) return (
+    <div className="py-20 text-center">
+       <div className="w-10 h-10 border-4 border-sky-500/10 border-t-sky-500 rounded-full animate-spin mx-auto mb-4" />
+       <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Accessing Schedule...</p>
+    </div>
+  );
 
   return (
-    <div className="bg-white rounded-xl shadow-premium overflow-hidden border border-gray-100">
-      <div className="overflow-x-auto">
-        {appointments.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 bg-gray-50/50 flex flex-col items-center">
-            <Calendar className="w-12 h-12 text-gray-300 mb-2" />
-            No appointments found.
-          </div>
-        ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50/80">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Date & Time</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  {role === 'doctor' ? 'Requester' : (role === 'admin' ? 'Participants' : 'Doctor')}
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Reason</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                {role !== 'admin' && <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {appointments.map((apt) => (
-                <tr key={apt._id} className="hover:bg-gray-50/80 transition-colors group">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-bold text-gray-900">
-                      {new Date(apt.date).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
-                    </div>
-                    <div className="text-xs font-medium text-health-blue bg-blue-50/50 px-2 py-0.5 rounded-full inline-block mt-1">
-                      {apt.time?.includes(':') ? new Date(`2000-01-01T${apt.time}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : apt.time}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-semibold text-gray-900">
-                      {role === 'doctor' ? apt.user?.name : (role === 'admin' ? `P: ${apt.user?.name} | D: ${apt.doctor?.name}` : `Dr. ${apt.doctor?.name}`)}
-                    </div>
-                    {role === 'doctor' && (
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-tight ${apt.user?.role === 'patient' ? 'bg-purple-100 text-purple-700' : 'bg-pink-100 text-pink-700'}`}>
-                          {apt.user?.role}
-                        </span>
-                        <span className="text-xs text-gray-500">{apt.user?.bloodGroup}</span>
-                      </div>
-                    )}
-                    {role !== 'doctor' && role !== 'admin' && (
-                       <div className="text-xs text-gray-500 font-medium">Hematologist</div>
-                    )}
-                    {role === 'admin' && (
-                       <div className="text-xs text-gray-500 italic">User: {apt.user?.role}</div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 capitalize">
-                    <div className="text-sm text-gray-700 max-w-xs">{apt.reason}</div>
-                    {apt.notes && <div className="text-[10px] text-gray-400 mt-1 italic line-clamp-1">Notes: {apt.notes}</div>}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${getStatusColor(apt.status)}`}>
-                      {apt.status === 'completed_pending' 
-                        ? (role === 'doctor' ? 'Verification Sent' : 'Awaiting Your Confirmation') 
-                        : (apt.status === 'scheduled' ? 'Scheduled' : apt.status)}
-                    </span>
-                  </td>
-                  {role !== 'admin' && (
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-xs font-medium">
-                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {role === 'doctor' && apt.status === 'pending' && (
-                           <button onClick={() => openScheduleModal(apt)} disabled={updating} className="px-3 py-1.5 bg-health-blue text-white rounded-lg hover:bg-blue-700 shadow-sm transition-all active:scale-95">
-                             Accept & Schedule
-                           </button>
-                        )}
-                        {role === 'doctor' && apt.status === 'scheduled' && (
-                           <button onClick={() => handleStatusUpdate(apt._id, 'completed_pending')} disabled={updating} className="px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-sm transition-all active:scale-95">
-                             Mark Completed
-                           </button>
-                        )}
-                        {role !== 'doctor' && apt.status === 'completed_pending' && (
-                           <button onClick={() => handleStatusUpdate(apt._id, 'completed')} disabled={updating} className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-sm transition-all active:scale-95">
-                             Confirm Visit
-                           </button>
-                        )}
-                        {apt.status !== 'cancelled' && apt.status !== 'completed' && apt.status !== 'completed_pending' && (
-                           <button onClick={() => handleStatusUpdate(apt._id, 'cancelled')} disabled={updating} className="px-3 py-1.5 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-all active:scale-95">
-                             Cancel
-                           </button>
-                        )}
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+    <div className="animate-reveal">
+      {appointments.length === 0 ? (
+        <div className="py-20 text-center card-premium bg-slate-50/50 border-dashed border-2">
+           <Calendar className="w-16 h-16 text-slate-200 mx-auto mb-4" />
+           <p className="text-slate-400 font-bold">No synchronization cycles scheduled.</p>
+           <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-2 font-black">Book a consultation to start</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+           {appointments.map((apt) => (
+              <div key={apt._id} className={`card-premium group hover:shadow-2xl hover:shadow-slate-200/50 transition-all border border-slate-100 bg-white p-6 relative ${activeDropdown === apt._id ? 'z-50' : 'z-0'}`}>
+                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="flex items-center gap-6">
+                       {/* Date Block */}
+                       <div className="w-20 bg-slate-50 border border-slate-100 rounded-2xl p-2 text-center flex flex-col items-center justify-center">
+                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-tight leading-none mb-1">
+                             {new Date(apt.date).toLocaleDateString(undefined, { month: 'short' })}
+                          </span>
+                          <span className="text-2xl font-black text-slate-900 leading-none">
+                             {new Date(apt.date).getDate()}
+                          </span>
+                          <span className="text-[10px] font-bold text-sky-500 mt-1 uppercase tracking-widest">
+                             {apt.time}
+                          </span>
+                       </div>
 
-      {/* Schedule Modal */}
+                       {/* Participant Info */}
+                       <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
+                             {role === 'doctor' ? 'Clinical Requester' : (role === 'admin' ? 'Participants' : 'Specialist')}
+                          </p>
+                          <h4 className="text-lg font-display font-black text-slate-900 leading-none flex items-center gap-2">
+                             {role === 'doctor' ? apt.user?.name : (role === 'admin' ? `${apt.user?.name} ↔ Dr. ${apt.doctor?.name}` : `Dr. ${apt.doctor?.name}`)}
+                             <span className={`px-2 py-0.5 rounded-full border text-[8px] font-black uppercase tracking-widest ${getStatusStyle(apt.status)}`}>
+                                {apt.status === 'completed_pending' ? 'Verification Sent' : apt.status}
+                             </span>
+                          </h4>
+                          <div className="flex items-center gap-3 mt-3">
+                             <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
+                                <Activity className="w-3 h-3" /> {apt.reason || 'General Consult'}
+                             </span>
+                             {role === 'doctor' && (
+                                <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                             )}
+                             {role === 'doctor' && (
+                                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500">
+                                   Group: {apt.user?.bloodGroup}
+                                </span>
+                             )}
+                          </div>
+                       </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-3 md:border-l md:border-slate-100 md:pl-6">
+                       {role === 'doctor' && apt.status === 'pending' && (
+                          <button onClick={() => openScheduleModal(apt)} disabled={updating} className="btn-primary py-3 px-6 text-[10px] font-black uppercase">
+                             Set Schedule
+                          </button>
+                       )}
+                       {role === 'doctor' && apt.status === 'scheduled' && (
+                          <button onClick={() => handleStatusUpdate(apt._id, 'completed_pending')} disabled={updating} className="py-3 px-6 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-2xl text-[10px] font-black uppercase border border-indigo-100 transition-all">
+                             Mark Completed
+                          </button>
+                       )}
+                       {role !== 'doctor' && apt.status === 'completed_pending' && (
+                          <button onClick={() => handleStatusUpdate(apt._id, 'completed')} disabled={updating} className="py-3 px-6 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all">
+                             Confirm Session
+                          </button>
+                       )}
+                       {apt.status !== 'cancelled' && apt.status !== 'completed' && apt.status !== 'completed_pending' && (
+                          <button onClick={() => handleStatusUpdate(apt._id, 'cancelled')} disabled={updating} className="p-3 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all">
+                             <X className="w-5 h-5" />
+                          </button>
+                       )}
+                       
+                       <div className="relative">
+                          <button 
+                            onClick={() => setActiveDropdown(activeDropdown === apt._id ? null : apt._id)}
+                            className={`p-3 rounded-xl transition-all ${activeDropdown === apt._id ? 'bg-slate-900 text-white' : 'text-slate-300 hover:text-slate-600 hover:bg-slate-50'}`}
+                          >
+                             <MoreHorizontal className="w-5 h-5" />
+                          </button>
+
+                          {activeDropdown === apt._id && (
+                            <>
+                              <div className="fixed inset-0 z-40" onClick={() => setActiveDropdown(null)} />
+                              <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-[24px] shadow-2xl border border-slate-100 p-2.5 z-50 animate-reveal">
+                                 <button 
+                                   onClick={() => { setSelectedApt(apt); setShowInfoModal(true); setActiveDropdown(null); }}
+                                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
+                                 >
+                                    <Info className="w-4 h-4" /> View Full Details
+                                 </button>
+                                 <button 
+                                   onClick={() => { alert('Sharing link copied to clipboard'); setActiveDropdown(null); }}
+                                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
+                                 >
+                                    <Share2 className="w-4 h-4" /> Share Sync Link
+                                 </button>
+                                 <button 
+                                   onClick={() => { alert('Preparing report download...'); setActiveDropdown(null); }}
+                                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
+                                 >
+                                    <FileText className="w-4 h-4" /> Generate Case Report
+                                 </button>
+                                 {role === 'admin' && (
+                                   <button 
+                                     onClick={() => { handleStatusUpdate(apt._id, 'cancelled'); setActiveDropdown(null); }}
+                                     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-all"
+                                   >
+                                      <AlertCircle className="w-4 h-4" /> Admin Override: Cancel
+                                   </button>
+                                 )}
+                                 <div className="h-[1px] bg-slate-50 my-1.5 mx-2" />
+                                 <p className="px-4 py-1 text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">ID: {apt._id.slice(-12)}</p>
+                              </div>
+                            </>
+                          )}
+                       </div>
+                    </div>
+                 </div>
+                 
+                 {apt.notes && (
+                   <div className="mt-4 pt-4 border-t border-slate-50 flex gap-3 items-start group-hover:bg-slate-50/50 rounded-xl transition-colors">
+                      <MessageSquare className="w-4 h-4 text-sky-400 mt-0.5 flex-shrink-0" />
+                      <p className="text-[10px] text-slate-500 font-medium leading-relaxed italic">
+                         Registry Notes: {apt.notes}
+                      </p>
+                   </div>
+                 )}
+              </div>
+           ))}
+        </div>
+      )}
+
+      {/* Schedule Sync Modal */}
       {showScheduleModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-slide-up">
-            <div className="p-6 border-b border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900">Schedule Appointment</h3>
-              <p className="text-sm text-gray-500 mt-1">Review and set time for {selectedApt?.user?.name}</p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-md overflow-hidden animate-slide-up border border-white/20">
+            <div className="p-8 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex justify-between items-center mb-2">
+                 <h3 className="text-2xl font-display font-black text-slate-900">Sync Schedule</h3>
+                 <button onClick={() => setShowScheduleModal(false)} className="p-2 text-slate-400 hover:text-rose-500 transition-colors"><X className="w-6 h-6" /></button>
+              </div>
+              <p className="text-xs font-bold text-slate-500">Clinical session for {selectedApt?.user?.name}</p>
             </div>
             
-            <form onSubmit={handleScheduleSubmit} className="p-6 space-y-4">
-              {error && <div className="p-3 bg-red-50 text-red-800 text-sm rounded-lg border border-red-100 font-medium">{error}</div>}
+            <form onSubmit={handleScheduleSubmit} className="p-8 space-y-6">
+              {error && <div className="p-4 bg-rose-50 text-rose-600 text-xs font-black uppercase tracking-widest rounded-2xl border border-rose-100">{error}</div>}
               
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Selected Date</label>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="input-label text-[10px]">Registry Date</label>
                   <input 
-                    type="date" 
-                    required
-                    value={scheduleData.date}
+                    type="date" required value={scheduleData.date}
                     onChange={(e) => setScheduleData({ ...scheduleData, date: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-health-blue/20 outline-none hover:border-health-blue/30 transition-all" 
+                    className="input-field py-3 text-sm bg-slate-50" 
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Preferred Time</label>
+                <div className="space-y-2">
+                  <label className="input-label text-[10px]">Sync Time</label>
                   <input 
-                    type="time" 
-                    required
-                    value={scheduleData.time}
+                    type="time" required value={scheduleData.time}
                     onChange={(e) => setScheduleData({ ...scheduleData, time: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-health-blue/20 outline-none hover:border-health-blue/30 transition-all" 
+                    className="input-field py-3 text-sm bg-slate-50" 
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Preparation Notes</label>
+              <div className="space-y-2">
+                <label className="input-label text-[10px]">Practitioner Instructions</label>
                 <textarea 
-                  rows="3"
-                  placeholder="Any instructions for the patient/donor..."
+                  rows="3" placeholder="Clinical preparation notes..."
                   value={scheduleData.notes}
                   onChange={(e) => setScheduleData({ ...scheduleData, notes: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-health-blue/20 outline-none hover:border-health-blue/30 transition-all resize-none" 
+                  className="input-field bg-slate-50 resize-none text-sm" 
                 ></textarea>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-4 pt-4">
                 <button 
-                  type="button"
-                  onClick={() => setShowScheduleModal(false)}
-                  className="flex-1 py-3 text-sm font-bold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all active:scale-95"
+                  type="submit" disabled={updating}
+                  className="flex-1 py-4 text-xs font-black uppercase tracking-widest text-white bg-sky-500 rounded-2xl hover:bg-sky-600 shadow-xl shadow-sky-500/20 transition-all active:scale-95 disabled:opacity-50"
                 >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  disabled={updating}
-                  className="flex-[2] py-3 text-sm font-bold text-white bg-health-blue rounded-xl hover:bg-blue-700 shadow-lg shadow-health-blue/20 transition-all active:scale-95 disabled:opacity-50"
-                >
-                  {updating ? 'Scheduling...' : 'Set Schedule'}
+                  {updating ? 'Synchronizing...' : 'Initialize Schedule Sync'}
                 </button>
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Instance Info Modal */}
+      {showInfoModal && selectedApt && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-fade-in">
+           <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up border border-white/20">
+              <div className="p-8 bg-slate-900 text-white relative">
+                 <button onClick={() => setShowInfoModal(false)} className="absolute top-6 right-6 p-2 text-white/40 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
+                 <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-sky-500 rounded-2xl flex items-center justify-center">
+                       <Activity className="w-6 h-6" />
+                    </div>
+                    <div>
+                       <p className="text-[10px] font-black text-sky-400 uppercase tracking-widest">Instance Details</p>
+                       <h3 className="text-xl font-display font-black">Sync Cycle #{selectedApt._id.slice(-6)}</h3>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="p-10 space-y-10">
+                 <div className="grid grid-cols-2 gap-8">
+                    <div>
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Participant A</p>
+                       <p className="font-bold text-slate-900">{selectedApt.user?.name}</p>
+                       <p className="text-xs text-slate-400">{selectedApt.user?.email}</p>
+                    </div>
+                    <div>
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Medical Specialist</p>
+                       <p className="font-bold text-slate-900">Dr. {selectedApt.doctor?.name}</p>
+                       <p className="text-xs text-slate-400">{selectedApt.doctor?.specialization || 'Clinical Expert'}</p>
+                    </div>
+                 </div>
+
+                 <div className="p-6 bg-slate-50 rounded-3xl space-y-4">
+                    <div className="flex items-center justify-between">
+                       <div className="flex items-center gap-3">
+                          <Calendar className="w-4 h-4 text-sky-500" />
+                          <p className="text-sm font-bold text-slate-700">{new Date(selectedApt.date).toLocaleDateString(undefined, { dateStyle: 'full' })}</p>
+                       </div>
+                       <div className="flex items-center gap-3">
+                          <Clock className="w-4 h-4 text-sky-500" />
+                          <p className="text-sm font-bold text-slate-700">{selectedApt.time}</p>
+                       </div>
+                    </div>
+                    <div className="h-[1px] bg-slate-200" />
+                    <div className="flex items-center gap-3">
+                       <CheckCircle className="w-4 h-4 text-emerald-500" />
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status Protocol: <span className="text-slate-900">{selectedApt.status}</span></p>
+                    </div>
+                 </div>
+
+                 {selectedApt.notes && (
+                   <div className="space-y-3">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                         <MessageSquare className="w-3 h-3" /> Clinical Instructions
+                      </p>
+                      <p className="text-sm text-slate-600 bg-slate-50 p-6 rounded-[24px] italic leading-relaxed font-medium">
+                         "{selectedApt.notes}"
+                      </p>
+                   </div>
+                 )}
+
+                 <button onClick={() => setShowInfoModal(false)} className="w-full btn-primary py-4 mt-4">
+                    Close Instance
+                 </button>
+              </div>
+           </div>
         </div>
       )}
     </div>

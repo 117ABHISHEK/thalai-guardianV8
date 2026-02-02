@@ -3,13 +3,17 @@ import { useAuth } from '../context/AuthContext';
 import { getProfile, updateProfile } from '../api/auth';
 import HealthMetricsForm from '../components/HealthMetricsForm';
 import { getDonorProfile } from '../api/donor';
+import { 
+  CheckCircle, XCircle, Clock, AlertCircle, 
+  ArrowLeft, ShieldCheck, Ruler, Weight, 
+  Calendar, Award, Activity, FileText,
+  User, Edit3, Heart, Info, Sparkles, Droplets
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-/**
- * Donor Profile Page with Eligibility Status Display
- * Shows eligibility status, next possible donation date, and donation history
- */
 const DonorProfile = () => {
   const { user: authUser } = useAuth();
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [donorProfile, setDonorProfile] = useState(null);
   const [eligibility, setEligibility] = useState(null);
@@ -28,300 +32,230 @@ const DonorProfile = () => {
       const response = await getProfile();
       setUser(response.data.user);
 
-      // Fetch donor profile if user is a donor
       if (response.data.user.role === 'donor') {
         try {
           const donorResponse = await getDonorProfile();
           setDonorProfile(donorResponse.data.donor);
           setEligibility(donorResponse.data.eligibility);
         } catch (err) {
-          console.error('Error fetching donor profile:', err);
-          // Donor profile might not exist yet
+          console.error('Donor details missing:', err);
         }
       }
     } catch (err) {
-      setError(err.message || 'Failed to fetch profile');
+      setError(err.message || 'Identity link interrupted.');
     } finally {
       setLoading(false);
     }
   };
 
-  const getEligibilityBadgeClass = (status) => {
-    switch (status) {
-      case 'eligible':
-        return 'bg-green-100 text-green-800 border-green-300';
-      case 'ineligible':
-        return 'bg-red-100 text-red-800 border-red-300';
-      case 'deferred':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
-    }
+  const getEligibilityStatus = () => {
+    if (!eligibility) return { label: 'Pending Assessment', color: 'text-slate-400', bg: 'bg-slate-50', icon: <Clock className="w-5 h-5" /> };
+    if (eligibility.eligible) return { label: 'Active Hero', color: 'text-emerald-500', bg: 'bg-emerald-50', icon: <CheckCircle className="w-5 h-5" /> };
+    return { label: 'Protocol Deferred', color: 'text-rose-500', bg: 'bg-rose-50', icon: <AlertCircle className="w-5 h-5" /> };
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+    return new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  const handleHealthMetricsUpdate = async (data) => {
-    try {
-      setUpdating(true);
-      await updateProfile(data);
-      await fetchProfile(); // Refresh data
-      setShowHealthMetricsEdit(false);
-    } catch (err) {
-      console.error('Failed to update health metrics:', err);
-      // You might want to show an error message here
-    } finally {
-      setUpdating(false);
-    }
-  };
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50/50">
+       <div className="w-12 h-12 border-4 border-sky-500/20 border-t-sky-500 rounded-full animate-spin" />
+    </div>
+  );
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-health-blue mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading profile...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="card p-6 text-center">
-          <p className="text-red-600">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user || user.role !== 'donor') {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="card p-6 text-center">
-          <p className="text-gray-600">This page is only available for donors.</p>
-        </div>
-      </div>
-    );
-  }
+  const status = getEligibilityStatus();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Donor Profile</h1>
-
-        {/* Eligibility Status Card */}
-        {eligibility && (
-          <div className="card p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Eligibility Status</h2>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <span className={`inline-block px-4 py-2 rounded-lg border-2 font-semibold ${getEligibilityBadgeClass(eligibility.eligible ? 'eligible' : donorProfile?.eligibilityStatus || 'deferred')}`}>
-                  {eligibility.eligible ? '✓ Eligible' : donorProfile?.eligibilityStatus?.toUpperCase() || 'DEFERRED'}
-                </span>
-              </div>
-              <div>
-                {eligibility.nextPossibleDate && (
-                  <p className="text-sm text-gray-600">
-                    Next Possible Donation: <strong className="text-health-blue">{formatDate(eligibility.nextPossibleDate)}</strong>
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-sm text-gray-700">
-                <strong>Reason:</strong> {eligibility.reason || donorProfile?.eligibilityReason || 'Pending review'}
-              </p>
-            </div>
-
-            {/* Eligibility Checks */}
-            {eligibility.checks && (
-              <div className="mt-4 space-y-2">
-                <h3 className="font-semibold text-gray-900">Eligibility Checks:</h3>
-                <div className="grid md:grid-cols-2 gap-2">
-                  <div className={`p-3 rounded ${eligibility.checks.ageCheck?.passed ? 'bg-green-50' : 'bg-red-50'}`}>
-                    <p className="text-sm">
-                      {eligibility.checks.ageCheck?.passed ? '✓' : '✗'} Age Check: {eligibility.checks.ageCheck?.passed ? 'Passed' : eligibility.checks.ageCheck?.reason || 'Failed'}
-                    </p>
-                  </div>
-                  <div className={`p-3 rounded ${eligibility.checks.donationIntervalCheck?.passed ? 'bg-green-50' : 'bg-red-50'}`}>
-                    <p className="text-sm">
-                      {eligibility.checks.donationIntervalCheck?.passed ? '✓' : '✗'} Donation Interval: {eligibility.checks.donationIntervalCheck?.passed ? 'Passed' : eligibility.checks.donationIntervalCheck?.reason || 'Failed'}
-                    </p>
-                  </div>
-                  <div className={`p-3 rounded ${eligibility.checks.medicalHistoryCheck?.passed ? 'bg-green-50' : 'bg-red-50'}`}>
-                    <p className="text-sm">
-                      {eligibility.checks.medicalHistoryCheck?.passed ? '✓' : '✗'} Medical History: {eligibility.checks.medicalHistoryCheck?.passed ? 'Passed' : eligibility.checks.medicalHistoryCheck?.reason || 'Failed'}
-                    </p>
-                  </div>
-                  <div className={`p-3 rounded ${eligibility.checks.healthClearanceCheck?.passed ? 'bg-green-50' : 'bg-red-50'}`}>
-                    <p className="text-sm">
-                      {eligibility.checks.healthClearanceCheck?.passed ? '✓' : '✗'} Health Clearance: {eligibility.checks.healthClearanceCheck?.passed ? 'Passed' : eligibility.checks.healthClearanceCheck?.reason || 'Failed'}
-                    </p>
-                  </div>
-                  <div className={`p-3 rounded ${eligibility.checks.verificationCheck?.passed ? 'bg-green-50' : 'bg-red-50'}`}>
-                    <p className="text-sm">
-                      {eligibility.checks.verificationCheck?.passed ? '✓' : '✗'} Verification: {eligibility.checks.verificationCheck?.passed ? 'Passed' : eligibility.checks.verificationCheck?.reason || 'Failed'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Donor Information */}
-        {donorProfile && (
-          <div className="card p-6 mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Donor Information</h2>
-              <button
-                onClick={() => setShowHealthMetricsEdit(!showHealthMetricsEdit)}
-                className="text-sm text-health-blue hover:text-blue-800 font-medium"
+    <div className="min-h-screen bg-slate-50/30 py-12 px-6 lg:px-12 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-sky-500/5 rounded-full blur-[100px] -z-10" />
+      
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+           <div className="animate-reveal">
+              <button 
+                onClick={() => navigate('/donor-dashboard')} 
+                className="flex items-center gap-2 text-slate-400 font-black uppercase tracking-widest text-[10px] mb-4 hover:text-sky-500 transition-colors group"
               >
-                {showHealthMetricsEdit ? 'Cancel Edit' : 'Edit Health Metrics'}
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
               </button>
-            </div>
+              <h1 className="text-4xl font-display font-black text-slate-900 tracking-tight">Hero Registry <span className="text-sky-500 text-gradient">Profile</span></h1>
+              <p className="text-slate-500 font-medium">Manage your clinical metrics and biological status.</p>
+           </div>
 
-            {showHealthMetricsEdit ? (
-              <HealthMetricsForm
-                initialData={donorProfile}
-                onSave={handleHealthMetricsUpdate}
-                loading={updating}
-              />
-            ) : (
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">Height</p>
-                  <p className="font-semibold text-gray-900">{donorProfile.heightCm || 'N/A'} cm</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Weight</p>
-                  <p className="font-semibold text-gray-900">{donorProfile.weightKg || 'N/A'} kg</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Date of Birth</p>
-                  <p className="font-semibold text-gray-900">{formatDate(donorProfile.dob || user.dateOfBirth)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Age</p>
-                  <p className="font-semibold text-gray-900">
-                    {donorProfile.dob || user.dateOfBirth
-                      ? Math.floor((new Date() - new Date(donorProfile.dob || user.dateOfBirth)) / (365.25 * 24 * 60 * 60 * 1000))
-                      : 'N/A'}{' '}
-                    years
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Last Donation Date</p>
-                  <p className="font-semibold text-gray-900">{formatDate(donorProfile.lastDonationDate)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Total Donations</p>
-                  <p className="font-semibold text-gray-900">{donorProfile.totalDonations || 0}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Donation Frequency</p>
-                  <p className="font-semibold text-gray-900">{donorProfile.donationFrequencyMonths || 3} months</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Health Clearance</p>
-                  <p className={`font-semibold ${donorProfile.healthClearance ? 'text-green-600' : 'text-yellow-600'}`}>
-                    {donorProfile.healthClearance ? '✓ Granted' : 'Pending'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Verification Status</p>
-                  <p className={`font-semibold ${donorProfile.isVerified ? 'text-green-600' : 'text-yellow-600'}`}>
-                    {donorProfile.isVerified ? '✓ Verified' : 'Pending'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Availability Status</p>
-                  <p className={`font-semibold ${donorProfile.availabilityStatus ? 'text-green-600' : 'text-gray-600'}`}>
-                    {donorProfile.availabilityStatus ? 'Available' : 'Not Available'}
-                  </p>
-                </div>
+           <div className={`animate-reveal px-6 py-4 rounded-3xl border border-white/50 backdrop-blur-sm shadow-xl flex items-center gap-4 ${status.bg}`}>
+              <div className={`p-2 rounded-xl bg-white shadow-sm ${status.color}`}>{status.icon}</div>
+              <div>
+                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1">Biological Status</p>
+                 <p className={`font-black text-sm uppercase tracking-tight ${status.color}`}>{status.label}</p>
               </div>
-            )}
-          </div>
-        )}
+           </div>
+        </div>
 
-        {/* Medical Reports (New Section) */}
-        {donorProfile?.medicalReports && donorProfile.medicalReports.length > 0 && (
-          <div className="card p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Medical Reports</h2>
-            <div className="space-y-3">
-              {donorProfile.medicalReports.map((report, index) => (
-                <div key={index} className="border rounded-lg p-4 bg-gray-50">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-gray-900">{report.title}</h3>
-                    <span className="text-xs text-gray-500">{formatDate(report.reportDate)}</span>
-                  </div>
-                  {report.value && <p className="text-sm font-medium text-gray-800 mb-1">Result: {report.value}</p>}
-                  {report.notes && <p className="text-sm text-gray-600">{report.notes}</p>}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+           {/* Primary Bio Card */}
+           <div className="lg:col-span-2 space-y-8 animate-reveal" style={{ animationDelay: '0.1s' }}>
+              <section className="card-premium h-full">
+                 <div className="flex justify-between items-center mb-10 border-b border-slate-100 pb-6">
+                    <h2 className="flex items-center gap-2 font-black uppercase text-[10px] tracking-[0.2em] text-slate-400">
+                       <Ruler className="w-4 h-4 text-sky-500" /> Bio-Metrics & Physicality
+                    </h2>
+                    <button 
+                      onClick={() => setShowHealthMetricsEdit(!showHealthMetricsEdit)}
+                      className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-sky-600 transition-all active:scale-95 shadow-lg shadow-slate-900/10"
+                    >
+                       <Edit3 className="w-3 h-3" /> {showHealthMetricsEdit ? 'Cancel Refinement' : 'Refine Metrics'}
+                    </button>
+                 </div>
 
-        {/* Donate Now Button */}
-        {eligibility && (
-          <div className="card p-6 mb-6">
-            {eligibility.eligible && donorProfile?.healthClearance && donorProfile?.isVerified ? (
-              <button className="btn-primary w-full py-3">
-                Donate Now
-              </button>
-            ) : (
-              <div className="text-center">
-                <button disabled className="btn-primary w-full py-3 opacity-50 cursor-not-allowed">
-                  Cannot Donate Now
-                </button>
-                <p className="mt-2 text-sm text-gray-600">
-                  {!eligibility.eligible
-                    ? eligibility.reason || 'You are not eligible to donate at this time.'
-                    : 'Please wait for admin verification and health clearance.'}
-                </p>
+                 {showHealthMetricsEdit ? (
+                    <div className="p-2">
+                       <HealthMetricsForm 
+                          initialData={donorProfile} 
+                          onSave={async (data) => {
+                             try { setUpdating(true); await updateProfile(data); await fetchProfile(); setShowHealthMetricsEdit(false); } catch(e){} finally { setUpdating(false); }
+                          }}
+                          loading={updating}
+                       />
+                    </div>
+                 ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
+                       {[
+                          { label: 'Height', val: `${donorProfile?.heightCm || 'N/A'} cm`, icon: <Ruler className="w-4 h-4" /> },
+                          { label: 'Weight', val: `${donorProfile?.weightKg || 'N/A'} kg`, icon: <Weight className="w-4 h-4" /> },
+                          { label: 'Blood Hub', val: donorProfile?.bloodGroup || user?.bloodGroup || 'N/A', icon: <Droplets className="w-4 h-4 text-rose-500" /> },
+                          { label: 'Cycles', val: donorProfile?.totalDonations || 0, icon: <Activity className="w-4 h-4 text-emerald-500" /> },
+                          { label: 'D.O.B', val: formatDate(donorProfile?.dob || user?.dateOfBirth), icon: <Calendar className="w-4 h-4 text-amber-500" /> },
+                          { label: 'Frequency', val: `${donorProfile?.donationFrequencyMonths || 3} Mon`, icon: <Clock className="w-4 h-4 text-sky-400" /> },
+                          { label: 'Last Log', val: formatDate(donorProfile?.lastDonationDate), icon: <Activity className="w-4 h-4 text-indigo-400" /> },
+                          { label: 'Verified', val: donorProfile?.isVerified ? 'Synchronized' : 'Pending', icon: <ShieldCheck className="w-4 h-4 text-emerald-400" /> }
+                       ].map((item, i) => (
+                          <div key={i} className="group cursor-default">
+                             <div className="flex items-center gap-2 mb-2">
+                                <span className="text-slate-300 group-hover:text-sky-500 transition-colors uppercase">{item.icon}</span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">{item.label}</span>
+                             </div>
+                             <p className="text-xl font-display font-black text-slate-900">{item.val}</p>
+                          </div>
+                       ))}
+                    </div>
+                 )}
+              </section>
+
+              {/* Medical Events & Reports */}
+              <div className="grid md:grid-cols-2 gap-8">
+                 <section className="card-premium">
+                    <h3 className="flex items-center gap-2 font-black uppercase text-[10px] tracking-[0.2em] text-slate-400 mb-6 pb-4 border-b border-slate-100">
+                       <FileText className="w-4 h-4 text-indigo-500" /> Clinical Reports
+                    </h3>
+                    <div className="space-y-4">
+                       {donorProfile?.medicalReports?.length > 0 ? (
+                          donorProfile.medicalReports.map((report, i) => (
+                             <div key={i} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all cursor-pointer">
+                                <div className="flex justify-between items-start mb-2">
+                                   <p className="font-bold text-slate-900">{report.title}</p>
+                                   <span className="text-[9px] font-black text-slate-400 bg-white px-2 py-0.5 rounded-full border border-slate-100">{formatDate(report.reportDate)}</span>
+                                </div>
+                                <p className="text-xs text-slate-500 line-clamp-2">{report.notes || 'No terminal observations.'}</p>
+                             </div>
+                          ))
+                       ) : (
+                          <div className="text-center py-8">
+                             <Activity className="w-12 h-12 text-slate-100 mx-auto mb-2" />
+                             <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">No clinical reports synced.</p>
+                          </div>
+                       )}
+                    </div>
+                 </section>
+
+                 <section className="card-premium">
+                    <h3 className="flex items-center gap-2 font-black uppercase text-[10px] tracking-[0.2em] text-slate-400 mb-6 pb-4 border-b border-slate-100">
+                       <Heart className="w-4 h-4 text-rose-500" /> Condition Log
+                    </h3>
+                    <div className="space-y-4">
+                       {donorProfile?.medicalHistory?.length > 0 ? (
+                          donorProfile.medicalHistory.map((entry, i) => (
+                             <div key={i} className="p-4 border border-slate-100 rounded-2xl flex items-center gap-4">
+                                <div className={`p-2 rounded-xl flex-shrink-0 ${entry.isContraindication ? 'bg-rose-50 text-rose-500' : 'bg-emerald-50 text-emerald-500'}`}>
+                                   {entry.isContraindication ? <AlertCircle className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                   <div className="flex justify-between items-center gap-2">
+                                      <p className="font-bold text-slate-900 truncate">{entry.condition}</p>
+                                      {entry.isContraindication && <span className="text-[8px] font-black uppercase text-rose-600 bg-rose-100 px-1.5 py-0.5 rounded leading-none">Critical</span>}
+                                   </div>
+                                   <p className="text-[10px] text-slate-400 font-medium">Synced: {formatDate(entry.diagnosisDate)}</p>
+                                </div>
+                             </div>
+                          ))
+                       ) : (
+                          <div className="text-center py-8">
+                             <Activity className="w-12 h-12 text-slate-100 mx-auto mb-2" />
+                             <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">No conditions registered.</p>
+                          </div>
+                       )}
+                    </div>
+                 </section>
               </div>
-            )}
-          </div>
-        )}
+           </div>
 
-        {/* Medical History */}
-        {donorProfile?.medicalHistory && donorProfile.medicalHistory.length > 0 && (
-          <div className="card p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Medical History</h2>
-            <div className="space-y-3">
-              {donorProfile.medicalHistory.map((entry, index) => (
-                <div key={index} className="border rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-gray-900">{entry.condition}</h3>
-                    {entry.isContraindication && (
-                      <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">Contraindication</span>
-                    )}
-                  </div>
-                  {entry.details && <p className="text-sm text-gray-600 mb-2">{entry.details}</p>}
-                  {entry.diagnosisDate && (
-                    <p className="text-xs text-gray-500">Diagnosed: {formatDate(entry.diagnosisDate)}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+           {/* Hero Integrity Side */}
+           <div className="space-y-8 animate-reveal" style={{ animationDelay: '0.2s' }}>
+              <section className="card-premium bg-slate-900 border-none relative overflow-hidden group">
+                 <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none group-hover:scale-110 group-hover:rotate-12 transition-transform duration-700">
+                    <Droplets className="w-32 h-32 text-sky-400" />
+                 </div>
+                 <div className="relative z-10 text-white space-y-6">
+                    <h3 className="text-2xl font-display font-black leading-tight tracking-tight">Mission Readiness <br/> Protocol</h3>
+                    
+                    <div className="space-y-4 pt-4 border-t border-white/10">
+                       <div className="flex justify-between items-center text-xs font-black uppercase tracking-widest text-slate-400">
+                          <span>Eligibility Pipeline</span>
+                          <span className={eligibility?.eligible ? 'text-emerald-400' : 'text-rose-400'}>{eligibility?.eligible ? 'Active' : 'Locked'}</span>
+                       </div>
+                       <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                          <div className={`h-full transition-all duration-1000 ${eligibility?.eligible ? 'w-full bg-emerald-500' : 'w-1/3 bg-rose-500'}`} />
+                       </div>
+                    </div>
+
+                    <div className="space-y-4">
+                       <p className="text-xs text-slate-400 font-medium leading-relaxed italic">
+                          "Heroism is not just a gift, it's clinical consistency. Maintain your metrics to remain in the active response pipeline."
+                       </p>
+                       <button 
+                          disabled={!eligibility?.eligible}
+                          className="w-full btn-primary py-4 text-lg shadow-xl shadow-sky-500/20 group hover:shadow-sky-500/40"
+                       >
+                          Initiate Donation <ArrowLeft className="w-5 h-5 ml-2 rotate-180 group-hover:translate-x-1 transition-transform" />
+                       </button>
+                    </div>
+                 </div>
+              </section>
+
+              <section className="card-premium h-fit">
+                 <h3 className="flex items-center gap-2 font-black uppercase text-[10px] tracking-[0.2em] text-slate-400 mb-6">
+                    <Activity className="w-4 h-4 text-emerald-500" /> Active Sync Logs
+                 </h3>
+                 <div className="space-y-3">
+                    {[
+                       { label: 'Health Clearance', status: donorProfile?.healthClearance },
+                       { label: 'Admin Verification', status: donorProfile?.isVerified },
+                       { label: 'Global Availability', status: donorProfile?.availabilityStatus },
+                       { label: 'Bio-Sync Active', status: eligibility?.eligible }
+                    ].map((item, i) => (
+                       <div key={i} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-2xl">
+                          <span className="text-xs font-bold text-slate-600 tracking-tight">{item.label}</span>
+                          {item.status ? <CheckCircle className="w-4 h-4 text-emerald-500" /> : <Clock className="w-4 h-4 text-amber-500 animate-pulse" />}
+                       </div>
+                    ))}
+                 </div>
+              </section>
+           </div>
+        </div>
       </div>
     </div>
   );
 };
 
 export default DonorProfile;
-

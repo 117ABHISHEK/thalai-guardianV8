@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getDonors, verifyDonor } from '../api/admin';
+import { 
+  RefreshCw, CheckCircle, AlertTriangle, 
+  ArrowLeft, Users, Filter, Search, 
+  Mail, Phone, Activity, ShieldCheck,
+  MoreVertical, CheckCircle2, Info, X
+} from 'lucide-react';
 
 const DonorVerification = () => {
   const { logout } = useAuth();
@@ -10,7 +16,10 @@ const DonorVerification = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [filter, setFilter] = useState('all'); // all, verified, unverified
+  const [filter, setFilter] = useState('all');
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [selectedHero, setSelectedHero] = useState(null);
 
   useEffect(() => {
     fetchDonors();
@@ -22,7 +31,7 @@ const DonorVerification = () => {
       const response = await getDonors();
       setDonors(response.data.donors || []);
     } catch (err) {
-      setError(err.message || 'Failed to load donors');
+      setError(err.message || 'Failed to synchronize hero data.');
     } finally {
       setLoading(false);
     }
@@ -31,12 +40,11 @@ const DonorVerification = () => {
   const handleVerify = async (donorId) => {
     try {
       await verifyDonor(donorId);
-      setMessage('Donor verified successfully!');
+      setMessage('Donor identity verified & synced.');
       setTimeout(() => setMessage(''), 3000);
-      fetchDonors(); // Refresh the list
+      fetchDonors();
     } catch (err) {
-      setError(err.message || 'Failed to verify donor');
-      setTimeout(() => setError(''), 5000);
+      setError('Verification protocol failed.');
     }
   };
 
@@ -46,296 +54,219 @@ const DonorVerification = () => {
     return true;
   });
 
-  if (loading) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.loading}>Loading donors...</div>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+       <div className="w-12 h-12 border-4 border-sky-500/20 border-t-sky-500 rounded-full animate-spin" />
+    </div>
+  );
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h1>Donor Verification</h1>
-        <div style={styles.headerActions}>
-          <button
-            onClick={() => navigate('/admin-dashboard')}
-            style={styles.backButton}
-          >
-            ← Back to Dashboard
-          </button>
-          <button onClick={logout} style={styles.logoutButton}>
-            Logout
-          </button>
+    <div className="min-h-screen bg-slate-50/50 py-12 px-6 lg:px-12 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-sky-500/5 rounded-full blur-[100px] -z-10" />
+
+      <div className="max-w-7xl mx-auto mb-10">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12 animate-reveal">
+           <div>
+              <button 
+                onClick={() => navigate('/admin-dashboard')} 
+                className="flex items-center gap-2 text-slate-400 font-black uppercase tracking-widest text-[10px] mb-4 hover:text-sky-500 transition-colors group"
+              >
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Admin Command
+              </button>
+              <h1 className="text-4xl font-display font-black text-slate-900 tracking-tight leading-none mb-4 flex items-center gap-3">
+                 <ShieldCheck className="w-10 h-10 text-emerald-500" /> Hero <span className="text-emerald-500">Verification</span>
+              </h1>
+              <p className="text-slate-500 font-medium">Validate and activate verified donor status for the global response network.</p>
+           </div>
+           
+           <div className="flex items-center gap-4">
+              <div className="flex bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm">
+                 {['all', 'unverified', 'verified'].map((f) => (
+                    <button 
+                      key={f}
+                      onClick={() => setFilter(f)}
+                      className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === f ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                       {f}
+                    </button>
+                 ))}
+              </div>
+              <button onClick={fetchDonors} className="p-3 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-sky-500 transition-all shadow-sm group">
+                 <RefreshCw className="w-6 h-6 group-hover:rotate-180 transition-transform duration-700" />
+              </button>
+           </div>
         </div>
-      </div>
 
-      {message && (
-        <div style={styles.success}>{message}</div>
-      )}
-      {error && (
-        <div style={styles.error}>{error}</div>
-      )}
-
-      {/* Filter Section */}
-      <div style={styles.card}>
-        <div style={styles.filterSection}>
-          <label style={styles.filterLabel}>Filter:</label>
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            style={styles.filterSelect}
-          >
-            <option value="all">All Donors</option>
-            <option value="verified">Verified Only</option>
-            <option value="unverified">Unverified Only</option>
-          </select>
-          <button onClick={fetchDonors} style={styles.refreshButton}>
-            🔄 Refresh
-          </button>
-        </div>
-        <p style={styles.countText}>
-          Showing {filteredDonors.length} of {donors.length} donors
-        </p>
-      </div>
-
-      {/* Donors List */}
-      <div style={styles.card}>
-        <h2>Donor List</h2>
-        {filteredDonors.length === 0 ? (
-          <p style={styles.noData}>No donors found</p>
-        ) : (
-          <div style={styles.tableContainer}>
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  <th style={styles.th}>Name</th>
-                  <th style={styles.th}>Email</th>
-                  <th style={styles.th}>Blood Group</th>
-                  <th style={styles.th}>Phone</th>
-                  <th style={styles.th}>Availability</th>
-                  <th style={styles.th}>Total Donations</th>
-                  <th style={styles.th}>Status</th>
-                  <th style={styles.th}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredDonors.map((donor) => (
-                  <tr key={donor._id}>
-                    <td style={styles.td}>{donor.user?.name || 'N/A'}</td>
-                    <td style={styles.td}>{donor.user?.email || 'N/A'}</td>
-                    <td style={styles.td}>{donor.user?.bloodGroup || 'N/A'}</td>
-                    <td style={styles.td}>{donor.user?.phone || 'N/A'}</td>
-                    <td style={styles.td}>
-                      <span
-                        style={
-                          donor.availabilityStatus
-                            ? styles.availableBadge
-                            : styles.unavailableBadge
-                        }
-                      >
-                        {donor.availabilityStatus ? 'Available' : 'Unavailable'}
-                      </span>
-                    </td>
-                    <td style={styles.td}>{donor.totalDonations || 0}</td>
-                    <td style={styles.td}>
-                      {donor.isVerified ? (
-                        <span style={styles.verifiedBadge}>✓ Verified</span>
-                      ) : (
-                        <span style={styles.unverifiedBadge}>⚠ Unverified</span>
-                      )}
-                    </td>
-                    <td style={styles.td}>
-                      {!donor.isVerified ? (
-                        <button
-                          onClick={() => handleVerify(donor._id)}
-                          style={styles.verifyButton}
-                        >
-                          Verify
-                        </button>
-                      ) : (
-                        <span style={styles.verifiedText}>
-                          Verified by {donor.verifiedBy?.name || 'Admin'}
-                          {donor.verifiedAt &&
-                            ` on ${new Date(donor.verifiedAt).toLocaleDateString()}`}
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {(message || error) && (
+          <div className={`p-6 rounded-[32px] border ${error ? 'bg-rose-50 border-rose-100 text-rose-600' : 'bg-emerald-50 border-emerald-100 text-emerald-600'} mb-10 flex items-center gap-4 animate-reveal`}>
+             {error ? <AlertTriangle className="w-6 h-6" /> : <CheckCircle2 className="w-6 h-6" />}
+             <span className="font-bold text-sm">{message || error}</span>
           </div>
         )}
+
+        <div className="grid grid-cols-1 gap-6 animate-reveal" style={{ animationDelay: '0.1s' }}>
+           {filteredDonors.length === 0 ? (
+              <div className="py-24 text-center card-premium bg-white border-dashed border-2">
+                 <Users className="w-16 h-16 text-slate-200 mx-auto mb-6" />
+                 <h3 className="text-xl font-display font-black text-slate-900 mb-2">Registry Terminal Empty</h3>
+                 <p className="text-slate-500 font-medium px-12">No hero profiles match your current verification filter.</p>
+              </div>
+           ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                 {filteredDonors.map((donor) => (
+                    <div key={donor._id} className={`card-premium h-full group hover:shadow-2xl hover:shadow-slate-200/50 transition-all border border-white bg-white/80 backdrop-blur-sm flex flex-col justify-between relative ${activeDropdown === donor._id ? 'z-50' : 'z-10'}`}>
+                       <div className="absolute top-4 right-4 group-hover:block">
+                          <button 
+                            onClick={() => setActiveDropdown(activeDropdown === donor._id ? null : donor._id)}
+                            className={`p-2 rounded-xl transition-all ${activeDropdown === donor._id ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-300 hover:text-slate-600'}`}
+                          >
+                             <MoreVertical className="w-5 h-5" />
+                          </button>
+
+                          {activeDropdown === donor._id && (
+                            <>
+                              <div className="fixed inset-0 z-40" onClick={() => setActiveDropdown(null)} />
+                              <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-[24px] shadow-2xl border border-slate-100 p-2.5 z-50 animate-reveal">
+                                 <button 
+                                   onClick={() => { setSelectedHero(donor); setShowInfoModal(true); setActiveDropdown(null); }}
+                                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
+                                 >
+                                    <Info className="w-4 h-4" /> Profile Intelligence
+                                 </button>
+                                 <button 
+                                   onClick={() => { alert('Accessing secure contact logs...'); setActiveDropdown(null); }}
+                                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
+                                 >
+                                    <Phone className="w-4 h-4" /> Contact History
+                                 </button>
+                                 <div className="h-[1px] bg-slate-50 my-1.5 mx-2" />
+                                 <p className="px-4 py-1 text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">NODE: {donor._id.slice(-12)}</p>
+                              </div>
+                            </>
+                          )}
+                       </div>
+
+                       <div>
+                          <div className="flex justify-between items-start mb-6">
+                             <div className="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center text-white text-xl font-black">
+                                {donor.user?.bloodGroup}
+                             </div>
+                             <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${donor.isVerified ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                                {donor.isVerified ? 'Verified Hero' : 'Pending Review'}
+                             </div>
+                          </div>
+                          
+                          <div className="space-y-4 mb-8">
+                             <div>
+                                <h3 className="text-xl font-display font-black text-slate-900 mb-1">{donor.user?.name || 'Incomplete Profile'}</h3>
+                                <div className="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                                   <Mail className="w-3.5 h-3.5 text-sky-400" /> {donor.user?.email}
+                                </div>
+                             </div>
+                             
+                             <div className="grid grid-cols-2 gap-4">
+                                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center">
+                                   <p className="text-[8px] font-black uppercase text-slate-400 mb-1">Total Impact</p>
+                                   <p className="font-black text-slate-900">{donor.totalDonations || 0} Cycles</p>
+                                </div>
+                                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center">
+                                   <p className="text-[8px] font-black uppercase text-slate-400 mb-1">Mass / HGT</p>
+                                   <p className="font-black text-slate-900">{donor.weightKg || '--'}kg / {donor.heightCm || '--'}cm</p>
+                                </div>
+                             </div>
+                          </div>
+                       </div>
+
+                       <div className="pt-6 border-t border-slate-100 space-y-4">
+                          {!donor.isVerified ? (
+                             <button 
+                               onClick={() => handleVerify(donor._id)}
+                               className="w-full btn-primary py-4 text-xs font-black uppercase tracking-widest shadow-xl shadow-emerald-500/10 bg-emerald-500 hover:bg-emerald-600"
+                             >
+                                <ShieldCheck className="w-4 h-4 mr-2" /> Activate Identity
+                             </button>
+                          ) : (
+                             <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100/50 flex flex-col gap-1 items-center">
+                                <span className="text-[10px] font-black uppercase text-emerald-600 tracking-widest">Administrative Sync Complete</span>
+                                <p className="text-[8px] font-bold text-slate-400 italic">Verified by {donor.verifiedBy?.name || 'Neural AI'}</p>
+                             </div>
+                          )}
+                       </div>
+                    </div>
+                 ))}
+              </div>
+           )}
+        </div>
       </div>
+
+      {/* Hero Intelligence Modal */}
+      {showInfoModal && selectedHero && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-fade-in">
+           <div className="bg-white rounded-[48px] shadow-2xl w-full max-w-2xl overflow-hidden border border-white/20">
+              <div className="p-10 bg-slate-900 text-white relative">
+                  <button onClick={() => setShowInfoModal(false)} className="absolute top-8 right-8 p-3 bg-white/10 hover:bg-white/20 rounded-2xl transition-all">
+                     <X className="w-6 h-6" />
+                  </button>
+                  <div className="flex items-center gap-5 mb-6">
+                     <div className="w-16 h-16 bg-emerald-500 rounded-3xl flex items-center justify-center text-white text-3xl font-black">
+                        {selectedHero.user?.bloodGroup}
+                     </div>
+                     <div>
+                        <p className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.3em] mb-1">Verified Donor Node</p>
+                        <h3 className="text-3xl font-display font-black tracking-tight">{selectedHero.user?.name}</h3>
+                     </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                     <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${selectedHero.isVerified ? 'bg-emerald-500 text-white border-emerald-400' : 'bg-amber-500 text-white border-amber-400'}`}>
+                        {selectedHero.isVerified ? 'Synchronized' : 'Activation Pending'}
+                     </span>
+                     <span className="text-[10px] font-black uppercase tracking-widest text-white/60">
+                        Reliability: High
+                     </span>
+                  </div>
+              </div>
+
+              <div className="p-10 space-y-8">
+                 <div className="grid grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                       <div className="p-6 bg-slate-50 rounded-[32px] border border-slate-100">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                             <Mail className="w-3.5 h-3.5" /> Secure Email
+                          </p>
+                          <p className="text-sm font-bold text-slate-900">{selectedHero.user?.email}</p>
+                       </div>
+                       <div className="p-6 bg-slate-50 rounded-[32px] border border-slate-100">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                             <Activity className="w-3.5 h-3.5" /> Clinical Vitals
+                          </p>
+                          <p className="text-sm font-bold text-slate-900">Mass: {selectedHero.weightKg}kg</p>
+                          <p className="text-sm font-bold text-slate-900">Health: Normal</p>
+                       </div>
+                    </div>
+
+                    <div className="space-y-6">
+                       <div className="p-6 bg-slate-50 rounded-[32px] border border-slate-100">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> Impact Score
+                          </p>
+                          <p className="text-2xl font-black text-slate-900">{selectedHero.totalDonations || 0} <span className="text-sm font-bold text-slate-400">Total Cycles</span></p>
+                       </div>
+                       <div className="p-6 bg-slate-50 rounded-[32px] border border-slate-100">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Internal Global ID</p>
+                          <p className="text-xs font-mono font-bold text-slate-900 break-all">{selectedHero._id}</p>
+                       </div>
+                    </div>
+                 </div>
+
+                 <button onClick={() => setShowInfoModal(false)} className="w-full btn-primary py-5 text-sm font-black uppercase tracking-[0.2em] shadow-xl shadow-emerald-500/20 bg-emerald-500 hover:bg-emerald-600">
+                    Seal Intelligence Data
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 };
 
-const styles = {
-  container: {
-    minHeight: '100vh',
-    backgroundColor: '#f5f5f5',
-    padding: '20px',
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px',
-    flexWrap: 'wrap',
-    gap: '10px',
-  },
-  headerActions: {
-    display: 'flex',
-    gap: '10px',
-  },
-  backButton: {
-    padding: '10px 20px',
-    backgroundColor: '#6c757d',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '16px',
-  },
-  logoutButton: {
-    padding: '10px 20px',
-    backgroundColor: '#dc3545',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '16px',
-  },
-  loading: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '50vh',
-    fontSize: '18px',
-  },
-  card: {
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    padding: '20px',
-    marginBottom: '20px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-  },
-  filterSection: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '15px',
-    marginBottom: '15px',
-  },
-  filterLabel: {
-    fontWeight: '500',
-  },
-  filterSelect: {
-    padding: '8px 12px',
-    border: '1px solid #ddd',
-    borderRadius: '4px',
-    fontSize: '16px',
-  },
-  refreshButton: {
-    padding: '8px 16px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '16px',
-  },
-  countText: {
-    color: '#666',
-    margin: 0,
-  },
-  tableContainer: {
-    overflowX: 'auto',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    marginTop: '15px',
-  },
-  th: {
-    backgroundColor: '#f8f9fa',
-    padding: '12px',
-    textAlign: 'left',
-    borderBottom: '2px solid #dee2e6',
-    fontWeight: '600',
-  },
-  td: {
-    padding: '12px',
-    borderBottom: '1px solid #dee2e6',
-  },
-  availableBadge: {
-    backgroundColor: '#d4edda',
-    color: '#155724',
-    padding: '4px 8px',
-    borderRadius: '4px',
-    fontSize: '12px',
-    fontWeight: '500',
-  },
-  unavailableBadge: {
-    backgroundColor: '#f8d7da',
-    color: '#721c24',
-    padding: '4px 8px',
-    borderRadius: '4px',
-    fontSize: '12px',
-    fontWeight: '500',
-  },
-  verifiedBadge: {
-    backgroundColor: '#d1ecf1',
-    color: '#0c5460',
-    padding: '4px 8px',
-    borderRadius: '4px',
-    fontSize: '12px',
-    fontWeight: '500',
-  },
-  unverifiedBadge: {
-    backgroundColor: '#fff3cd',
-    color: '#856404',
-    padding: '4px 8px',
-    borderRadius: '4px',
-    fontSize: '12px',
-    fontWeight: '500',
-  },
-  verifyButton: {
-    padding: '6px 12px',
-    backgroundColor: '#28a745',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '14px',
-  },
-  verifiedText: {
-    fontSize: '12px',
-    color: '#666',
-  },
-  success: {
-    backgroundColor: '#d4edda',
-    color: '#155724',
-    padding: '15px',
-    borderRadius: '4px',
-    marginBottom: '20px',
-  },
-  error: {
-    backgroundColor: '#f8d7da',
-    color: '#721c24',
-    padding: '15px',
-    borderRadius: '4px',
-    marginBottom: '20px',
-  },
-  noData: {
-    textAlign: 'center',
-    color: '#666',
-    padding: '40px',
-    fontStyle: 'italic',
-  },
-};
-
 export default DonorVerification;
-

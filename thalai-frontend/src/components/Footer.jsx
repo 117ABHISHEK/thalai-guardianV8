@@ -1,85 +1,97 @@
 import { Link } from 'react-router-dom';
+import { Droplets, Heart, Mail, Phone, Info, Globe, ShieldCheck } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-white mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* About */}
-          <div>
-            <h3 className="text-lg font-bold mb-4">ThalAI Guardian</h3>
-            <p className="text-gray-400 text-sm">
-              Connecting thalassemia patients with blood donors through intelligent matching and AI-powered predictions.
+    <footer className="bg-slate-950 text-white font-body">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
+          {/* Brand Column */}
+          <div className="space-y-6">
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <div className="p-2bg-sky-500 rounded-xl group-hover:scale-110 transition-transform">
+                <Droplets className="w-6 h-6 text-sky-400" />
+              </div>
+              <span className="text-xl font-display font-black tracking-tight">
+                Thal<span className="text-sky-400">AI</span> Guardian
+              </span>
+            </Link>
+            <p className="text-slate-400 text-sm leading-relaxed font-medium">
+              Revolutionizing Thalassemia care through decentralized AI matching and predictive analytics. Join the mission to ensure no patient goes without care.
             </p>
+            <div className="flex gap-4">
+               {[1,2,3].map(i => (
+                 <div key={i} className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center border border-slate-800 hover:border-sky-500 hover:text-sky-400 transition-all cursor-pointer">
+                    <Globe className="w-5 h-5" />
+                 </div>
+               ))}
+            </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Nav */}
           <div>
-            <h4 className="font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li>
-                <Link to="/" className="hover:text-white transition-colors">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link to="/donors" className="hover:text-white transition-colors">
-                  Donors
-                </Link>
-              </li>
-              <li>
-                <Link to="/requests" className="hover:text-white transition-colors">
-                  Requests
-                </Link>
-              </li>
-              <li>
-                <Link to="/register" className="hover:text-white transition-colors">
-                  Become a Donor
-                </Link>
-              </li>
+            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-8">Navigation</h4>
+            <ul className="space-y-4 text-sm font-bold text-slate-300">
+              {['Home', 'Donors', 'Requests', 'Emergency'].map(item => (
+                <li key={item}>
+                  <Link to={`/${item.toLowerCase()}`} className="hover:text-sky-400 transition-colors flex items-center gap-2 group">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-800 bg-sky-400 scale-0 group-hover:scale-100 transition-all" />
+                    {item}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Resources */}
+          {/* Medical Resources */}
           <div>
-            <h4 className="font-semibold mb-4">Resources</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Donor Guidelines
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Transfusion Info
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Emergency Help
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  FAQs
-                </a>
-              </li>
+            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-8">Resources</h4>
+            <ul className="space-y-4 text-sm font-bold text-slate-300">
+              {[
+                { name: 'Guidelines', icon: ShieldCheck },
+                { name: 'Predictive Care', icon: Info },
+                { name: 'Medical FAQ', icon: Info },
+                { name: 'Crisis Center', icon: Heart }
+              ].map(item => (
+                <li key={item.name}>
+                  <a href="#" className="hover:text-sky-400 transition-colors flex items-center gap-2.5">
+                    <item.icon className="w-4 h-4 text-slate-600" />
+                    {item.name}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Contact */}
+          {/* Contact & Support */}
           <div>
-            <h4 className="font-semibold mb-4">Contact</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li>Email: support@thalai-guardian.com</li>
-              <li>Phone: +91-XXXXX-XXXXX</li>
-              <li>Emergency: 108</li>
-            </ul>
+            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-8">Support Hub</h4>
+            <div className="space-y-6">
+               <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
+                  <div className="flex items-center gap-2 text-sky-400 mb-1">
+                     <Mail className="w-4 h-4" />
+                     <span className="text-[10px] uppercase font-black tracking-widest">Email Assistance</span>
+                  </div>
+                  <p className="text-sm font-bold truncate">support@thalai.guardian</p>
+               </div>
+               <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
+                  <div className="flex items-center gap-2 text-rose-400 mb-1">
+                     <Phone className="w-4 h-4" />
+                     <span className="text-[10px] uppercase font-black tracking-widest">Emergency Line</span>
+                  </div>
+                  <p className="text-sm font-bold">+91 247-GUARDIAN</p>
+               </div>
+            </div>
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-          <p>&copy; 2024 ThalAI Guardian. All rights reserved.</p>
+        {/* Bottom Bar */}
+        <div className="mt-20 pt-8 border-t border-slate-900 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-black uppercase tracking-widest text-slate-600">
+          <p>© 2026 ThalAI Network. All Rights Reserved.</p>
+          <div className="flex gap-8">
+             <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+             <a href="#" className="hover:text-white transition-colors">Security Standards</a>
+          </div>
         </div>
       </div>
     </footer>
@@ -87,4 +99,3 @@ const Footer = () => {
 };
 
 export default Footer;
-

@@ -1,189 +1,132 @@
 import {
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
+  BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip,
+  Legend, ResponsiveContainer, AreaChart, Area
 } from 'recharts';
+import { Activity, Droplets, Users, ShieldCheck } from 'lucide-react';
 
 const StatsCharts = ({ stats }) => {
-  // Prepare blood group data for pie chart
   const bloodGroupData = stats?.bloodGroupDistribution?.map((item) => ({
-    name: item._id || 'Unknown',
+    name: item._id || 'UNK',
     value: item.count,
   })) || [];
 
-  // Prepare data for bar chart (patients vs donors)
   const roleComparisonData = [
-    {
-      name: 'Patients',
-      count: stats?.totalPatients || 0,
-    },
-    {
-      name: 'Donors',
-      count: stats?.totalDonors || 0,
-    },
-    {
-      name: 'Verified Donors',
-      count: stats?.verifiedDonors || 0,
-    },
+    { name: 'Patients', count: stats?.totalPatients || 0, fill: '#0ea5e9' },
+    { name: 'Heroes', count: stats?.totalDonors || 0, fill: '#f43f5e' },
+    { name: 'Verified', count: stats?.verifiedDonors || 0, fill: '#10b981' },
   ];
 
-  // Colors for pie chart
-  const COLORS = [
-    '#0088FE',
-    '#00C49F',
-    '#FFBB28',
-    '#FF8042',
-    '#8884d8',
-    '#82ca9d',
-    '#ffc658',
-    '#ff7300',
-  ];
+  const COLORS = ['#0ea5e9', '#f43f5e', '#10b981', '#f59e0b', '#6366f1', '#8b5cf6', '#ec4899', '#94a3b8'];
 
   return (
-    <div style={styles.container}>
-      <div style={styles.chartGrid}>
-        {/* Blood Group Distribution Pie Chart */}
-        <div style={styles.chartCard}>
-          <h3 style={styles.chartTitle}>Blood Group Distribution</h3>
-          {bloodGroupData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={bloodGroupData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) =>
-                    `${name}: ${(percent * 100).toFixed(0)}%`
-                  }
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {bloodGroupData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <p style={styles.noData}>No data available</p>
-          )}
+    <div className="space-y-10">
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Blood Group Distribution */}
+        <div className="bg-slate-50/50 rounded-[40px] p-8 border border-white/40 shadow-sm relative overflow-hidden group">
+          <div className="flex justify-between items-center mb-10">
+             <div>
+                <h3 className="text-xl font-display font-black text-slate-900 tracking-tight">Biological Spread</h3>
+                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mt-1">Network Blood Group Analytics</p>
+             </div>
+             <div className="p-3 bg-white rounded-2xl shadow-sm"><Droplets className="w-5 h-5 text-rose-500" /></div>
+          </div>
+          
+          <div className="h-[300px] w-full">
+            {bloodGroupData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px 16px' }}
+                    itemStyle={{ fontWeight: '900', fontSize: '12px', textTransform: 'uppercase' }}
+                  />
+                  <Pie
+                    data={bloodGroupData}
+                    cx="50%" cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={8}
+                    dataKey="value"
+                  >
+                    {bloodGroupData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(255,255,255,0.2)" strokeWidth={2} />
+                    ))}
+                  </Pie>
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em', paddingTop: '20px' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                 <Activity className="w-10 h-10 mb-2 opacity-20" />
+                 <p className="text-xs font-bold">Synchronizing telemetry data...</p>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Role Comparison Bar Chart */}
-        <div style={styles.chartCard}>
-          <h3 style={styles.chartTitle}>Users Overview</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={roleComparisonData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="count" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
+        {/* User Base Bar Chart */}
+        <div className="bg-slate-50/50 rounded-[40px] p-8 border border-white/40 shadow-sm relative overflow-hidden group">
+          <div className="flex justify-between items-center mb-10">
+             <div>
+                <h3 className="text-xl font-display font-black text-slate-900 tracking-tight">User Equilibrium</h3>
+                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mt-1">Growth & Verification Ratio</p>
+             </div>
+             <div className="p-3 bg-white rounded-2xl shadow-sm"><Users className="w-5 h-5 text-sky-500" /></div>
+          </div>
+
+          <div className="h-[300px] w-full px-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={roleComparisonData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: '#94a3b8', fontWeight: 900, fontSize: 10 }}
+                  dy={10}
+                />
+                <YAxis hide />
+                <Tooltip 
+                  cursor={{ fill: 'rgba(255,255,255,0.4)', radius: 16 }}
+                  contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px 16px' }}
+                />
+                <Bar 
+                  dataKey="count" 
+                  radius={[16, 16, 16, 16]} 
+                  barSize={40}
+                >
+                  {roleComparisonData.map((entry, index) => (
+                    <Cell key={`bar-${index}`} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
-      {/* Donor Statistics Card */}
+      {/* Hero Stats Row */}
       {stats?.donorStats && (
-        <div style={styles.chartCard}>
-          <h3 style={styles.chartTitle}>Donor Statistics</h3>
-          <div style={styles.statsRow}>
-            <div style={styles.statItem}>
-              <span style={styles.statLabel}>Total Donor Profiles:</span>
-              <span style={styles.statValue}>
-                {stats.donorStats.totalDonorProfiles || 0}
-              </span>
-            </div>
-            <div style={styles.statItem}>
-              <span style={styles.statLabel}>Available Donors:</span>
-              <span style={styles.statValue}>
-                {stats.donorStats.availableDonors || 0}
-              </span>
-            </div>
-            <div style={styles.statItem}>
-              <span style={styles.statLabel}>Total Donations:</span>
-              <span style={styles.statValue}>
-                {stats.donorStats.totalDonationsCount || 0}
-              </span>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+           {[
+             { label: 'Total Hero Profiles', value: stats.donorStats.totalDonorProfiles || 0, icon: Users, color: 'text-indigo-500', bg: 'bg-indigo-50' },
+             { label: 'Deployment Ready', value: stats.donorStats.availableDonors || 0, icon: ShieldCheck, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+             { label: 'Platform Impact', value: stats.donorStats.totalDonationsCount || 0, icon: Activity, color: 'text-rose-500', bg: 'bg-rose-50' }
+           ].map((stat, i) => (
+             <div key={i} className="p-8 bg-white border border-slate-100 rounded-[32px] shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all flex items-center justify-between group">
+                <div>
+                   <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2">{stat.label}</p>
+                   <p className="text-4xl font-display font-black text-slate-900 group-hover:scale-105 transition-transform origin-left">{stat.value}</p>
+                </div>
+                <div className={`p-4 rounded-2xl ${stat.bg} ${stat.color} rotate-3 group-hover:rotate-0 transition-transform duration-500`}>
+                   <stat.icon className="w-8 h-8" />
+                </div>
+             </div>
+           ))}
         </div>
       )}
     </div>
   );
 };
 
-const styles = {
-  container: {
-    marginBottom: '20px',
-  },
-  chartGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-    gap: '20px',
-    marginBottom: '20px',
-  },
-  chartCard: {
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    padding: '20px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-  },
-  chartTitle: {
-    marginBottom: '20px',
-    color: '#333',
-    fontSize: '18px',
-    fontWeight: '600',
-  },
-  noData: {
-    textAlign: 'center',
-    color: '#666',
-    padding: '40px',
-    fontStyle: 'italic',
-  },
-  statsRow: {
-    display: 'flex',
-    justifyContent: 'space-around',
-    flexWrap: 'wrap',
-    gap: '20px',
-  },
-  statItem: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    padding: '15px',
-    backgroundColor: '#f8f9fa',
-    borderRadius: '8px',
-    minWidth: '150px',
-  },
-  statLabel: {
-    fontSize: '14px',
-    color: '#666',
-    marginBottom: '8px',
-  },
-  statValue: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#333',
-  },
-};
-
 export default StatsCharts;
-

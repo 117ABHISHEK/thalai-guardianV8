@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getPublicRequests } from '../api/public';
 import ChartCard from '../components/ChartCard';
 import TablePreview from '../components/TablePreview';
+import { Activity, ShieldAlert, CheckCircle2, Search, Clock, Droplets, ArrowRight } from 'lucide-react';
 
 const RequestsPage = () => {
   const [requestData, setRequestData] = useState(null);
@@ -24,33 +25,35 @@ const RequestsPage = () => {
 
   const urgencyColumns = [
     {
-      header: 'Blood Group',
+      header: 'Requirement',
       key: 'bloodGroup',
       render: (value) => (
-        <span className="font-semibold text-health-blue">{value}</span>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-black text-sm border border-rose-100">
+             {value}
+          </div>
+          <span className="font-bold text-slate-900">Blood Requested</span>
+        </div>
       ),
     },
     {
-      header: 'Units',
+      header: 'Volume',
       key: 'unitsRequired',
+      render: (value) => <span className="font-bold text-slate-900">{value} <span className="text-slate-400 font-medium">Units</span></span>
     },
     {
       header: 'Urgency',
       key: 'urgency',
       render: (value) => {
-        const colors = {
-          critical: 'bg-red-100 text-red-800',
-          high: 'bg-orange-100 text-orange-800',
-          medium: 'bg-yellow-100 text-yellow-800',
-          low: 'bg-green-100 text-green-800',
+        const styles = {
+          critical: 'bg-rose-500 text-white shadow-rose-200',
+          high: 'bg-orange-500 text-white shadow-orange-200',
+          medium: 'bg-amber-500 text-white shadow-amber-200',
+          low: 'bg-emerald-500 text-white shadow-emerald-200',
         };
         return (
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-medium ${
-              colors[value] || colors.medium
-            }`}
-          >
-            {value.toUpperCase()}
+          <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-md ${styles[value] || styles.medium}`}>
+            {value} Priority
           </span>
         );
       },
@@ -59,39 +62,36 @@ const RequestsPage = () => {
       header: 'Status',
       key: 'status',
       render: (value) => {
-        const colors = {
-          pending: 'bg-yellow-100 text-yellow-800',
-          searching: 'bg-blue-100 text-blue-800',
-          completed: 'bg-green-100 text-green-800',
+        const configs = {
+          pending: { color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', icon: Clock },
+          searching: { color: 'text-sky-600', bg: 'bg-sky-50', border: 'border-sky-100', icon: Search },
+          completed: { color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', icon: CheckCircle2 },
         };
+        const cfg = configs[value] || configs.pending;
         return (
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-medium ${
-              colors[value] || colors.pending
-            }`}
-          >
-            {value.toUpperCase()}
-          </span>
+          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg ${cfg.bg} ${cfg.color} border ${cfg.border}`}>
+             <cfg.icon className="w-3.5 h-3.5" />
+             <span className="text-[10px] font-black uppercase tracking-widest">{value}</span>
+          </div>
         );
       },
     },
     {
-      header: 'Created',
+      header: 'Case Age',
       key: 'createdAt',
-      render: (value) => new Date(value).toLocaleDateString(),
+      render: (value) => (
+        <div className="flex flex-col">
+           <span className="text-sm font-bold text-slate-900">{new Date(value).toLocaleDateString()}</span>
+           <span className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">Logged Date</span>
+        </div>
+      ),
     },
   ];
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="card">
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-health-blue mx-auto"></div>
-            </div>
-          </div>
-        </div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-sky-100 border-t-sky-500 rounded-full animate-spin" />
       </div>
     );
   }
@@ -109,47 +109,98 @@ const RequestsPage = () => {
   })) || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-[#F8FAFC] font-body py-20 pb-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Blood Requests
-          </h1>
-          <p className="text-gray-600">
-            Current blood requests from thalassemia patients
-          </p>
+        
+        {/* Header Section */}
+        <div className="mb-20 animate-reveal">
+           <div className="flex items-center gap-3 mb-4">
+              <span className="px-4 py-1 bg-rose-50 text-rose-600 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-rose-100">
+                Live Requirement Map
+              </span>
+           </div>
+           <h1 className="text-5xl md:text-6xl font-display font-black text-slate-900 tracking-tight leading-none mb-6">
+             Patient <span className="text-gradient">Requests</span>
+           </h1>
+           <p className="text-xl text-slate-500 max-w-2xl font-medium leading-relaxed">
+             Monitoring real-time blood requirements across the network. Urgent cases are prioritized by our AI matching engine.
+           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 mb-8">
+        {/* Analytics Section */}
+        <div className="grid lg:grid-cols-2 gap-10 mb-16 animate-reveal" style={{ animationDelay: '0.1s' }}>
           {statusData.length > 0 && (
-            <ChartCard
-              title="Request Status"
-              data={statusData}
-              type="pie"
-              colors={['#1976d2', '#009688', '#4caf50', '#ff9800']}
-            />
+            <div className="card-premium h-full">
+               <div className="flex items-center gap-3 mb-8">
+                  <div className="p-3 bg-sky-50 text-sky-500 rounded-2xl">
+                     <Activity className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-2xl font-display font-black text-slate-900">Pipeline Status</h3>
+               </div>
+               <ChartCard
+                 title=""
+                 data={statusData}
+                 type="pie"
+                 colors={['#0ea5e9', '#10b981', '#f59e0b', '#6366f1']}
+               />
+            </div>
           )}
           {urgencyData.length > 0 && (
-            <ChartCard
-              title="Urgency Distribution"
-              data={urgencyData}
-              type="bar"
-              colors={['#dc3545', '#ff9800', '#ffc107', '#4caf50']}
-            />
+            <div className="card-premium h-full">
+               <div className="flex items-center gap-3 mb-8">
+                  <div className="p-3 bg-rose-50 text-rose-500 rounded-2xl">
+                     <ShieldAlert className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-2xl font-display font-black text-slate-900">Urgency Load</h3>
+               </div>
+               <ChartCard
+                 title=""
+                 data={urgencyData}
+                 type="bar"
+                 colors={['#f43f5e', '#f59e0b', '#fbbf24', '#10b981']}
+               />
+            </div>
           )}
         </div>
 
-        <TablePreview
-          title="Recent Requests"
-          data={requestData.recentRequests || []}
-          columns={urgencyColumns}
-          emptyMessage="No active requests"
-          maxRows={10}
-        />
+        {/* Request Feed */}
+        <div className="animate-reveal" style={{ animationDelay: '0.2s' }}>
+          <div className="card-premium overflow-hidden">
+             <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-display font-black text-slate-900">Active Demand Feed</h2>
+                <div className="flex items-center gap-2 text-slate-400 font-bold text-xs uppercase tracking-widest">
+                   <Clock className="w-4 h-4" /> Live Tracking
+                </div>
+             </div>
+             <TablePreview
+               title=""
+               data={requestData.recentRequests || []}
+               columns={urgencyColumns}
+               emptyMessage="No active requests found in the current cycle."
+               maxRows={10}
+             />
+          </div>
+        </div>
+
+        {/* Hero CTA for Donors */}
+        <div className="mt-20 p-12 bg-white border border-slate-100 rounded-[48px] flex flex-col md:flex-row items-center justify-between gap-8 animate-reveal" style={{ animationDelay: '0.3s' }}>
+           <div className="flex items-center gap-6">
+              <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-[28px] flex items-center justify-center shadow-xl shadow-rose-200/50">
+                 <Droplets className="w-10 h-10" />
+              </div>
+              <div className="text-left">
+                 <h3 className="text-3xl font-display font-black text-slate-900">Response is Action</h3>
+                 <p className="text-slate-500 font-medium">Your donation can close these pending requests today.</p>
+              </div>
+           </div>
+           <button className="btn-primary py-5 px-12 text-lg shadow-2xl shadow-sky-500/20 group">
+              Become a Hero <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+           </button>
+        </div>
+
       </div>
     </div>
   );
 };
 
 export default RequestsPage;
-

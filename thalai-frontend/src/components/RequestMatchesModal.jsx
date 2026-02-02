@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getTopMatches } from '../api/match';
+import { Search, X, User, MapPin, Phone, ShieldCheck, Zap, Activity, Heart, Target } from 'lucide-react';
 
 const RequestMatchesModal = ({ requestId, onClose }) => {
   const [matches, setMatches] = useState([]);
@@ -13,7 +14,7 @@ const RequestMatchesModal = ({ requestId, onClose }) => {
     try {
       setLoading(true);
       const data = await getTopMatches(requestId);
-      setMatches(data.data.matches);
+      setMatches(data.data.matches || []);
     } catch (error) {
       console.error('Failed to fetch matches:', error);
     } finally {
@@ -21,125 +22,115 @@ const RequestMatchesModal = ({ requestId, onClose }) => {
     }
   };
 
+  const getScoreColor = (score) => {
+    if (score >= 80) return 'text-emerald-500 bg-emerald-50 border-emerald-100';
+    if (score >= 60) return 'text-sky-500 bg-sky-50 border-sky-100';
+    return 'text-amber-500 bg-amber-50 border-amber-100';
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-zoom-in">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fade-in">
+      <div className="bg-white rounded-[48px] shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-slide-up border border-white/20">
         {/* Header */}
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+        <div className="p-10 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Donor Matches</h2>
-            <p className="text-sm text-gray-500 mt-1">Found {matches.length} matching donors for this request</p>
+            <div className="flex items-center gap-3 mb-2">
+               <span className="px-3 py-1 bg-sky-500 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-sky-500/20">
+                 Precision Engine
+               </span>
+            </div>
+            <h2 className="text-4xl font-display font-black text-slate-900 tracking-tight">System <span className="text-sky-500">Matches</span></h2>
+            <p className="text-sm font-bold text-slate-500 mt-2 flex items-center gap-2">
+               <Search className="w-4 h-4 text-sky-400" /> Neural scan found {matches.length} active hero profiles
+            </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+            className="p-4 bg-white hover:bg-rose-50 hover:text-rose-500 rounded-3xl transition-all shadow-sm border border-slate-100 text-slate-400"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-6 h-6" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 bg-white">
+        <div className="flex-1 overflow-y-auto p-10 bg-white no-scrollbar">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-health-blue mb-4"></div>
-              <p className="text-gray-500 animate-pulse">Analyzing matches...</p>
+            <div className="flex flex-col items-center justify-center py-24">
+               <div className="w-16 h-16 border-4 border-sky-500/10 border-t-sky-500 rounded-full animate-spin mb-6" />
+               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 animate-pulse">Running Neural Optimization...</p>
             </div>
           ) : matches.length === 0 ? (
-            <div className="text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-              <div className="text-5xl mb-4">🔍</div>
-              <h3 className="text-xl font-bold text-gray-900">No matches found yet</h3>
-              <p className="text-gray-500 mt-2 max-w-sm mx-auto">
-                We're continuing to look for donors who match your requirements. You'll be notified as soon as a match is found.
+            <div className="text-center py-24 bg-slate-50 rounded-[40px] border-2 border-dashed border-slate-200">
+              <Target className="w-20 h-20 text-slate-200 mx-auto mb-6" />
+              <h3 className="text-2xl font-display font-black text-slate-900 mb-2">Zero Alignment Detected</h3>
+              <p className="text-slate-500 font-medium max-w-sm mx-auto">
+                No active donors currently match the clinical requirement profile. Background monitoring remains active.
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead>
-                  <tr className="bg-gray-50/50">
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Donor Details</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Blood Group</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Compatibility Score</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {matches.map((match) => (
-                    <tr key={match.matchId} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm shadow-sm">
-                            {match.donor?.name?.substring(0, 1) || 'D'}
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-gray-900">{match.donor?.name || 'Anonymous Donor'}</p>
-                            <p className="text-xs text-gray-500">{match.donor?.address?.city || 'City'}, {match.donor?.address?.state || 'State'}</p>
-                          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               {matches.map((match) => (
+                  <div key={match.matchId} className="card-premium group hover:shadow-2xl hover:shadow-slate-200/50 transition-all border border-slate-100 bg-white/50 backdrop-blur-sm p-6 overflow-hidden relative">
+                     <div className="flex justify-between items-start mb-6">
+                        <div className="flex items-center gap-4">
+                           <div className="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-xl shadow-slate-900/10">
+                              {match.donor?.bloodGroup}
+                           </div>
+                           <div>
+                              <h4 className="text-lg font-display font-black text-slate-900 mb-1">{match.donor?.name || 'Anonymous Hero'}</h4>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap">
+                                 <MapPin className="w-3.5 h-3.5 text-sky-400" /> {match.donor?.address?.city || 'Region Active'}
+                              </p>
+                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-health-blue">
-                        {match.donor?.bloodGroup}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-col gap-1 w-32">
-                          <div className="flex justify-between items-center text-[10px] font-bold text-gray-600">
-                            <span>Score</span>
-                            <span>{match.matchScore}%</span>
-                          </div>
-                          <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full rounded-full ${
-                                match.matchScore > 80 ? 'bg-green-500' : 
-                                match.matchScore > 50 ? 'bg-blue-500' : 'bg-yellow-500'
-                              }`}
-                              style={{ width: `${match.matchScore}%` }}
-                            ></div>
-                          </div>
+                        <div className={`px-4 py-2 rounded-2xl border text-[11px] font-black flex flex-col items-center leading-none ${getScoreColor(match.matchScore)}`}>
+                           <span className="mb-0.5">{match.matchScore}%</span>
+                           <span className="text-[7px] uppercase tracking-widest opacity-60">Sync</span>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
-                          match.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                          match.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800 text-yellow-900 border border-yellow-200'
-                        }`}>
-                          {match.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                     </div>
+
+                     <div className="space-y-4 mb-8">
+                        <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                           <div className="h-full bg-sky-500 transition-all duration-1000" style={{ width: `${match.matchScore}%` }} />
+                        </div>
+                        <div className="flex justify-between items-center text-[9px] font-black uppercase text-slate-400 px-1">
+                           <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-amber-500" /> High Reliability</span>
+                           <span className={`flex items-center gap-1 ${match.status === 'accepted' ? 'text-emerald-500' : 'text-amber-500'}`}>
+                              <ShieldCheck className="w-3 h-3" /> {match.status}
+                           </span>
+                        </div>
+                     </div>
+
+                     <div className="pt-6 border-t border-slate-50 flex gap-3">
                         {match.status === 'accepted' ? (
                           <a 
                             href={`tel:${match.donor?.phone}`}
-                            className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-2 w-fit shadow-md shadow-green-100"
+                            className="flex-1 btn-primary py-4 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-emerald-500/20 bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center gap-2 group/btn"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                            </svg>
-                            Call Donor
+                            <Phone className="w-4 h-4 group-hover/btn:rotate-12 transition-transform" /> Contact Hero
                           </a>
                         ) : (
-                          <span className="text-xs text-gray-400 italic">No contact yet</span>
+                          <div className="flex-1 py-4 bg-slate-100 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-[0.1em] flex items-center justify-center gap-2">
+                             <Activity className="w-4 h-4 animate-pulse text-sky-400" /> Awaiting Initial Link
+                          </div>
                         )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        <button className="p-4 bg-white border border-slate-100 text-slate-300 hover:text-sky-500 transition-all rounded-2xl">
+                           <User className="w-5 h-5" />
+                        </button>
+                     </div>
+                  </div>
+               ))}
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end">
+        <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex justify-end">
           <button
             onClick={onClose}
-            className="bg-health-blue text-white font-bold py-2.5 px-8 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+            className="btn-primary px-12 py-4 shadow-xl shadow-sky-500/10"
           >
-            Close
+            Acknowledge Intelligence
           </button>
         </div>
       </div>

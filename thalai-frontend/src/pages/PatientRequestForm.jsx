@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { createRequest } from '../api/requests';
-import { getUserRequests } from '../api/requests';
-import { AlertTriangle } from 'lucide-react';
+import { createRequest, getUserRequests } from '../api/requests';
+import { 
+  AlertTriangle, Droplets, MapPin, Hospital, 
+  User, Phone, FileText, Send, CheckCircle2,
+  Clock, ArrowRight, Zap, Info
+} from 'lucide-react';
 
 const PatientRequestForm = ({ onRequestCreated }) => {
   const { user } = useAuth();
@@ -33,93 +36,43 @@ const PatientRequestForm = ({ onRequestCreated }) => {
   const checkActiveRequests = async () => {
     try {
       const response = await getUserRequests(user._id || user.id);
-      const activeRequests = response.data.requests.filter(
-        (req) => req.status === 'pending' || req.status === 'searching'
-      );
-      if (activeRequests.length > 0) {
+      const active = response.data.requests?.find(req => req.status === 'pending' || req.status === 'searching');
+      if (active) {
         setHasActiveRequest(true);
-        setActiveRequest(activeRequests[0]);
+        setActiveRequest(active);
       }
     } catch (error) {
-      console.error('Error checking active requests:', error);
+      console.error('Error fetching requests:', error);
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-    if (errors[name]) {
-      setErrors({
-        ...errors,
-        [name]: '',
-      });
-    }
-  };
-
-  const validate = () => {
-    const newErrors = {};
-    if (!formData.bloodGroup) {
-      newErrors.bloodGroup = 'Blood group is required';
-    }
-    if (!formData.unitsRequired || formData.unitsRequired < 1 || formData.unitsRequired > 10) {
-      newErrors.unitsRequired = 'Units required must be between 1 and 10';
-    }
-    if (!formData.urgency) {
-      newErrors.urgency = 'Urgency level is required';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage('');
-    if (!validate()) return;
-
     setLoading(true);
+    setMessage('');
+
     try {
       const requestData = {
         bloodGroup: formData.bloodGroup,
         unitsRequired: parseInt(formData.unitsRequired),
         urgency: formData.urgency,
-        location: {
-          hospital: formData.hospital || undefined,
-          address: formData.address || undefined,
-          city: formData.city || undefined,
-          state: formData.state || undefined,
-          zipCode: formData.zipCode || undefined,
-        },
-        contactPerson: {
-          name: formData.contactName || undefined,
-          phone: formData.contactPhone || undefined,
-          relationship: formData.contactRelationship || undefined,
-        },
-        notes: formData.notes || undefined,
+        location: { hospital: formData.hospital, address: formData.address, city: formData.city, state: formData.state, zipCode: formData.zipCode },
+        contactPerson: { name: formData.contactName, phone: formData.contactPhone, relationship: formData.contactRelationship },
+        notes: formData.notes,
       };
 
       await createRequest(requestData);
-      setMessage('Blood request created successfully!');
-      setFormData({
-        bloodGroup: user?.bloodGroup || '',
-        unitsRequired: 1,
-        urgency: 'medium',
-        hospital: '',
-        address: '',
-        city: '',
-        state: '',
-        zipCode: '',
-        contactName: '',
-        contactPhone: '',
-        contactRelationship: '',
-        notes: '',
-      });
+      setMessage('Vital request broadcast successful!');
       if (onRequestCreated) onRequestCreated();
       await checkActiveRequests();
     } catch (error) {
-      setMessage(error.message || 'Failed to create request');
+      setMessage(error.message || 'Transmission failed. Verify link.');
     } finally {
       setLoading(false);
     }
@@ -127,20 +80,48 @@ const PatientRequestForm = ({ onRequestCreated }) => {
 
   if (hasActiveRequest) {
     return (
-      <div className="card">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-          <h3 className="text-xl font-bold text-yellow-800 mb-3 flex items-center gap-2">
-            <AlertTriangle className="w-6 h-6" /> Active Request Exists
-          </h3>
-          <p className="text-yellow-700 mb-4">
-            You already have an active blood request. Please cancel it before creating a new one.
-          </p>
-          <div className="bg-white p-4 rounded-lg">
-            <p className="text-sm"><strong>Status:</strong> {activeRequest.status}</p>
-            <p className="text-sm"><strong>Blood Group:</strong> {activeRequest.bloodGroup}</p>
-            <p className="text-sm"><strong>Units Required:</strong> {activeRequest.unitsRequired}</p>
-            <p className="text-sm"><strong>Created:</strong> {new Date(activeRequest.createdAt).toLocaleString()}</p>
-          </div>
+      <div className="animate-reveal">
+        <div className="p-10 rounded-[40px] bg-slate-900 text-white relative overflow-hidden shadow-2xl">
+           <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">
+              <Zap className="w-48 h-48 text-sky-400" />
+           </div>
+           
+           <div className="relative z-10 max-w-2xl">
+              <div className="flex items-center gap-3 mb-6">
+                 <div className="p-3 bg-amber-500 rounded-2xl shadow-lg shadow-amber-500/20">
+                    <AlertTriangle className="w-6 h-6 text-white" />
+                 </div>
+                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">Active Pipeline Found</span>
+              </div>
+              
+              <h3 className="text-4xl font-display font-black mb-4 tracking-tight">Requirement <span className="text-sky-400">In Progress</span></h3>
+              <p className="text-slate-400 font-medium text-lg leading-relaxed mb-10">
+                You already have an active request being processed by our neural network. Please finalize or cancel it before initiating a new cycle.
+              </p>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-8 bg-white/5 border border-white/10 rounded-[32px] mb-8">
+                 <div>
+                    <p className="text-[10px] font-black uppercase text-slate-500 mb-1">Status</p>
+                    <p className="font-bold text-sky-400 uppercase tracking-widest">{activeRequest.status}</p>
+                 </div>
+                 <div>
+                    <p className="text-[10px] font-black uppercase text-slate-500 mb-1">Requirement</p>
+                    <p className="font-bold">{activeRequest.bloodGroup}</p>
+                 </div>
+                 <div>
+                    <p className="text-[10px] font-black uppercase text-slate-500 mb-1">Units</p>
+                    <p className="font-bold text-rose-400">{activeRequest.unitsRequired}</p>
+                 </div>
+                 <div>
+                    <p className="text-[10px] font-black uppercase text-slate-500 mb-1">Logged</p>
+                    <p className="font-bold">{new Date(activeRequest.createdAt).toLocaleDateString()}</p>
+                 </div>
+              </div>
+
+              <button onClick={() => onRequestCreated && onRequestCreated()} className="btn-primary py-4 px-10 group">
+                 View Tracking History <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+           </div>
         </div>
       </div>
     );
@@ -149,205 +130,107 @@ const PatientRequestForm = ({ onRequestCreated }) => {
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
   return (
-    <div className="card">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Create Blood Request</h2>
+    <div className="max-w-4xl mx-auto animate-reveal">
+      <div className="mb-10">
+         <div className="flex items-center gap-3 mb-4">
+            <span className="px-4 py-1 bg-rose-50 text-rose-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-rose-100">
+               Urgent Acquisition
+            </span>
+         </div>
+         <h2 className="text-4xl font-display font-black tracking-tight text-slate-900">Initiate <span className="text-sky-500">Care Link</span></h2>
+         <p className="text-slate-500 font-medium mt-2">Configure and broadcast a new blood requirement across the guardian network.</p>
+      </div>
 
       {message && (
-        <div
-          className={`p-4 rounded-lg mb-6 ${
-            message.includes('success')
-              ? 'bg-green-50 text-green-800 border border-green-200'
-              : 'bg-red-50 text-red-800 border border-red-200'
-          }`}
-        >
-          {message}
+        <div className={`p-6 rounded-[32px] mb-10 border ${message.includes('success') ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-rose-50 border-rose-100 text-rose-700'} flex items-center gap-4`}>
+           {message.includes('success') ? <CheckCircle2 className="w-6 h-6" /> : <Info className="w-6 h-6" />}
+           <span className="font-bold text-sm">{message}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Blood Group Required <span className="text-red-500">*</span>
-            </label>
-            <select
-              name="bloodGroup"
-              value={formData.bloodGroup}
-              onChange={handleChange}
-              className="input-field"
-              required
-            >
-              <option value="">Select Blood Group</option>
-              {bloodGroups.map((bg) => (
-                <option key={bg} value={bg}>{bg}</option>
-              ))}
-            </select>
-            {errors.bloodGroup && (
-              <span className="text-red-500 text-sm mt-1 block">{errors.bloodGroup}</span>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Units Required <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              name="unitsRequired"
-              value={formData.unitsRequired}
-              onChange={handleChange}
-              min="1"
-              max="10"
-              className="input-field"
-              required
-            />
-            {errors.unitsRequired && (
-              <span className="text-red-500 text-sm mt-1 block">{errors.unitsRequired}</span>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Urgency Level <span className="text-red-500">*</span>
-            </label>
-            <select
-              name="urgency"
-              value={formData.urgency}
-              onChange={handleChange}
-              className="input-field"
-              required
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="critical">Critical</option>
-            </select>
-            {errors.urgency && (
-              <span className="text-red-500 text-sm mt-1 block">{errors.urgency}</span>
-            )}
-          </div>
-        </div>
-
-        <div className="border-t pt-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Location Details</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Hospital Name</label>
-              <input
-                type="text"
-                name="hospital"
-                value={formData.hospital}
-                onChange={handleChange}
-                className="input-field"
-                placeholder="Enter hospital name"
-              />
+      <form onSubmit={handleSubmit} className="space-y-10">
+         {/* Vital Configuration */}
+         <section className="card-premium">
+            <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-8 border-b border-slate-100 pb-4">
+               <Droplets className="w-4 h-4 text-rose-500" /> Vital Configuration
+            </h4>
+            <div className="grid md:grid-cols-3 gap-8">
+               <div className="space-y-2">
+                  <label className="input-label">Blood Requirement</label>
+                  <select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} className="input-field" required>
+                     <option value="">Select Group</option>
+                     {bloodGroups.map(bg => <option key={bg} value={bg}>{bg}</option>)}
+                  </select>
+               </div>
+               <div className="space-y-2">
+                  <label className="input-label">Units (Quantity)</label>
+                  <input type="number" name="unitsRequired" value={formData.unitsRequired} onChange={handleChange} className="input-field" min="1" max="10" required />
+               </div>
+               <div className="space-y-2">
+                  <label className="input-label">Urgency Priority</label>
+                  <select name="urgency" value={formData.urgency} onChange={handleChange} className="input-field font-black uppercase text-[10px] tracking-widest" required>
+                     <option value="low">Low Priority</option>
+                     <option value="medium">Standard Operational</option>
+                     <option value="high">High Urgency</option>
+                     <option value="critical">Critical (Immediate)</option>
+                  </select>
+               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                className="input-field"
-                placeholder="Street address"
-              />
-            </div>
-            <div className="grid md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
-                <input
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  className="input-field"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
-                <input
-                  type="text"
-                  name="state"
-                  value={formData.state}
-                  onChange={handleChange}
-                  className="input-field"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Zip Code</label>
-                <input
-                  type="text"
-                  name="zipCode"
-                  value={formData.zipCode}
-                  onChange={handleChange}
-                  className="input-field"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+         </section>
 
-        <div className="border-t pt-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Person (Optional)</h3>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Contact Name</label>
-              <input
-                type="text"
-                name="contactName"
-                value={formData.contactName}
-                onChange={handleChange}
-                className="input-field"
-              />
+         {/* Medical Logistics */}
+         <section className="card-premium">
+            <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-8 border-b border-slate-100 pb-4">
+               <MapPin className="w-4 h-4 text-sky-500" /> Clinical Logistics
+            </h4>
+            <div className="space-y-6">
+               <div className="space-y-2">
+                  <label className="input-label">Target Medical Center (Hospital)</label>
+                  <div className="relative group">
+                     <Hospital className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                     <input type="text" name="hospital" value={formData.hospital} onChange={handleChange} className="input-field pl-12" placeholder="Central City Medical" />
+                  </div>
+               </div>
+               <div className="grid md:grid-cols-3 gap-4">
+                  <div className="space-y-1"><label className="input-label text-[10px]">City</label><input type="text" name="city" value={formData.city} onChange={handleChange} className="input-field py-2.5" /></div>
+                  <div className="space-y-1"><label className="input-label text-[10px]">State/Region</label><input type="text" name="state" value={formData.state} onChange={handleChange} className="input-field py-2.5" /></div>
+                  <div className="space-y-1"><label className="input-label text-[10px]">Postal Code</label><input type="text" name="zipCode" value={formData.zipCode} onChange={handleChange} className="input-field py-2.5" /></div>
+               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Contact Phone</label>
-              <input
-                type="tel"
-                name="contactPhone"
-                value={formData.contactPhone}
-                onChange={handleChange}
-                className="input-field"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Relationship</label>
-              <input
-                type="text"
-                name="contactRelationship"
-                value={formData.contactRelationship}
-                onChange={handleChange}
-                className="input-field"
-                placeholder="e.g., Family, Friend"
-              />
-            </div>
-          </div>
-        </div>
+         </section>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
-          <textarea
-            name="notes"
-            value={formData.notes}
-            onChange={handleChange}
-            className="input-field"
-            rows="4"
-            maxLength="500"
-            placeholder="Any additional information..."
-          />
-          <span className="text-xs text-gray-500 mt-1 block">
-            {formData.notes.length}/500 characters
-          </span>
-        </div>
+         {/* Protocol Contact */}
+         <section className="card-premium">
+            <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-8 border-b border-slate-100 pb-4">
+               <User className="w-4 h-4 text-emerald-500" /> Operational Contact
+            </h4>
+            <div className="grid md:grid-cols-2 gap-8">
+               <div className="space-y-2">
+                  <label className="input-label">On-site Contact</label>
+                  <input type="text" name="contactName" value={formData.contactName} onChange={handleChange} className="input-field" placeholder="Full Name" />
+               </div>
+               <div className="space-y-2">
+                  <label className="input-label">Emergency Phone</label>
+                  <div className="relative group">
+                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                     <input type="tel" name="contactPhone" value={formData.contactPhone} onChange={handleChange} className="input-field pl-12" placeholder="+123..." />
+                  </div>
+               </div>
+            </div>
+         </section>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full btn-primary py-3 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Creating Request...' : 'Create Request'}
-        </button>
+         {/* Additional Synthesis */}
+         <section className="card-premium">
+            <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">
+               <FileText className="w-4 h-4 text-indigo-500" /> Supplementary Case Notes
+            </h4>
+            <textarea name="notes" value={formData.notes} onChange={handleChange} className="input-field min-h-[150px] resize-none" placeholder="Any specific requirements or instructions for the matched hero..." maxLength="500"></textarea>
+            <div className="flex justify-end mt-2"><span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{formData.notes.length}/500 Context Units</span></div>
+         </section>
+
+         <button type="submit" disabled={loading} className="w-full btn-primary py-5 text-xl shadow-2xl shadow-sky-500/20 group">
+            {loading ? 'Transmitting Vital Request...' : 'Initialize Vital Broadcast'} <Send className="w-5 h-5 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+         </button>
       </form>
     </div>
   );

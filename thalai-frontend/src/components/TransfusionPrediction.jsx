@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AlertCircle, AlertTriangle, Calendar } from 'lucide-react';
 
 const TransfusionPrediction = ({ prediction, onRefresh, loading }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -53,7 +54,7 @@ const TransfusionPrediction = ({ prediction, onRefresh, loading }) => {
       bgColor: 'bg-red-50',
       textColor: 'text-red-700',
       borderColor: 'border-red-200',
-      icon: '🚨',
+      icon: <AlertCircle className="w-8 h-8" />,
       label: 'Urgent'
     },
     soon: {
@@ -61,7 +62,7 @@ const TransfusionPrediction = ({ prediction, onRefresh, loading }) => {
       bgColor: 'bg-yellow-50',
       textColor: 'text-yellow-800',
       borderColor: 'border-yellow-200',
-      icon: '⚠️',
+      icon: <AlertTriangle className="w-8 h-8" />,
       label: 'Soon'
     },
     normal: {
@@ -69,7 +70,7 @@ const TransfusionPrediction = ({ prediction, onRefresh, loading }) => {
       bgColor: 'bg-blue-50',
       textColor: 'text-blue-700',
       borderColor: 'border-blue-200',
-      icon: '📅',
+      icon: <Calendar className="w-8 h-8" />,
       label: 'Scheduled'
     }
   };
