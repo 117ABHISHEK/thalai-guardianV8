@@ -4,7 +4,7 @@ import {
   Droplets, LayoutDashboard, UserCircle, 
   LogOut, Bell, Settings, Menu, X,
   UserCheck, ClipboardList, Activity, Heart,
-  LogIn, UserPlus, Search
+  LogIn, UserPlus, Search, Calendar
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import NotificationDropdown from './NotificationDropdown';
@@ -140,8 +140,12 @@ const Navbar = () => {
                 
                 <div className="relative group">
                   <button className="flex items-center gap-3 p-1.5 pr-4 bg-slate-50 border border-slate-100 rounded-2xl group-hover:bg-white group-hover:border-sky-200 transition-all">
-                    <div className="w-9 h-9 rounded-xl bg-sky-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/20">
-                       <UserCircle className="w-6 h-6" />
+                    <div className="w-9 h-9 rounded-xl bg-sky-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/20 overflow-hidden">
+                       {user.profilePicture ? (
+                         <img src={user.profilePicture} alt={user.name} className="w-full h-full object-cover" />
+                       ) : (
+                         <UserCircle className="w-6 h-6" />
+                       )}
                     </div>
                     <div className="text-left">
                       <p className="text-xs font-black text-slate-900 leading-none mb-1">{user.name.split(' ')[0]}</p>
@@ -150,7 +154,7 @@ const Navbar = () => {
                   </button>
                   
                   {/* Dropdown */}
-                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-[24px] shadow-2xl border border-slate-100 p-2.5 opacity-0 translate-y-3 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all">
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-[24px] shadow-2xl border border-slate-100 p-2.5 opacity-0 translate-y-3 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all z-[9999]">
                     <div className="px-4 py-3 border-b border-slate-50 mb-1">
                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Signed in as</p>
                        <p className="text-sm font-bold text-slate-900 truncate">{user.email}</p>

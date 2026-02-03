@@ -104,14 +104,14 @@ const ChatbotWidget = () => {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-8 right-8 w-16 h-16 bg-slate-900 border border-white/10 text-white rounded-[24px] shadow-2xl hover:scale-110 active:scale-95 transition-all duration-500 z-50 flex items-center justify-center group ${isOpen ? 'opacity-0 scale-0 pointer-events-none' : 'opacity-100 scale-100'}`}
+        className={`fixed bottom-8 right-8 w-16 h-16 bg-slate-900 border border-white/10 text-white rounded-[24px] shadow-2xl hover:scale-110 active:scale-95 transition-all duration-500 z-[9998] flex items-center justify-center group ${isOpen ? 'opacity-0 scale-0 pointer-events-none' : 'opacity-100 scale-100'}`}
       >
         <Sparkles className="w-8 h-8 group-hover:text-sky-400 transition-colors" />
         <span className="absolute -top-1 -right-1 w-4 h-4 bg-sky-500 rounded-full border-2 border-white shadow-sm" />
       </button>
 
       {isOpen && (
-        <div className="fixed bottom-8 right-8 w-[420px] h-[700px] bg-white rounded-[40px] shadow-2xl flex flex-col z-100 overflow-hidden animate-reveal border border-slate-100">
+        <div className="fixed bottom-8 right-8 w-[420px] h-[700px] bg-white rounded-[40px] shadow-2xl flex flex-col z-[9999] overflow-hidden animate-reveal border border-slate-100">
           {/* AI Header */}
           <div className="bg-slate-900 p-6 flex justify-between items-center relative overflow-hidden">
              <div className="absolute top-0 right-0 p-8 opacity-10">

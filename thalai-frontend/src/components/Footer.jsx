@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import { Droplets, Heart, Mail, Phone, Info, Globe, ShieldCheck } from 'lucide-react';
 
-const Footer = () => {
+const Footer = ({ className = '' }) => {
   return (
-    <footer className="bg-slate-950 text-white font-body">
+    <footer className={`bg-slate-950 text-white font-body ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
           {/* Brand Column */}

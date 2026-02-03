@@ -526,6 +526,7 @@ const updateProfile = async (req, res) => {
       address,
       dateOfBirth,
       bloodGroup,
+      profilePicture,
       // Health metrics
       heightCm,
       weightKg,
@@ -542,6 +543,7 @@ const updateProfile = async (req, res) => {
     if (phone) updateFields.phone = phone;
     if (address) updateFields.address = address;
     if (dateOfBirth) updateFields.dateOfBirth = dateOfBirth;
+    if (profilePicture) updateFields.profilePicture = profilePicture;
     if (bloodGroup) {
       const validBloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
       if (validBloodGroups.includes(bloodGroup)) {

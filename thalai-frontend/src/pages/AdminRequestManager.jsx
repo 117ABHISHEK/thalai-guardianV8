@@ -88,7 +88,7 @@ const AdminRequestManager = () => {
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
   return (
-    <div className="min-h-screen bg-transparent py-12 px-6 lg:px-12 relative overflow-hidden animate-slide-up">
+    <div className="min-h-screen bg-transparent pt-12 pb-32 px-6 lg:px-12 relative animate-slide-up">
       {/* Local administrative blur removed */}
 
       <div className="max-w-7xl mx-auto">

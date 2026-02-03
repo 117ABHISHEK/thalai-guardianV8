@@ -13,7 +13,7 @@ const logger = require('../utils/logger');
 const getDonors = async (req, res) => {
   try {
     const donors = await Donor.find()
-      .populate('user', 'name email bloodGroup phone address dateOfBirth')
+      .populate('user', 'name email bloodGroup phone address dateOfBirth profilePicture')
       .populate('verifiedBy', 'name email')
       .sort({ createdAt: -1 });
 
@@ -153,7 +153,7 @@ const verifyDonor = async (req, res) => {
     });
 
     // Populate the updated donor
-    await donor.populate('user', 'name email bloodGroup phone');
+    await donor.populate('user', 'name email bloodGroup phone profilePicture');
     await donor.populate('verifiedBy', 'name email');
 
     // Get final eligibility status
@@ -187,7 +187,7 @@ const verifyDonor = async (req, res) => {
 const getEligibilityReport = async (req, res) => {
   try {
     const donors = await Donor.find()
-      .populate('user', 'name email bloodGroup phone dateOfBirth')
+      .populate('user', 'name email bloodGroup phone dateOfBirth profilePicture')
       .populate('verifiedBy', 'name email')
       .sort({ createdAt: -1 });
 
@@ -207,6 +207,7 @@ const getEligibilityReport = async (req, res) => {
         daysSinceLastDonation: donor.daysSinceLastDonation || null,
         eligibilityChecks: eligibility.checks,
         eligible: eligibility.eligible,
+        profilePicture: donor.user?.profilePicture || '',
       };
     });
 
@@ -359,7 +360,7 @@ const getStats = async (req, res) => {
 const getDoctors = async (req, res) => {
   try {
     const doctors = await Doctor.find()
-      .populate('user', 'name email bloodGroup phone address dateOfBirth')
+      .populate('user', 'name email bloodGroup phone address dateOfBirth profilePicture')
       .populate('verifiedBy', 'name email')
       .sort({ createdAt: -1 });
 
@@ -418,7 +419,7 @@ const verifyDoctor = async (req, res) => {
     logger.info('Doctor verified', { doctorId: doctor._id, verifiedBy: req.user._id });
 
     // Populate the updated doctor
-    await doctor.populate('user', 'name email phone');
+    await doctor.populate('user', 'name email phone profilePicture');
     await doctor.populate('verifiedBy', 'name email');
 
     res.status(200).json({
@@ -580,7 +581,7 @@ const unassignPatientFromDoctor = async (req, res) => {
 const getPatients = async (req, res) => {
   try {
     const patients = await Patient.find()
-      .populate('user', 'name email bloodGroup phone address dateOfBirth')
+      .populate('user', 'name email bloodGroup phone address dateOfBirth profilePicture')
       .sort({ createdAt: -1 });
 
     res.status(200).json({

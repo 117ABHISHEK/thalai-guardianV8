@@ -45,7 +45,7 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-transparent font-body animate-slide-up">
+    <div className="min-h-screen bg-transparent font-body pb-64 animate-slide-up">
       {/* Central Command Header */}
       <div className="glass border-b border-slate-100 sticky top-20 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

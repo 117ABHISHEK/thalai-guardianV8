@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api/auth';
-import { Mail, Phone, MoreVertical, XCircle, Info, ShieldAlert } from 'lucide-react';
+import { Mail, Phone, MoreVertical, XCircle, Info, ShieldAlert, Users } from 'lucide-react';
 
 const ConnectionList = ({ role }) => {
   const [connections, setConnections] = useState([]);
@@ -48,10 +48,24 @@ const ConnectionList = ({ role }) => {
     }
   };
 
-  if (loading) return <div className="text-center p-24"><div className="w-12 h-12 border-4 border-sky-100 border-t-sky-500 rounded-full animate-spin mx-auto"></div></div>;
+  if (loading) return (
+    <div className="text-center p-24">
+      <div className="w-12 h-12 border-4 border-sky-100 border-t-sky-500 rounded-full animate-spin mx-auto"></div>
+    </div>
+  );
 
-  const pendingRequests = connections.filter(c => c.status === 'pending');
-  const activeConnections = connections.filter(c => c.status === 'active');
+  if (error && (!connections || connections.length === 0)) {
+    return (
+      <div className="text-center p-12 bg-rose-50 rounded-3xl border border-rose-100">
+        <ShieldAlert className="w-12 h-12 text-rose-500 mx-auto mb-4" />
+        <p className="text-rose-800 font-bold">{error}</p>
+        <button onClick={fetchConnections} className="mt-4 px-6 py-2 bg-rose-500 text-white rounded-xl text-xs font-black uppercase tracking-widest">Retry Connection</button>
+      </div>
+    );
+  }
+
+  const pendingRequests = Array.isArray(connections) ? connections.filter(c => c.status === 'pending') : [];
+  const activeConnections = Array.isArray(connections) ? connections.filter(c => c.status === 'active') : [];
 
   return (
     <div className="space-y-12">
@@ -64,7 +78,7 @@ const ConnectionList = ({ role }) => {
           <div className="grid gap-6 md:grid-cols-2">
             {pendingRequests.map(conn => {
               const otherUser = role === 'patient' ? conn.donor : conn.patient;
-              const isRequester = conn.requester === (role === 'patient' ? conn.patient?._id : conn.donor?._id);
+              const isRequester = conn.requester === (role === 'patient' ? conn.patient?._id : conn.donor?._id) || conn.requester?._id === (role === 'patient' ? conn.patient?._id : conn.donor?._id);
               
               return (
                 <div key={conn._id} className="bg-white p-7 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all group overflow-hidden relative">

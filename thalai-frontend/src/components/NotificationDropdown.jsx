@@ -47,7 +47,7 @@ const NotificationDropdown = ({ onClose }) => {
   };
 
   return (
-    <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-[24px] shadow-2xl border border-slate-100 overflow-hidden z-50 animate-reveal">
+    <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-[24px] shadow-2xl border border-slate-100 overflow-hidden z-[9999] animate-reveal">
       <div className="p-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
         <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
           <Bell className="w-4 h-4 text-sky-500" /> Neural Signals

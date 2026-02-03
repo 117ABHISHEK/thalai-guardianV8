@@ -45,6 +45,10 @@ const userSchema = new mongoose.Schema(
     dateOfBirth: {
       type: Date,
     },
+    profilePicture: {
+      type: String,
+      default: '',
+    },
     isActive: {
       type: Boolean,
       default: true,

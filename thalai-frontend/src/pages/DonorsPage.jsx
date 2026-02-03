@@ -29,8 +29,12 @@ const DonorsPage = () => {
       key: 'name',
       render: (value, row) => (
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-black text-sm border border-sky-100">
-            {value?.charAt(0) || 'D'}
+          <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-black text-sm border border-sky-100 overflow-hidden">
+            {row.profilePicture ? (
+               <img src={row.profilePicture} alt={value} className="w-full h-full object-cover" />
+            ) : (
+               value?.charAt(0) || 'D'
+            )}
           </div>
           <div>
             <p className="font-bold text-slate-900">{value}</p>

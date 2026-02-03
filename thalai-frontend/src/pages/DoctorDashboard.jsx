@@ -4,6 +4,8 @@ import { getDoctorStats, getAssignedPatients, getPatientDetails, updatePatientNo
 import AppointmentList from '../components/AppointmentList';
 import NotificationList from '../components/NotificationList';
 import StatCard from '../components/StatCard';
+import { useAuth } from '../context/AuthContext';
+import ProfilePictureUpload from '../components/ProfilePictureUpload';
 import { 
   Users, ClipboardList, AlertTriangle, CheckCircle2, 
   X, Activity, ArrowRight, UserCheck, Search,
@@ -12,6 +14,7 @@ import {
 } from 'lucide-react';
 
 const DoctorDashboard = () => {
+  const { user } = useAuth();
   const location = useLocation();
   const [stats, setStats] = useState({
     activePatientsCount: 0,
@@ -82,21 +85,24 @@ const DoctorDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-transparent font-body animate-slide-up">
+    <div className="min-h-screen bg-transparent font-body pb-64 animate-slide-up">
       {/* Premium Medical Header */}
       <div className="glass border-b border-slate-100 sticky top-20 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 animate-reveal">
-              <div>
-                 <div className="flex items-center gap-2 mb-2">
-                    <span className="px-3 py-1 bg-sky-50 text-sky-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-sky-100">
-                      Medical Practitioner Hub
-                    </span>
+              <div className="flex items-center gap-6">
+                 <ProfilePictureUpload size="w-20 h-20" />
+                 <div>
+                    <div className="flex items-center gap-2 mb-2">
+                       <span className="px-3 py-1 bg-sky-50 text-sky-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-sky-100">
+                          Medical Practitioner Hub
+                       </span>
+                    </div>
+                    <h1 className="text-4xl font-display font-black text-slate-900 tracking-tight leading-tight">
+                       Doctor <span className="text-sky-500 text-gradient">{user?.name}</span>
+                    </h1>
+                    <p className="text-slate-500 font-medium mt-1">Reviewing clinical care for <span className="text-slate-900 font-bold">{stats.activePatientsCount} patients</span></p>
                  </div>
-                 <h1 className="text-4xl font-display font-black text-slate-900 tracking-tight">
-                   Doctor <span className="text-sky-500">Workspace</span>
-                 </h1>
-                 <p className="text-slate-500 font-medium mt-1">Reviewing clinical care for <span className="text-slate-900 font-bold">{stats.activePatientsCount} patients</span></p>
               </div>
 
               <div className="flex items-center gap-4">

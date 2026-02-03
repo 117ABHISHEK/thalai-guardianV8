@@ -3,6 +3,7 @@
 ## Module 1: User Management Module
 
 ### Base URL
+
 ```
 http://localhost:5000/api
 ```
@@ -12,11 +13,13 @@ http://localhost:5000/api
 ## Authentication Endpoints
 
 ### 1. Register User
+
 **POST** `/auth/register`
 
 Register a new user with role (patient, donor, or admin).
 
 **Request Body:**
+
 ```json
 {
   "name": "John Doe",
@@ -31,11 +34,13 @@ Register a new user with role (patient, donor, or admin).
     "state": "State",
     "zipCode": "12345"
   },
-  "dateOfBirth": "1990-01-01"
+  "dateOfBirth": "1990-01-01",
+  "profilePicture": "base64_string_or_url"
 }
 ```
 
 **Required Fields:**
+
 - `name` (string)
 - `email` (string, valid email format)
 - `password` (string, min 6 characters)
@@ -43,6 +48,7 @@ Register a new user with role (patient, donor, or admin).
 - `bloodGroup` (enum: "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
 
 **Response (201):**
+
 ```json
 {
   "success": true,
@@ -53,7 +59,8 @@ Register a new user with role (patient, donor, or admin).
       "name": "John Doe",
       "email": "john@example.com",
       "role": "donor",
-      "bloodGroup": "O+"
+      "bloodGroup": "O+",
+      "profilePicture": "base64_string_or_url"
     },
     "token": "jwt_token_here"
   }
@@ -63,11 +70,13 @@ Register a new user with role (patient, donor, or admin).
 ---
 
 ### 2. Login User
+
 **POST** `/auth/login`
 
 Login user and receive JWT token.
 
 **Request Body:**
+
 ```json
 {
   "email": "john@example.com",
@@ -76,6 +85,7 @@ Login user and receive JWT token.
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -86,7 +96,8 @@ Login user and receive JWT token.
       "name": "John Doe",
       "email": "john@example.com",
       "role": "donor",
-      "bloodGroup": "O+"
+      "bloodGroup": "O+",
+      "profilePicture": "base64_string_or_url"
     },
     "token": "jwt_token_here"
   }
@@ -98,16 +109,19 @@ Login user and receive JWT token.
 ---
 
 ### 3. Get User Profile
+
 **GET** `/auth/profile`
 
 Get authenticated user's profile.
 
 **Headers:**
+
 ```
 Authorization: Bearer <jwt_token>
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -121,6 +135,7 @@ Authorization: Bearer <jwt_token>
       "phone": "1234567890",
       "address": {...},
       "dateOfBirth": "1990-01-01T00:00:00.000Z",
+      "profilePicture": "base64_string_or_url",
       "isActive": true,
       "createdAt": "...",
       "updatedAt": "..."
@@ -132,16 +147,19 @@ Authorization: Bearer <jwt_token>
 ---
 
 ### 4. Update User Profile
+
 **PUT** `/auth/profile`
 
 Update authenticated user's profile.
 
 **Headers:**
+
 ```
 Authorization: Bearer <jwt_token>
 ```
 
 **Request Body (all fields optional):**
+
 ```json
 {
   "name": "John Updated",
@@ -153,11 +171,13 @@ Authorization: Bearer <jwt_token>
     "zipCode": "54321"
   },
   "dateOfBirth": "1990-01-01",
-  "bloodGroup": "O-"
+  "bloodGroup": "O-",
+  "profilePicture": "base64_string_or_url"
 }
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -173,11 +193,13 @@ Authorization: Bearer <jwt_token>
 ## Donor Endpoints
 
 ### 5. Update Donor Availability
+
 **POST** `/donors/availability`
 
 Update donor availability status and last donation date.
 
 **Headers:**
+
 ```
 Authorization: Bearer <jwt_token>
 ```
@@ -185,6 +207,7 @@ Authorization: Bearer <jwt_token>
 **Access:** Donor role only
 
 **Request Body:**
+
 ```json
 {
   "availabilityStatus": true,
@@ -193,12 +216,15 @@ Authorization: Bearer <jwt_token>
 ```
 
 **Required Fields:**
+
 - `availabilityStatus` (boolean: true/false)
 
 **Optional Fields:**
+
 - `lastDonationDate` (string, ISO date format)
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -226,11 +252,13 @@ Authorization: Bearer <jwt_token>
 ---
 
 ### 6. Get Donor Availability
+
 **GET** `/donors/availability`
 
 Get donor's availability status.
 
 **Headers:**
+
 ```
 Authorization: Bearer <jwt_token>
 ```
@@ -238,6 +266,7 @@ Authorization: Bearer <jwt_token>
 **Access:** Donor role only
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -261,6 +290,7 @@ Authorization: Bearer <jwt_token>
 ## Error Responses
 
 ### 400 Bad Request
+
 ```json
 {
   "message": "Please provide all required fields: name, email, password, role, bloodGroup"
@@ -268,6 +298,7 @@ Authorization: Bearer <jwt_token>
 ```
 
 ### 401 Unauthorized
+
 ```json
 {
   "message": "Not authorized, no token"
@@ -275,6 +306,7 @@ Authorization: Bearer <jwt_token>
 ```
 
 ### 403 Forbidden
+
 ```json
 {
   "message": "Access denied. Required roles: donor"
@@ -282,6 +314,7 @@ Authorization: Bearer <jwt_token>
 ```
 
 ### 404 Not Found
+
 ```json
 {
   "message": "User not found"
@@ -289,6 +322,7 @@ Authorization: Bearer <jwt_token>
 ```
 
 ### 500 Server Error
+
 ```json
 {
   "message": "Server error",
@@ -316,4 +350,3 @@ Authorization: Bearer <jwt_token>
 - **Admin**: Can access admin-specific routes
 
 Use the `allowRoles()` middleware to protect routes by role.
-

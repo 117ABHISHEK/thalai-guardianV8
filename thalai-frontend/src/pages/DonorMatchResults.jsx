@@ -60,7 +60,7 @@ const DonorMatchResults = () => {
   );
 
   return (
-    <div className="min-h-screen bg-transparent py-16 px-6 lg:px-12 relative overflow-hidden animate-slide-up">
+    <div className="min-h-screen bg-transparent pt-16 pb-32 px-6 lg:px-12 relative animate-slide-up">
       {/* Neural background removed to reveal global system */}
       
       <div className="max-w-6xl mx-auto">

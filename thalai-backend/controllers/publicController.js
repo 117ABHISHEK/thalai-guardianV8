@@ -63,7 +63,7 @@ const getPublicDonors = async (req, res) => {
       isVerified: true,
       availabilityStatus: true,
     })
-      .populate('user', 'name bloodGroup')
+      .populate('user', 'name bloodGroup profilePicture')
       .sort({ totalDonations: -1, createdAt: -1 })
       .limit(limit)
       .select('totalDonations lastDonationDate availabilityStatus');
@@ -76,6 +76,7 @@ const getPublicDonors = async (req, res) => {
         totalDonations: donor.totalDonations || 0,
         lastDonationDate: donor.lastDonationDate,
         isAvailable: donor.availabilityStatus,
+        profilePicture: donor.user.profilePicture,
       }));
 
     res.status(200).json({
@@ -179,7 +180,7 @@ const Doctor = require('../models/doctorModel');
 const getPublicDoctors = async (req, res) => {
   try {
     const doctors = await Doctor.find({ isVerified: true })
-      .populate('user', 'name email phone')
+      .populate('user', 'name email phone profilePicture')
       .select('specialization qualification hospital experience');
 
     const formattedDoctors = doctors
@@ -191,6 +192,7 @@ const getPublicDoctors = async (req, res) => {
         qualification: doc.qualification,
         hospital: doc.hospital?.name || 'N/A',
         experience: doc.experience,
+        profilePicture: doc.user.profilePicture,
       }));
 
     res.status(200).json({

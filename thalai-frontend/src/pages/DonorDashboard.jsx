@@ -9,11 +9,12 @@ import AppointmentList from '../components/AppointmentList';
 import ConnectionList from '../components/ConnectionList';
 import NotificationList from '../components/NotificationList';
 import MatchedRequests from '../components/MatchedRequests';
+import ProfilePictureUpload from '../components/ProfilePictureUpload';
 
 import { 
   Heart, CheckCircle, PauseCircle, Calendar, XCircle, 
   Clock, ClipboardList, ArrowRight, User, Settings,
-  ShieldCheck, Activity, Users, Bell, UserCheck
+  ShieldCheck, Activity, Users, Bell, UserCheck, AlertCircle
 } from 'lucide-react';
 
 const DonorDashboard = () => {
@@ -119,26 +120,34 @@ const DonorDashboard = () => {
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Activity },
     { id: 'matches', label: 'Matches', icon: Heart },
-    { id: 'appointments', label: 'Visits', icon: Calendar },
+    { id: 'appointments', label: 'Appointments', icon: Calendar },
     { id: 'connections', label: 'Circles', icon: Users },
     { id: 'health', label: 'Health', icon: ClipboardList },
     { id: 'notifications', label: 'Alerts', icon: Bell },
   ];
 
   return (
-    <div className="min-h-screen bg-transparent font-body animate-slide-up">
+    <div className="min-h-screen bg-transparent font-body pb-64 animate-slide-up">
       {/* Premium Header */}
       <div className="glass border-b border-slate-100 sticky top-20 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="animate-reveal">
-              <h1 className="text-4xl font-display font-black text-slate-900 tracking-tight">
-                Donor <span className="text-sky-500">Dashboard</span>
-              </h1>
-              <p className="text-slate-500 font-medium mt-1.5 flex items-center gap-2">
-                Welcome back, <span className="text-slate-900 font-bold">{user?.name}</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              </p>
+            <div className="flex items-center gap-6 animate-reveal">
+              <ProfilePictureUpload size="w-20 h-20" />
+              <div>
+                <h1 className="text-4xl font-display font-black text-slate-900 tracking-tight leading-tight">
+                  Donor <span className="text-sky-500">Dashboard</span>
+                </h1>
+                <p className="text-slate-500 font-medium mt-1.5 flex items-center gap-2">
+                  Welcome back, <span className="text-slate-900 font-bold">{user?.name}</span>
+                  <span className="flex items-center gap-1.5 ml-2">
+                     <span className={`w-2 h-2 rounded-full ${availability?.availabilityStatus ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
+                     <span className={`text-[10px] font-black uppercase tracking-widest ${availability?.availabilityStatus ? 'text-emerald-500' : 'text-slate-400'}`}>
+                        {availability?.availabilityStatus ? 'Visible' : 'Hidden'}
+                     </span>
+                  </span>
+                </p>
+              </div>
             </div>
             
             <div className="flex items-center gap-3 animate-reveal" style={{ animationDelay: '0.1s' }}>
@@ -211,8 +220,8 @@ const DonorDashboard = () => {
                 title="Availability"
                 value={availability?.availabilityStatus ? 'Active' : 'Offline'}
                 icon={availability?.availabilityStatus ? <CheckCircle className="w-6 h-6" /> : <PauseCircle className="w-6 h-6" />}
-                color={availability?.availabilityStatus ? 'green' : 'orange'}
-                subtitle={availability?.availabilityStatus ? 'You are visible to patients' : 'You are currently hidden'}
+                color={availability?.availabilityStatus ? 'green' : 'red'}
+                subtitle={availability?.availabilityStatus ? 'You are visible to patients' : 'You are currently invisible'}
               />
               <StatCard
                 title="Last Visited"
@@ -276,9 +285,14 @@ const DonorDashboard = () => {
 
               {/* Quick Availability Actions */}
               <div className="card-premium">
-                <div className="mb-8">
-                  <h2 className="text-2xl font-display font-black text-slate-900">Preferences</h2>
-                  <p className="text-slate-500 text-sm font-medium">Control your public visibility</p>
+                <div className="mb-8 flex justify-between items-start">
+                  <div>
+                    <h2 className="text-2xl font-display font-black text-slate-900">Preferences</h2>
+                    <p className="text-slate-500 text-sm font-medium">Control your public visibility</p>
+                  </div>
+                  {!availabilityForm.availabilityStatus && (
+                    <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-full text-[9px] font-black uppercase border border-rose-100 animate-pulse">Action Required</span>
+                  )}
                 </div>
 
                 <form onSubmit={handleAvailabilitySubmit} className="space-y-8">
@@ -320,6 +334,16 @@ const DonorDashboard = () => {
                   </div>
 
                   <button id="avail-submit" type="submit" className="hidden">Save</button>
+                  
+                  {!availabilityForm.availabilityStatus && (
+                    <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-start gap-3">
+                       <AlertCircle className="w-4 h-4 text-rose-500 mt-0.5" />
+                       <div className="space-y-1">
+                          <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Visibility Critical</p>
+                          <p className="text-[11px] text-rose-500 font-medium">You are currently hidden from patients. Enable visibility to appear in emergency search results.</p>
+                       </div>
+                    </div>
+                  )}
                   
                   <div className="p-4 bg-slate-50 rounded-2xl text-xs font-bold text-slate-500 flex gap-3 italic">
                     <Clock className="w-4 h-4 flex-shrink-0" />

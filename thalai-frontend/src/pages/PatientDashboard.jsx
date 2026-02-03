@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { updatePatientMedicalData } from '../api/patient';
+import ProfilePictureUpload from '../components/ProfilePictureUpload';
 
 const PatientDashboard = () => {
   const { user, logout, updateUser } = useAuth();
@@ -191,24 +192,27 @@ const PatientDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-transparent font-body pb-20">
+    <div className="min-h-screen bg-transparent font-body pb-32">
       {/* Premium Header */}
       <div className="glass border-b border-slate-100 sticky top-20 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="animate-reveal">
-               <div className="flex items-center gap-3 mb-2">
-                  <span className="px-3 py-1 bg-sky-50 text-sky-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-sky-100">
-                    Patient Hub
-                  </span>
+            <div className="flex items-center gap-6 animate-reveal">
+               <ProfilePictureUpload size="w-20 h-20" />
+               <div>
+                  <div className="flex items-center gap-3 mb-2">
+                     <span className="px-3 py-1 bg-sky-50 text-sky-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-sky-100">
+                       Patient Hub
+                     </span>
+                  </div>
+                  <h1 className="text-4xl font-display font-black text-slate-900 tracking-tight leading-tight">
+                    Guardian <span className="text-sky-500">Dashboard</span>
+                  </h1>
+                  <p className="text-slate-500 font-medium mt-1.5 flex items-center gap-2">
+                    Welcome back, <span className="text-slate-900 font-bold">{user?.name}</span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  </p>
                </div>
-               <h1 className="text-4xl font-display font-black text-slate-900 tracking-tight">
-                 Guardian <span className="text-sky-500">Dashboard</span>
-               </h1>
-               <p className="text-slate-500 font-medium mt-1.5 flex items-center gap-2">
-                 Welcome back, <span className="text-slate-900 font-bold">{user?.name}</span>
-                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-               </p>
             </div>
 
             <div className="flex items-center gap-4 animate-reveal" style={{ animationDelay: '0.1s' }}>

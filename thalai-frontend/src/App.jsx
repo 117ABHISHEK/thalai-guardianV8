@@ -76,7 +76,7 @@ function App() {
         <div className="min-h-screen flex flex-col relative bg-transparent">
           <BackgroundDecoration />
           <Navigation />
-          <main className="flex-grow">
+          <main className="flex-grow w-full overflow-visible min-h-[70vh]">
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Home />} />
@@ -169,7 +169,7 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
-          <Footer />
+          <Footer className="flex-shrink-0" />
           <ChatbotWidget />
         </div>
       </Router>
