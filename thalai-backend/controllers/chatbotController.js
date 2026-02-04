@@ -19,7 +19,7 @@ const askChatbot = async (req, res) => {
     }
 
     // Generate response
-    const result = chatbotService.generateResponse(
+    const result = await chatbotService.generateResponse(
       message,
       req.user || null
     );

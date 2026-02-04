@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getPublicRequests } from '../api/public';
 import ChartCard from '../components/ChartCard';
 import TablePreview from '../components/TablePreview';
 import { Activity, ShieldAlert, CheckCircle2, Search, Clock, Droplets, ArrowRight } from 'lucide-react';
 
 const RequestsPage = () => {
+  const navigate = useNavigate();
   const [requestData, setRequestData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -193,7 +195,7 @@ const RequestsPage = () => {
                  <p className="text-slate-500 font-medium">Your donation can close these pending requests today.</p>
               </div>
            </div>
-           <button className="btn-primary py-5 px-12 text-lg shadow-2xl shadow-sky-500/20 group">
+           <button onClick={() => navigate('/register')} className="btn-primary py-5 px-12 text-lg shadow-2xl shadow-sky-500/20 group">
               Become a Hero <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
            </button>
         </div>

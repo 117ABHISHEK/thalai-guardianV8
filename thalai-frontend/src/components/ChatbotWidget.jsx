@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/auth';
+import ReactMarkdown from 'react-markdown';
 import { MessageCircle, Bot, Send, X, RefreshCw, Minus, Sparkles, Command } from 'lucide-react';
 
 const ChatbotWidget = () => {
@@ -111,7 +112,7 @@ const ChatbotWidget = () => {
       </button>
 
       {isOpen && (
-        <div className="fixed bottom-8 right-8 w-[420px] h-[700px] bg-white rounded-[40px] shadow-2xl flex flex-col z-[9999] overflow-hidden animate-reveal border border-slate-100">
+        <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 w-[calc(100vw-2rem)] sm:w-[420px] h-[calc(100vh-8rem)] sm:h-[700px] bg-white rounded-[32px] sm:rounded-[40px] shadow-2xl flex flex-col z-[9999] overflow-hidden animate-reveal border border-slate-100">
           {/* AI Header */}
           <div className="bg-slate-900 p-6 flex justify-between items-center relative overflow-hidden">
              <div className="absolute top-0 right-0 p-8 opacity-10">
@@ -142,7 +143,13 @@ const ChatbotWidget = () => {
                 <div className={`max-w-[85%] p-4 rounded-3xl text-sm font-medium leading-relaxed shadow-sm ${
                   msg.type === 'user' ? 'bg-sky-500 text-white rounded-tr-lg' : 'bg-white text-slate-700 border border-slate-100 rounded-tl-lg'
                 }`}>
-                  {msg.text}
+                  {msg.type === 'bot' ? (
+                    <div className="prose prose-slate max-w-none text-inherit">
+                      <ReactMarkdown>{msg.text}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    msg.text
+                  )}
                 </div>
                 {msg.type === 'bot' && msg.recommendations?.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2 w-full">

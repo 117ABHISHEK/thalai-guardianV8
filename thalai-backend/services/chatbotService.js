@@ -1,3 +1,19 @@
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+const SYSTEM_PROMPT = `You are ThalAI Guardian, a specialized AI assistant for Thalassemia patients and blood donors. 
+Your goal is to provide accurate, empathetic, and helpful information about Thalassemia.
+
+Guidelines:
+1. Focus on Thalassemia management, diet, symptoms, and blood donation.
+2. If asked about medical advice, always add a disclaimer: "Please consult with your hematologist for professional medical advice."
+3. Be supportive and encouraging.
+4. Keep responses concise and formatted with markdown if necessary.
+5. If the user asks about something completely unrelated to health or this platform, politely bring them back to Thalassemia support.`;
+
 /**
  * Chatbot Service - NLP-based responses for Thalassemia support
  */
@@ -257,15 +273,53 @@ const detectIntent = (message) => {
 /**
  * Generate chatbot response
  */
-const generateResponse = (message, user = null) => {
+const generateResponse = async (message, user = null) => {
   const intent = detectIntent(message);
   const responseData = responses[intent];
   const userName = user?.name ? user.name.split(' ')[0] : 'there';
   const role = user?.role;
   
-  let response = typeof responseData.response === 'function' 
+  // Get base response (either string or from function)
+  const baseResponse = typeof responseData.response === 'function' 
     ? responseData.response(userName) 
     : responseData.response;
+
+  let response;
+  let confidence = 0.85;
+
+  // Use Gemini if available to provide a smarter, contextual response
+  if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here') {
+    try {
+      const prompt = `
+User Context:
+- Name: ${userName}
+- Role: ${role || 'Visitor'}
+- Message: "${message}"
+- System Identified Intent: ${intent}
+- Base Knowledge Point: "${baseResponse}"
+
+${SYSTEM_PROMPT}
+
+Your Task:
+1. Provide a natural, empathetic response to the user's message.
+2. Use the "Base Knowledge Point" as your factual source for Thalassemia-specific info.
+3. If the user's question is specific (e.g., "what to avoid" in diet), focus your answer on those specific details while using the Base Knowledge as a guide.
+4. Maintain a supportive tone.
+5. If the identified intent is 'general', you have more freedom but stay within Thalassemia/Health bounds.
+6. Keep your answer concise (under 150 words).
+`;
+      const result = await model.generateContent(prompt);
+      response = result.response.text();
+      confidence = 0.98;
+    } catch (error) {
+      console.error('Gemini API Error:', error);
+      response = baseResponse;
+      confidence = 0.5;
+    }
+  } else {
+    // Fallback to static response if no API key
+    response = baseResponse;
+  }
   
   // Only add tip for relevant intents for patients/donors
   const tipIntents = ['thalassemia_info', 'symptoms', 'transfusion_schedule', 'emergency', 'general'];

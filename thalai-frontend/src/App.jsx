@@ -162,6 +162,10 @@ function App() {
                 }
               />
               
+              {/* Redirects for links in Navbar/Footer */}
+              <Route path="/emergency" element={<Navigate to="/requests" replace />} />
+              <Route path="/settings" element={<Navigate to="/dashboard" replace />} />
+              
               {/* Generic dashboard route */}
               <Route path="/dashboard" element={<DashboardRoute />} />
               

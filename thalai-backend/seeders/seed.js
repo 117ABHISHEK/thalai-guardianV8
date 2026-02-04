@@ -8,6 +8,8 @@ const DonorHistory = require('../models/donorHistoryModel');
 const Doctor = require('../models/doctorModel');
 const Appointment = require('../models/appointmentModel');
 const Connection = require('../models/connectionModel');
+const Notification = require('../models/notificationModel');
+const MatchLog = require('../models/matchLogModel');
 const connectDB = require('../config/db');
 
 dotenv.config({ path: require('path').resolve(__dirname, '../.env') });
@@ -86,6 +88,8 @@ const seedData = async () => {
     await Doctor.deleteMany({});
     await Appointment.deleteMany({});
     await Connection.deleteMany({});
+    await Notification.deleteMany({});
+    await MatchLog.deleteMany({});
 
     // 1. Admin
     const admin = await User.create({
@@ -243,6 +247,98 @@ const seedData = async () => {
       });
     }
     console.log('✅ Requests seeded.');
+    
+    const patients = await Patient.find();
+    const doctors = await Doctor.find();
+    const donors = await Donor.find();
+
+    // 6. Appointments (40)
+    for (let i = 0; i < 40; i++) {
+        const p = getRandom(patients);
+        const d = getRandom(doctors);
+        const date = new Date(Date.now() + getRandomInRange(-30, 30) * 24 * 60 * 60 * 1000);
+        
+        await Appointment.create({
+            user: p.user,
+            doctor: d.user,
+            userRole: 'patient',
+            date: date,
+            time: getRandom(['10:00 AM', '11:30 AM', '02:00 PM', '04:15 PM', '05:00 PM']),
+            status: getRandom(['scheduled', 'pending', 'completed', 'cancelled']),
+            reason: getRandom(['Regular Transfusion', 'Chronic Pain Checkup', 'Iron Overload Screening', 'Blood Compatibility Test', 'General Consultation']),
+            notes: 'System generated clinical appointment during seeding.'
+        });
+    }
+    console.log('✅ Appointments seeded.');
+
+    // 7. Connections / Circles (50)
+    for (let i = 0; i < 50; i++) {
+        const p = getRandom(patients);
+        const d = getRandom(donors);
+        
+        // Prevent duplicate connections if possible, but for seeding we just create
+        try {
+            await Connection.create({
+                patient: p.user,
+                donor: d.user,
+                requester: p.user,
+                status: getRandom(['pending', 'active']),
+                notes: 'Community sync connection established.'
+            });
+        } catch (e) {
+            // Skip duplicates
+        }
+    }
+    console.log('✅ Connections (Circles) seeded.');
+
+    // 8. Notifications / Neural Signals (60)
+    const allUsers = await User.find();
+    const notificationTypes = [
+        'appointment_scheduled', 
+        'donor_match', 
+        'checkup_suggested', 
+        'urgent_request', 
+        'system',
+        'connection_accepted'
+    ];
+    
+    for (let i = 0; i < 60; i++) {
+        const u = getRandom(allUsers);
+        const type = getRandom(notificationTypes);
+        
+        await Notification.create({
+            userId: u._id,
+            title: type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+            message: `Neural Signal: Your clinical status for ${type.replace('_', ' ')} has been updated in the global registry.`,
+            type: type,
+            isRead: Math.random() > 0.5,
+            channel: 'in_app'
+        });
+    }
+    console.log('✅ Notifications seeded.');
+
+    // 9. Match Logs (40)
+    const requests = await Request.find();
+    
+    for (let i = 0; i < 40; i++) {
+        const r = getRandom(requests);
+        const d = getRandom(donors); // Donor model doc
+        
+        await MatchLog.create({
+            requestId: r._id,
+            donorId: d._id,
+            matchScore: getRandomInRange(70, 99),
+            scoreBreakdown: {
+                bloodGroupMatch: 40,
+                locationScore: getRandomInRange(15, 30),
+                availabilityScore: 20,
+                donationFrequencyScore: 10,
+                aiPredictionScore: getRandomInRange(5, 10)
+            },
+            status: getRandom(['pending', 'contacted', 'accepted'])
+        });
+    }
+    console.log('✅ Match Logs seeded.');
 
     console.log('\n🌟 SEEDING COMPLETE: 100 USERS CREATED');
     process.exit(0);
@@ -263,6 +359,8 @@ const destroyData = async () => {
       await Doctor.deleteMany({});
       await Appointment.deleteMany({});
       await Connection.deleteMany({});
+      await Notification.deleteMany({});
+      await MatchLog.deleteMany({});
       console.log('✅ Data destroyed.');
       process.exit(0);
     } catch (error) {

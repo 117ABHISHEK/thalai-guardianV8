@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { Bell, Calendar, Handshake, Droplets, Hospital, AlertCircle, X, CheckCircle, Trash2, MoreHorizontal } from 'lucide-react';
 import { getNotifications, markAsRead } from '../api/notifications';
 
 const NotificationDropdown = ({ onClose }) => {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -103,7 +105,7 @@ const NotificationDropdown = ({ onClose }) => {
 
       <div className="p-3 bg-slate-50 border-t border-slate-100 flex justify-center">
         <Link 
-          to="/dashboard?tab=notifications" 
+          to={`/${user?.role}-dashboard?tab=notifications`} 
           onClick={onClose}
           className="text-[10px] font-black text-sky-500 uppercase tracking-[0.2em] hover:text-sky-600 transition-all flex items-center gap-2"
         >

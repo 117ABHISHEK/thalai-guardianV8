@@ -162,7 +162,7 @@ const Navbar = () => {
                     <button onClick={() => navigate(`/${user.role}-dashboard`)} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all">
                       <LayoutDashboard className="w-4 h-4" /> My Dashboard
                     </button>
-                    <button onClick={() => navigate('/settings')} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all">
+                    <button onClick={() => navigate(`/${user.role}-dashboard`)} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all">
                       <Settings className="w-4 h-4" /> Account Settings
                     </button>
                     <div className="h-[1px] bg-slate-50 my-1.5 mx-2" />
@@ -223,7 +223,7 @@ const Navbar = () => {
               
               {isAuthenticated && (
                 <Link
-                  to="/dashboard?tab=notifications"
+                  to={`/${user.role}-dashboard?tab=notifications`}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`flex items-center justify-between px-5 py-4 rounded-[20px] text-lg font-bold transition-all text-slate-600 hover:bg-slate-50`}
                 >

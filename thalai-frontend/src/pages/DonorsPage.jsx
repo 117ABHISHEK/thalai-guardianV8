@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getPublicDonors } from '../api/public';
 import TablePreview from '../components/TablePreview';
 import StatCard from '../components/StatCard';
 import { Droplets, CheckCircle, Heart, Search, Users, ShieldCheck, MapPin, Calendar, HeartPulse, Activity } from 'lucide-react';
 
 const DonorsPage = () => {
+  const navigate = useNavigate();
   const [donors, setDonors] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -144,7 +146,7 @@ const DonorsPage = () => {
                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                          <input type="text" placeholder="Search registry..." className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/20" />
                       </div>
-                      <button className="p-2.5 bg-sky-50 text-sky-600 rounded-xl border border-sky-100 hover:bg-sky-500 hover:text-white transition-all">
+                      <button onClick={() => navigate('/login')} className="p-2.5 bg-sky-50 text-sky-600 rounded-xl border border-sky-100 hover:bg-sky-500 hover:text-white transition-all">
                          <MapPin className="w-5 h-5" />
                       </button>
                    </div>
@@ -169,7 +171,7 @@ const DonorsPage = () => {
               <h2 className="text-3xl font-display font-black text-white">Can't Find a Specific Match?</h2>
               <p className="text-slate-400 font-medium">Our AI matching system can help you find compatible donors specifically for your case. Sign in to your patient dashboard for personalized results.</p>
               <div className="flex justify-center gap-4 pt-4">
-                 <button className="btn-primary px-10 py-4">Request Donor Map</button>
+                 <button onClick={() => navigate('/register')} className="btn-primary px-10 py-4">Request Donor Map</button>
               </div>
            </div>
         </div>
