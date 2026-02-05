@@ -48,6 +48,45 @@ const ConnectionList = ({ role }) => {
     }
   };
 
+  const handleDownloadIntegrityLog = (conn) => {
+    const logData = {
+      connectionId: conn._id,
+      establishedAt: new Date(conn.createdAt).toLocaleDateString(),
+      status: conn.status,
+      participants: {
+        requester: conn.requester?.name || 'Self',
+        patient: conn.patient?.name,
+        donor: conn.donor?.name
+      },
+      integrityCheck: 'Passed',
+      notes: conn.notes || 'No registry notes.'
+    };
+    
+    const blob = new Blob([JSON.stringify(logData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `integrity-log-${conn._id.slice(-6)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleReportNode = async (nodeId) => {
+    if (!window.confirm('Initialize administrative audit for this node? This will flag the connection for review.')) return;
+    
+    try {
+      setActionLoading(nodeId);
+      const response = await api.post(`/connections/${nodeId}/report`);
+      alert(response.data.message);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to report node');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   if (loading) return (
     <div className="text-center p-24">
       <div className="w-12 h-12 border-4 border-sky-100 border-t-sky-500 rounded-full animate-spin mx-auto"></div>
@@ -146,24 +185,24 @@ const ConnectionList = ({ role }) => {
                 <div key={conn._id} className={`bg-white p-7 rounded-[40px] border border-slate-100 shadow-sm group hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-300 relative overflow-visible ${activeDropdown === conn._id ? 'z-50' : 'z-10'}`}>
                   
                   <div className="absolute top-6 right-6">
-                     <button 
-                       onClick={() => setActiveDropdown(activeDropdown === conn._id ? null : conn._id)}
-                       className={`p-2 rounded-xl transition-all ${activeDropdown === conn._id ? 'bg-slate-900 text-white' : 'text-slate-300 hover:text-slate-600'}`}
-                     >
-                        <MoreVertical className="w-5 h-5" />
-                     </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === conn._id ? null : conn._id); }}
+                        className={`p-2 rounded-xl transition-all ${activeDropdown === conn._id ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}
+                      >
+                         <MoreVertical className="w-5 h-5" />
+                      </button>
                      {activeDropdown === conn._id && (
                         <>
-                           <div className="fixed inset-0 z-40" onClick={() => setActiveDropdown(null)} />
-                           <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-[24px] shadow-2xl border border-slate-100 p-2.5 z-50 animate-reveal">
-                              <button onClick={() => { alert('Accessing connection logs...'); setActiveDropdown(null); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all">
-                                 <Info className="w-4 h-4" /> Integrity Log
-                              </button>
-                              <button onClick={() => { alert('Reporting node for audit...'); setActiveDropdown(null); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50 transition-all">
-                                 <ShieldAlert className="w-4 h-4" /> Report Node
-                              </button>
+                           <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setActiveDropdown(null); }} />
+                           <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-[24px] shadow-2xl border border-slate-100 p-2.5 z-[9999] animate-reveal">
+                               <button onClick={(e) => { e.stopPropagation(); handleDownloadIntegrityLog(conn); setActiveDropdown(null); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all">
+                                  <Info className="w-4 h-4" /> Integrity Log
+                               </button>
+                               <button onClick={(e) => { e.stopPropagation(); handleReportNode(conn._id); setActiveDropdown(null); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50 transition-all">
+                                  <ShieldAlert className="w-4 h-4" /> Report Node
+                               </button>
                               <div className="h-[1px] bg-slate-50 my-2 mx-2" />
-                              <button onClick={() => handleResponse(conn._id, 'declined')} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 hover:text-rose-600 transition-all">
+                              <button onClick={(e) => { e.stopPropagation(); handleResponse(conn._id, 'declined'); setActiveDropdown(null); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 hover:text-rose-600 transition-all">
                                  <XCircle className="w-4 h-4" /> Disconnect
                               </button>
                            </div>

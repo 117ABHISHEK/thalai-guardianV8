@@ -29,10 +29,10 @@ const RequestMatchesModal = ({ requestId, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
       <div className="bg-white rounded-[48px] shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-slide-up border border-white/20">
         {/* Header */}
-        <div className="p-10 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+        <div className="p-10 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 flex-shrink-0">
           <div>
             <div className="flex items-center gap-3 mb-2">
                <span className="px-3 py-1 bg-sky-500 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-sky-500/20">
@@ -53,7 +53,7 @@ const RequestMatchesModal = ({ requestId, onClose }) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-10 bg-white no-scrollbar">
+        <div className="flex-1 overflow-y-auto p-10 pb-20 bg-white no-scrollbar">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24">
                <div className="w-16 h-16 border-4 border-sky-500/10 border-t-sky-500 rounded-full animate-spin mb-6" />
@@ -125,7 +125,7 @@ const RequestMatchesModal = ({ requestId, onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+        <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex justify-end flex-shrink-0">
           <button
             onClick={onClose}
             className="btn-primary px-12 py-4 shadow-xl shadow-sky-500/10"

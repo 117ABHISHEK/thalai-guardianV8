@@ -8,6 +8,7 @@ import {
   Droplets, Hospital, MapPin, User, 
   Clock, X, Zap, Activity, Info, MoreHorizontal
 } from 'lucide-react';
+import api from '../api/auth';
 
 const AdminRequestManager = () => {
   const { logout } = useAuth();
@@ -39,6 +40,17 @@ const AdminRequestManager = () => {
       setError(err.message || 'Failed to sync requests.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUrgentDispatch = async (reqId) => {
+    try {
+      if (!window.confirm('Initiate emergency dispatch protocol for this requirement?')) return;
+      await api.patch(`/requests/${reqId}/urgency`, { urgency: 'emergency' });
+      alert('Emergency dispatch protocol initiated. Global response network alerted.');
+      fetchRequests();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Dispatch escalation failed.');
     }
   };
 
@@ -185,16 +197,16 @@ const AdminRequestManager = () => {
 
                         {activeDropdown === req._id && (
                           <>
-                            <div className="fixed inset-0 z-40" onClick={() => setActiveDropdown(null)} />
-                            <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-[24px] shadow-2xl border border-slate-100 p-2.5 z-50 animate-reveal">
+                            <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setActiveDropdown(null); }} />
+                            <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-[24px] shadow-2xl border border-slate-100 p-2.5 z-[9999] animate-reveal">
                                <button 
-                                 onClick={() => { setSelectedRequest(req); setShowDetailsModal(true); setActiveDropdown(null); }}
+                                 onClick={(e) => { e.stopPropagation(); setSelectedRequest(req); setShowDetailsModal(true); setActiveDropdown(null); }}
                                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
                                >
                                   <Info className="w-4 h-4" /> Clinical Protocol
                                </button>
                                <button 
-                                 onClick={() => { alert('Emergency dispatch notification sent to local handlers'); setActiveDropdown(null); }}
+                                 onClick={(e) => { e.stopPropagation(); handleUrgentDispatch(req._id); setActiveDropdown(null); }}
                                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
                                >
                                   <Zap className="w-4 h-4" /> Urgent Dispatch
@@ -272,7 +284,7 @@ const AdminRequestManager = () => {
 
       {/* Admin Protocol Modal */}
       {showDetailsModal && selectedRequest && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-reveal">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-reveal">
            <div className="bg-white rounded-[48px] shadow-2xl w-full max-w-2xl overflow-hidden border border-white/20">
               <div className="p-10 bg-slate-900 text-white relative">
                   <button onClick={() => setShowDetailsModal(false)} className="absolute top-8 right-8 p-3 bg-white/10 hover:bg-white/20 rounded-2xl transition-all">

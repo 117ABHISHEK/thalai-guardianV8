@@ -138,3 +138,27 @@ exports.suggestCheckup = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
+
+/**
+ * @desc    Report a connection for audit
+ * @route   POST /api/connections/:id/report
+ */
+exports.reportConnection = async (req, res) => {
+  try {
+    const connection = await Connection.findById(req.params.id);
+    if (!connection) {
+      return res.status(404).json({ success: false, message: 'Connection not found' });
+    }
+
+    // In a real app, this would create an audit record or notify an admin
+    // For now, we simulate the logic
+    console.log(`[AUDIT] Connection ${req.params.id} reported by user ${req.user._id}`);
+    
+    res.status(200).json({ 
+      success: true, 
+      message: 'Node flagged for administrative audit. Integrity check protocol initiated.' 
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};

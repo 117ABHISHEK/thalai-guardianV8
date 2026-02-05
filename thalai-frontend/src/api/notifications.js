@@ -37,3 +37,23 @@ export const sendNotification = async (notificationData) => {
   }
 };
 
+// Mark all as read
+export const markAllNotificationsAsRead = async () => {
+  try {
+    const response = await api.put('/notifications/read-all');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Failed to finalize signals' };
+  }
+};
+
+// Delete notification
+export const deleteNotification = async (id) => {
+  try {
+    const response = await api.delete(`/notifications/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Failed to purge signal' };
+  }
+};
+

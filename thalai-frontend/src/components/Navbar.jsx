@@ -132,7 +132,7 @@ const Navbar = () => {
 
                   {isNotificationOpen && (
                     <>
-                      <div className="fixed inset-0 z-40" onClick={() => setIsNotificationOpen(false)} />
+                      <div className="fixed inset-0 z-[9998]" onClick={() => setIsNotificationOpen(false)} />
                       <NotificationDropdown onClose={() => setIsNotificationOpen(false)} />
                     </>
                   )}

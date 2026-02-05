@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getNotifications, markAsRead } from '../api/notifications';
+import { getNotifications, markAsRead, deleteNotification, markAllNotificationsAsRead } from '../api/notifications';
 import api from '../api/auth';
 import { Calendar, Handshake, Droplets, Hospital, AlertCircle, Bell, MoreHorizontal, Trash2, CheckCircle } from 'lucide-react';
 
@@ -37,20 +37,22 @@ const NotificationList = () => {
     }
   };
 
-  const deleteNotification = async (id) => {
+  const handleDelete = async (id) => {
     try {
-      await api.delete(`/notifications/${id}`);
+      await deleteNotification(id);
       setNotifications(notifications.filter(n => n._id !== id));
-      setActiveDropdown(null);
+      // Dispatch event to update navbar count
+      window.dispatchEvent(new Event('notificationsUpdated'));
     } catch (err) {
-      alert('Failed to delete notification');
+      console.error('Failed to purge notification');
     }
   };
 
-  const markAllAsRead = async () => {
+  const handleMarkAllAsRead = async () => {
     try {
-      await api.put('/notifications/read-all');
+      await markAllNotificationsAsRead();
       setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+      // Dispatch event to update navbar count
       window.dispatchEvent(new Event('notificationsUpdated'));
     } catch (err) {
       console.error('Failed to mark all as read');
@@ -73,7 +75,7 @@ const NotificationList = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center px-2">
          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Recent Activity Logs</p>
-         <button onClick={markAllAsRead} className="text-[10px] font-black text-sky-500 uppercase tracking-widest hover:text-sky-600 transition-colors">Clear Undue Alerts</button>
+         <button onClick={handleMarkAllAsRead} className="text-[10px] font-black text-sky-500 uppercase tracking-widest hover:text-sky-600 transition-colors">Clear Undue Alerts</button>
       </div>
 
       {notifications.length === 0 ? (
@@ -97,23 +99,23 @@ const NotificationList = () => {
             <div className="absolute top-6 right-6">
                <button 
                  onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === n._id ? null : n._id); }}
-                 className="p-2 text-slate-300 hover:text-slate-600 transition-colors rounded-xl hover:bg-slate-50"
+                 className={`p-2 transition-all rounded-xl ${activeDropdown === n._id ? 'bg-slate-900 text-white' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'}`}
                >
                   <MoreHorizontal className="w-5 h-5" />
                </button>
                {activeDropdown === n._id && (
                   <>
-                     <div className="fixed inset-0 z-40" onClick={() => setActiveDropdown(null)} />
-                     <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-[24px] shadow-2xl border border-slate-100 p-2 z-50 animate-reveal text-left">
+                     <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setActiveDropdown(null); }} />
+                     <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-[24px] shadow-2xl border border-slate-100 p-2 z-[9999] animate-reveal text-left">
                         <button 
-                          onClick={() => handleMarkAsRead(n._id)}
+                          onClick={(e) => { e.stopPropagation(); handleMarkAsRead(n._id); setActiveDropdown(null); }}
                           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all"
                         >
                            <CheckCircle className="w-4 h-4" /> Finalize Signal
                         </button>
                         <div className="h-[1px] bg-slate-50 my-2 mx-2" />
                         <button 
-                          onClick={() => deleteNotification(n._id)}
+                          onClick={(e) => { e.stopPropagation(); handleDelete(n._id); setActiveDropdown(null); }}
                           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50 transition-all"
                         >
                            <Trash2 className="w-4 h-4" /> Purge Log

@@ -75,8 +75,11 @@ const getPatientDetails = async (req, res) => {
       });
     }
 
-    // Get patient details
-    const patient = await Patient.findById(patientId).populate('user', '-password');
+    // Get patient details with populated addedBy fields
+    const patient = await Patient.findById(patientId)
+      .populate('user', '-password')
+      .populate('medicalReports.addedBy', 'name role')
+      .populate('transfusionHistory.addedBy', 'name role');
 
     if (!patient) {
       return res.status(404).json({
@@ -283,13 +286,23 @@ const updatePatientMedicalData = async (req, res) => {
 
     // Update patient details
     const patientFields = {};
-    if (transfusionHistory) patientFields.transfusionHistory = transfusionHistory;
+    if (transfusionHistory) {
+      patientFields.transfusionHistory = transfusionHistory.map(t => ({
+        ...t,
+        addedBy: t.addedBy || req.user._id
+      }));
+    }
     if (currentHb) {
       patientFields.currentHb = currentHb;
       patientFields.currentHbDate = new Date();
     }
     if (comorbidities) patientFields.comorbidities = comorbidities;
-    if (medicalReports) patientFields.medicalReports = medicalReports;
+    if (medicalReports) {
+      patientFields.medicalReports = medicalReports.map(r => ({
+        ...r,
+        addedBy: r.addedBy || req.user._id
+      }));
+    }
 
     const patient = await Patient.findByIdAndUpdate(
       patientId,

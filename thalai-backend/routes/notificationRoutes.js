@@ -4,6 +4,8 @@ const {
   sendNotification,
   getUserNotifications,
   markAsRead,
+  markAllAsRead,
+  deleteNotification
 } = require('../controllers/notificationController');
 const { protect } = require('../middleware/authMiddleware');
 const { allowRoles } = require('../middleware/roleMiddleware');
@@ -25,6 +27,16 @@ router.get('/', getUserNotifications);
 // @desc    Mark notification as read
 // @access  Private
 router.put('/:id/read', markAsRead);
+
+// @route   PUT /api/notifications/read-all
+// @desc    Mark all notifications as read
+// @access  Private
+router.put('/read-all', markAllAsRead);
+
+// @route   DELETE /api/notifications/:id
+// @desc    Delete a notification
+// @access  Private
+router.delete('/:id', deleteNotification);
 
 module.exports = router;
 

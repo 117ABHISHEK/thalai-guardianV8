@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import api from '../api/auth';
 import { 
   Calendar, Clock, User, Activity, 
@@ -13,14 +14,43 @@ const AppointmentList = ({ role }) => {
   const [selectedApt, setSelectedApt] = useState(null);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showBookModal, setShowBookModal] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [scheduleData, setScheduleData] = useState({ date: '', time: '', notes: '', status: 'scheduled' });
+  const [bookingData, setBookingData] = useState({ doctorId: '', date: '', time: '', reason: '' });
+  const [doctors, setDoctors] = useState([]);
   const [error, setError] = useState('');
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     fetchAppointments();
+    if (role === 'donor') {
+      fetchDoctors();
+    }
   }, [role]);
+
+  useEffect(() => {
+    if (showBookModal || showScheduleModal || showInfoModal) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = '0px';
+    } else {
+      document.body.style.overflow = 'unset';
+      document.body.style.paddingRight = '0px';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+      document.body.style.paddingRight = '0px';
+    };
+  }, [showBookModal, showScheduleModal, showInfoModal]);
+
+  const fetchDoctors = async () => {
+    try {
+      const response = await api.get('/public/doctors');
+      setDoctors(response.data.data || []);
+    } catch (error) {
+      console.error('Failed to fetch doctors:', error);
+    }
+  };
 
   const fetchAppointments = async () => {
     try {
@@ -75,6 +105,54 @@ const AppointmentList = ({ role }) => {
     }
   };
 
+  const handleBookAppointment = async (e) => {
+    e.preventDefault();
+    setError('');
+    setUpdating(true);
+    try {
+      await api.post('/appointments', bookingData);
+      setShowBookModal(false);
+      setBookingData({ doctorId: '', date: '', time: '', reason: '' });
+      fetchAppointments();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Appointment booking failed.');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleShareLink = (aptId) => {
+    const link = `${window.location.origin}/sync/${aptId}`;
+    navigator.clipboard.writeText(link).then(() => {
+      alert('Clinical synchronization link copied to clipboard.');
+    }).catch(err => {
+      console.error('Failed to copy link:', err);
+    });
+  };
+
+  const handleDownloadReport = (apt) => {
+    const reportData = {
+      instanceId: apt._id,
+      patient: apt.user?.name,
+      practitioner: apt.doctor?.name,
+      specialization: apt.doctor?.specialization,
+      scheduledDate: new Date(apt.date).toLocaleDateString(),
+      scheduledTime: apt.time,
+      status: apt.status,
+      registryNotes: apt.notes || 'No clinical notes provided.'
+    };
+    
+    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `thalai-report-${apt._id.slice(-6)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const getStatusStyle = (status) => {
     const styles = {
       scheduled: 'bg-sky-500/10 text-sky-600 border-sky-100',
@@ -95,6 +173,19 @@ const AppointmentList = ({ role }) => {
 
   return (
     <div className="animate-reveal">
+      {/* Book Appointment Button for Donors */}
+      {role === 'donor' && (
+        <div className="mb-8">
+          <button 
+            onClick={() => setShowBookModal(true)}
+            className="btn-primary w-full py-5 text-sm font-black uppercase tracking-widest shadow-xl shadow-sky-500/10 flex items-center justify-center gap-3 group"
+          >
+            <Calendar className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+            Book New Appointment with Doctor
+          </button>
+        </div>
+      )}
+
       {appointments.length === 0 ? (
         <div className="py-20 text-center card-premium bg-slate-50/50 border-dashed border-2">
            <Calendar className="w-16 h-16 text-slate-200 mx-auto mb-4" />
@@ -172,37 +263,37 @@ const AppointmentList = ({ role }) => {
                        
                        <div className="relative">
                           <button 
-                            onClick={() => setActiveDropdown(activeDropdown === apt._id ? null : apt._id)}
-                            className={`p-3 rounded-xl transition-all ${activeDropdown === apt._id ? 'bg-slate-900 text-white' : 'text-slate-300 hover:text-slate-600 hover:bg-slate-50'}`}
-                          >
-                             <MoreHorizontal className="w-5 h-5" />
-                          </button>
+                          onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === apt._id ? null : apt._id); }}
+                          className={`p-2 rounded-xl transition-all ${activeDropdown === apt._id ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'}`}
+                        >
+                           <MoreVertical className="w-6 h-6" />
+                        </button>
 
                           {activeDropdown === apt._id && (
                             <>
-                              <div className="fixed inset-0 z-40" onClick={() => setActiveDropdown(null)} />
-                              <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-[24px] shadow-2xl border border-slate-100 p-2.5 z-50 animate-reveal">
+                              <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setActiveDropdown(null); }} />
+                              <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-[24px] shadow-2xl border border-slate-100 p-2.5 z-[9999] animate-reveal">
                                  <button 
-                                   onClick={() => { setSelectedApt(apt); setShowInfoModal(true); setActiveDropdown(null); }}
+                                   onClick={(e) => { e.stopPropagation(); setSelectedApt(apt); setShowInfoModal(true); setActiveDropdown(null); }}
                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
                                  >
                                     <Info className="w-4 h-4" /> View Full Details
                                  </button>
                                  <button 
-                                   onClick={() => { alert('Sharing link copied to clipboard'); setActiveDropdown(null); }}
+                                   onClick={(e) => { e.stopPropagation(); handleShareLink(apt._id); setActiveDropdown(null); }}
                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
                                  >
                                     <Share2 className="w-4 h-4" /> Share Sync Link
                                  </button>
                                  <button 
-                                   onClick={() => { alert('Preparing report download...'); setActiveDropdown(null); }}
+                                   onClick={(e) => { e.stopPropagation(); handleDownloadReport(apt); setActiveDropdown(null); }}
                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
                                  >
                                     <FileText className="w-4 h-4" /> Generate Case Report
                                  </button>
                                  {role === 'admin' && (
                                    <button 
-                                     onClick={() => { handleStatusUpdate(apt._id, 'cancelled'); setActiveDropdown(null); }}
+                                     onClick={(e) => { e.stopPropagation(); handleStatusUpdate(apt._id, 'cancelled'); setActiveDropdown(null); }}
                                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-all"
                                    >
                                       <AlertCircle className="w-4 h-4" /> Admin Override: Cancel
@@ -231,8 +322,8 @@ const AppointmentList = ({ role }) => {
       )}
 
       {/* Schedule Sync Modal */}
-      {showScheduleModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+      {showScheduleModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-md overflow-hidden animate-slide-up border border-white/20">
             <div className="p-8 border-b border-slate-100 bg-slate-50/50">
               <div className="flex justify-between items-center mb-2">
@@ -284,12 +375,13 @@ const AppointmentList = ({ role }) => {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Instance Info Modal */}
-      {showInfoModal && selectedApt && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-fade-in">
+      {showInfoModal && selectedApt && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up border border-white/20">
               <div className="p-8 bg-slate-900 text-white relative">
                  <button onClick={() => setShowInfoModal(false)} className="absolute top-6 right-6 p-2 text-white/40 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
@@ -347,12 +439,119 @@ const AppointmentList = ({ role }) => {
                    </div>
                  )}
 
-                 <button onClick={() => setShowInfoModal(false)} className="w-full btn-primary py-4 mt-4">
+                  <button onClick={() => setShowInfoModal(false)} className="w-full btn-primary py-4 mt-4">
                     Close Instance
-                 </button>
+                  </button>
+               </div>
+            </div>
+         </div>,
+         document.body
+      )}
+
+      {/* Book Appointment Modal for Donors */}
+      {showBookModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-fade-in" style={{ margin: 0 }}>
+          <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-slide-up border border-white/20">
+            <div className="p-8 border-b border-slate-100 bg-slate-900 text-white flex-shrink-0">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-[10px] font-black text-sky-400 uppercase tracking-widest mb-1">Medical Consultation</p>
+                  <h3 className="text-2xl font-display font-black">Book Appointment</h3>
+                </div>
+                <button onClick={() => setShowBookModal(false)} className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl transition-all">
+                  <X className="w-6 h-6" />
+                </button>
               </div>
-           </div>
-        </div>
+            </div>
+            
+            <form onSubmit={handleBookAppointment} className="flex-1 overflow-y-auto p-8 pb-20 space-y-6">
+              {error && <div className="p-4 bg-rose-50 text-rose-600 text-xs font-black uppercase tracking-widest rounded-2xl border border-rose-100">{error}</div>}
+              
+              <div className="space-y-2">
+                <label className="input-label">Select Doctor</label>
+                <div className="relative group">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                  <select
+                    value={bookingData.doctorId}
+                    onChange={(e) => setBookingData({ ...bookingData, doctorId: e.target.value })}
+                    className="input-field pl-12 cursor-pointer appearance-none bg-white"
+                    required
+                  >
+                    <option value="">Choose a Specialist</option>
+                    {doctors.map((doc) => (
+                      <option key={doc._id || doc.id} value={doc._id || doc.id}>
+                        Dr. {doc.name} — {doc.specialization}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="input-label">Preferred Date</label>
+                  <div className="relative group">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                    <input
+                      type="date"
+                      value={bookingData.date}
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
+                      className="input-field pl-12 bg-white"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="input-label">Preferred Time</label>
+                  <div className="relative group">
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                    <input
+                      type="time"
+                      value={bookingData.time}
+                      onChange={(e) => setBookingData({ ...bookingData, time: e.target.value })}
+                      className="input-field pl-12 bg-white"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="input-label">Reason for Consultation</label>
+                <div className="relative group">
+                  <MessageSquare className="absolute left-4 top-4 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                  <textarea
+                    value={bookingData.reason}
+                    onChange={(e) => setBookingData({ ...bookingData, reason: e.target.value })}
+                    rows="4"
+                    className="input-field pl-12 pt-4 bg-white resize-none"
+                    placeholder="Describe your consultation objective..."
+                    required
+                  ></textarea>
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="submit"
+                  disabled={updating}
+                  className="flex-1 py-4 text-sm font-black uppercase tracking-widest text-white bg-sky-500 rounded-2xl hover:bg-sky-600 shadow-xl shadow-sky-500/20 transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {updating ? 'Booking...' : 'Confirm Appointment'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowBookModal(false)}
+                  className="px-8 py-4 text-sm font-black uppercase tracking-widest text-slate-600 bg-slate-100 rounded-2xl hover:bg-slate-200 transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

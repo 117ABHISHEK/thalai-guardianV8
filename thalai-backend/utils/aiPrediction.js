@@ -60,7 +60,8 @@ const updateTransfusionPrediction = async (patientId) => {
       creatinine: patient.medicalReports?.[0]?.creatinine || 0,
       age: calculateAge(patient.user.dateOfBirth) || 25,
       weightKg: patient.weightKg || 50,
-      thalassemiaType: patient.thalassemiaType || 'beta_major',
+      thalassemiaType: patient.thalassemiaType || 'Beta Thalassemia Major',
+      splenectomy: patient.splenectomy || false,
       comorbidities: patient.comorbidities?.map(c => c.condition) || [],
       currentDate: new Date().toISOString().split('T')[0]
     };

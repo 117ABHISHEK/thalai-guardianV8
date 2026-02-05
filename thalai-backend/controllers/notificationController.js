@@ -126,9 +126,78 @@ const markAsRead = async (req, res) => {
   }
 };
 
+/**
+ * @route   DELETE /api/notifications/:id
+ * @desc    Delete a notification
+ * @access  Private
+ */
+const deleteNotification = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const notification = await Notification.findById(id);
+
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        message: 'Notification not found',
+      });
+    }
+
+    if (notification.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied',
+      });
+    }
+
+    await notification.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: 'Notification purged from registry',
+    });
+  } catch (error) {
+    console.error('Delete notification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @route   PUT /api/notifications/read-all
+ * @desc    Mark all notifications as read
+ * @access  Private
+ */
+const markAllAsRead = async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { userId: req.user._id, isRead: false },
+      { $set: { isRead: true, deliveredAt: new Date() } }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'All undue signals finalized',
+    });
+  } catch (error) {
+    console.error('Mark all as read error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   sendNotification,
   getUserNotifications,
   markAsRead,
+  deleteNotification,
+  markAllAsRead
 };
 

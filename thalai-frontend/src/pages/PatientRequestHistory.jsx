@@ -42,6 +42,39 @@ const PatientRequestHistory = ({ onRequestCancelled }) => {
     }
   };
 
+  const handleShareRequest = (reqId) => {
+    const link = `${window.location.origin}/request/${reqId}`;
+    navigator.clipboard.writeText(`Urgent blood transmission request: ${link}`).then(() => {
+      alert('Emergency broadcast link copied to clipboard.');
+    }).catch(err => {
+      console.error('Failed to copy link:', err);
+    });
+  };
+
+  const handleDownloadVitalReport = (req) => {
+    const reportData = {
+      requestId: req._id,
+      patient: user.name,
+      bloodGroup: req.bloodGroup,
+      unitsRequired: req.unitsRequired,
+      urgency: req.urgency,
+      hospital: req.location?.hospital,
+      city: req.location?.city,
+      status: req.status,
+      timestamp: new Date(req.createdAt).toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `vital-report-${req._id.slice(-6)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const handleCancel = async (requestId) => {
     if (!window.confirm('Terminate this blood acquisition cycle?')) return;
     try {
@@ -133,7 +166,7 @@ const PatientRequestHistory = ({ onRequestCancelled }) => {
 
                     {activeDropdown === req._id && (
                       <>
-                        <div className="fixed inset-0 z-40" onClick={() => setActiveDropdown(null)} />
+                        <div className="fixed inset-0 z-[9998]" onClick={() => setActiveDropdown(null)} />
                         <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-[24px] shadow-2xl border border-slate-100 p-2.5 z-50 animate-reveal">
                            <button 
                              onClick={() => { setSelectedRequest(req); setShowDetailsModal(true); setActiveDropdown(null); }}
@@ -142,13 +175,13 @@ const PatientRequestHistory = ({ onRequestCancelled }) => {
                               <Info className="w-4 h-4" /> Request Profile
                            </button>
                            <button 
-                             onClick={() => { alert('Emergency broadcast link copied'); setActiveDropdown(null); }}
+                             onClick={() => { handleShareRequest(req._id); setActiveDropdown(null); }}
                              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
                            >
                               <Share2 className="w-4 h-4" /> Broadcast Share
                            </button>
                            <button 
-                             onClick={() => { alert('Downloading clinical requirement PDF...'); setActiveDropdown(null); }}
+                             onClick={() => { handleDownloadVitalReport(req); setActiveDropdown(null); }}
                              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
                            >
                               <FileText className="w-4 h-4" /> Vital Report
@@ -231,7 +264,7 @@ const PatientRequestHistory = ({ onRequestCancelled }) => {
 
       {/* Details Modal */}
       {showDetailsModal && selectedRequest && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-reveal">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-reveal">
            <div className="bg-white rounded-[48px] shadow-2xl w-full max-w-2xl overflow-hidden border border-white/20">
               <div className="p-10 bg-slate-900 text-white relative">
                   <button onClick={() => setShowDetailsModal(false)} className="absolute top-8 right-8 p-3 bg-white/10 hover:bg-white/20 rounded-2xl transition-all">

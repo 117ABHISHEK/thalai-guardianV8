@@ -96,6 +96,8 @@ const PatientDashboard = () => {
         zipCode: u.address?.zipCode || '',
         dateOfBirth: u.dateOfBirth ? new Date(u.dateOfBirth).toISOString().split('T')[0] : '',
         bloodGroup: u.bloodGroup || '',
+        thalassemiaType: response.data.patient?.thalassemiaType || 'Beta Thalassemia Major',
+        splenectomy: response.data.patient?.splenectomy || false,
       });
     } catch (error) {
       console.error('Failed to fetch profile:', error);
@@ -105,8 +107,8 @@ const PatientDashboard = () => {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
   const handleSubmit = async (e) => {
@@ -118,6 +120,8 @@ const PatientDashboard = () => {
         phone: formData.phone,
         bloodGroup: formData.bloodGroup,
         dateOfBirth: formData.dateOfBirth,
+        thalassemiaType: formData.thalassemiaType,
+        splenectomy: formData.splenectomy,
         address: {
           street: formData.street,
           city: formData.city,
@@ -130,6 +134,8 @@ const PatientDashboard = () => {
       updateUser(response.data.user);
       setMessage('Profile updated successfully!');
       setEditing(false);
+      fetchProfile();
+      handleRefreshPrediction();
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       setMessage(error.message || 'Failed to update profile');
@@ -316,6 +322,19 @@ const PatientDashboard = () => {
                        <label className="input-label">Date of Birth</label>
                        <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} className="input-field" />
                     </div>
+                    <div className="space-y-2">
+                       <label className="input-label">Thalassemia Type</label>
+                       <select name="thalassemiaType" value={formData.thalassemiaType} onChange={handleChange} className="input-field">
+                          <option value="Beta Thalassemia Major">Beta Thalassemia Major</option>
+                          <option value="Beta Thalassemia Intermedia">Beta Thalassemia Intermedia</option>
+                          <option value="E-Beta Thalassemia">E-Beta Thalassemia</option>
+                          <option value="Alpha Thalassemia (HbH)">Alpha Thalassemia (HbH)</option>
+                       </select>
+                    </div>
+                    <div className="flex items-center gap-3 pt-6">
+                       <input type="checkbox" name="splenectomy" id="splenectomy" checked={formData.splenectomy} onChange={handleChange} className="w-5 h-5 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
+                       <label htmlFor="splenectomy" className="text-sm font-bold text-slate-700">Splenectomy Performed</label>
+                    </div>
                   </div>
 
                   <div className="pt-8 border-t border-slate-100">
@@ -349,6 +368,8 @@ const PatientDashboard = () => {
                     { label: 'Name', value: profile?.name, icon: User, color: 'text-sky-500', bg: 'bg-sky-50' },
                     { label: 'Role', value: profile?.role, icon: ShieldCheck, color: 'text-indigo-500', bg: 'bg-indigo-50', capitalize: true },
                     { label: 'Blood Group', value: profile?.bloodGroup, icon: Droplets, color: 'text-rose-500', bg: 'bg-rose-50' },
+                    { label: 'Thalassemia Type', value: patientProfile?.thalassemiaType || 'Not set', icon: Heart, color: 'text-sky-500', bg: 'bg-sky-50' },
+                    { label: 'Splenectomy', value: patientProfile?.splenectomy ? 'Performed' : 'Not Performed', icon: ShieldCheck, color: 'text-emerald-500', bg: 'bg-emerald-50' },
                     { label: 'Phone', value: profile?.phone || 'Not linked', icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-50' },
                     { label: 'Email', value: profile?.email, icon: Bell, color: 'text-amber-500', bg: 'bg-amber-50', full: true },
                     { label: 'Birth Date', value: profile?.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString(undefined, { dateStyle: 'long' }) : 'Not set', icon: CalendarDays, color: 'text-purple-500', bg: 'bg-purple-50' }

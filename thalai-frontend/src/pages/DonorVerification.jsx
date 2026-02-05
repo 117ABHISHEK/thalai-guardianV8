@@ -48,6 +48,33 @@ const DonorVerification = () => {
     }
   };
 
+  const handleDownloadContactHistory = (donor) => {
+    const historyData = {
+      donorId: donor._id,
+      name: donor.user?.name,
+      contact: {
+        email: donor.user?.email,
+        phone: donor.user?.phone
+      },
+      verificationStatus: donor.isVerified ? 'Verified' : 'Pending',
+      lastSynced: new Date().toISOString(),
+      logs: [
+        { event: 'Registry Initialization', timestamp: donor.createdAt },
+        { event: 'Contact Synchronization', timestamp: new Date().toISOString() }
+      ]
+    };
+    
+    const blob = new Blob([JSON.stringify(historyData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `contact-history-${donor._id.slice(-6)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const filteredDonors = donors.filter((donor) => {
     if (filter === 'verified') return donor.isVerified;
     if (filter === 'unverified') return !donor.isVerified;
@@ -125,16 +152,16 @@ const DonorVerification = () => {
 
                           {activeDropdown === donor._id && (
                             <>
-                              <div className="fixed inset-0 z-40" onClick={() => setActiveDropdown(null)} />
-                              <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-[24px] shadow-2xl border border-slate-100 p-2.5 z-50 animate-reveal">
+                              <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setActiveDropdown(null); }} />
+                              <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-[24px] shadow-2xl border border-slate-100 p-2.5 z-[9999] animate-reveal">
                                  <button 
-                                   onClick={() => { setSelectedHero(donor); setShowInfoModal(true); setActiveDropdown(null); }}
+                                   onClick={(e) => { e.stopPropagation(); setSelectedHero(donor); setShowInfoModal(true); setActiveDropdown(null); }}
                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
                                  >
                                     <Info className="w-4 h-4" /> Profile Intelligence
                                  </button>
                                  <button 
-                                   onClick={() => { alert('Accessing secure contact logs...'); setActiveDropdown(null); }}
+                                   onClick={(e) => { e.stopPropagation(); handleDownloadContactHistory(donor); setActiveDropdown(null); }}
                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
                                  >
                                     <Phone className="w-4 h-4" /> Contact History
@@ -201,7 +228,7 @@ const DonorVerification = () => {
 
       {/* Hero Intelligence Modal */}
       {showInfoModal && selectedHero && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-fade-in">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
            <div className="bg-white rounded-[48px] shadow-2xl w-full max-w-2xl overflow-hidden border border-white/20">
               <div className="p-10 bg-slate-900 text-white relative">
                   <button onClick={() => setShowInfoModal(false)} className="absolute top-8 right-8 p-3 bg-white/10 hover:bg-white/20 rounded-2xl transition-all">

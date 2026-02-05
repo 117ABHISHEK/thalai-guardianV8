@@ -167,6 +167,13 @@ const seedData = async () => {
         user: u._id,
         heightCm: getRandomInRange(120, 180),
         weightKg: getRandomInRange(30, 70),
+        thalassemiaType: getRandom([
+          'Beta Thalassemia Major',
+          'Beta Thalassemia Intermedia',
+          'E-Beta Thalassemia',
+          'Alpha Thalassemia (HbH)'
+        ]),
+        splenectomy: Math.random() > 0.8,
         transfusionHistory,
         medicalReports: generatePatientReports(5),
         currentHb: parseFloat((8 + Math.random() * 2).toFixed(1)),

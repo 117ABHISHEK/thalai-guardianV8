@@ -6,6 +6,7 @@ const {
   getAllRequests,
   cancelRequest,
   getRequestById,
+  updateUrgency,
 } = require('../controllers/requestController');
 const { protect } = require('../middleware/authMiddleware');
 const { allowRoles } = require('../middleware/roleMiddleware');
@@ -38,5 +39,9 @@ router.get('/:id', getRequestById);
 // @access  Private
 router.put('/:id/cancel', cancelRequest);
 
-module.exports = router;
+// @route   PATCH /api/requests/:id/urgency
+// @desc    Update request urgency (Admin only)
+// @access  Private/Admin
+router.patch('/:id/urgency', allowRoles('admin'), updateUrgency);
 
+module.exports = router;

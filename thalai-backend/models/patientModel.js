@@ -48,6 +48,10 @@ const patientSchema = new mongoose.Schema(
           type: String,
           trim: true,
         },
+        addedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+        },
       },
     ],
     // Last transfusion date (for quick access)
@@ -121,6 +125,22 @@ const patientSchema = new mongoose.Schema(
       min: [0, 'Weight must be positive'],
       max: [500, 'Weight seems unrealistic'],
     },
+    // Advanced Clinical Parameters for AI
+    thalassemiaType: {
+      type: String,
+      enum: [
+        'Beta Thalassemia Major',
+        'Beta Thalassemia Intermedia',
+        'E-Beta Thalassemia',
+        'Alpha Thalassemia (HbH)',
+        'Other'
+      ],
+      default: 'Beta Thalassemia Major'
+    },
+    splenectomy: {
+      type: Boolean,
+      default: false
+    },
     // Medical reports (user submitted)
     medicalReports: [
       {
@@ -172,6 +192,10 @@ const patientSchema = new mongoose.Schema(
           type: Number,
           min: 0,
           max: 500,
+        },
+        addedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
         },
       },
     ],

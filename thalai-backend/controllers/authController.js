@@ -493,7 +493,9 @@ const getProfile = async (req, res) => {
     if (user.role === 'donor') {
       roleData = await Donor.findOne({ user: user._id });
     } else if (user.role === 'patient') {
-      roleData = await Patient.findOne({ user: user._id });
+      roleData = await Patient.findOne({ user: user._id })
+        .populate('medicalReports.addedBy', 'name role')
+        .populate('transfusionHistory.addedBy', 'name role');
     } else if (user.role === 'doctor') {
       roleData = await Doctor.findOne({ user: user._id }).populate('assignedPatients.patient');
     }
@@ -584,13 +586,25 @@ const updateProfile = async (req, res) => {
       const patientUpdate = {};
       if (heightCm) patientUpdate.heightCm = heightCm;
       if (weightKg) patientUpdate.weightKg = weightKg;
-      if (medicalReports) patientUpdate.medicalReports = medicalReports;
-      if (transfusionHistory) patientUpdate.transfusionHistory = transfusionHistory;
+      if (medicalReports) {
+        patientUpdate.medicalReports = medicalReports.map(r => ({
+          ...r,
+          addedBy: r.addedBy || req.user._id
+        }));
+      }
+      if (transfusionHistory) {
+        patientUpdate.transfusionHistory = transfusionHistory.map(t => ({
+          ...t,
+          addedBy: t.addedBy || req.user._id
+        }));
+      }
       if (currentHb) {
         patientUpdate.currentHb = currentHb;
         patientUpdate.currentHbDate = new Date();
       }
       if (comorbidities) patientUpdate.comorbidities = comorbidities;
+      if (req.body.thalassemiaType) patientUpdate.thalassemiaType = req.body.thalassemiaType;
+      if (req.body.splenectomy !== undefined) patientUpdate.splenectomy = req.body.splenectomy;
 
       const patient = await Patient.findOneAndUpdate(
         { user: user._id },

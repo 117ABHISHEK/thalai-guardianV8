@@ -120,6 +120,7 @@ const DonorDashboard = () => {
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Activity },
     { id: 'matches', label: 'Matches', icon: Heart },
+    { id: 'profile', label: 'My Identity', icon: User },
     { id: 'appointments', label: 'Appointments', icon: Calendar },
     { id: 'connections', label: 'Circles', icon: Users },
     { id: 'health', label: 'Health', icon: ClipboardList },
@@ -352,6 +353,139 @@ const DonorDashboard = () => {
                 </form>
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'profile' && (
+          <div className="card-premium animate-reveal">
+            <div className="flex justify-between items-center mb-10">
+              <div>
+                <h2 className="text-3xl font-display font-black text-slate-900 tracking-tight">Personal Profile</h2>
+                <p className="text-slate-500 font-medium">Manage your identity and bio-metric basic data</p>
+              </div>
+              {!editing && (
+                <button onClick={() => setEditing(true)} className="btn-secondary px-8">
+                  Update Profile
+                </button>
+              )}
+            </div>
+
+            {editing ? (
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  setLoading(true);
+                  const updateData = {
+                    name: formData.name,
+                    phone: formData.phone,
+                    bloodGroup: formData.bloodGroup,
+                    dateOfBirth: formData.dateOfBirth,
+                    address: {
+                      street: formData.street,
+                      city: formData.city,
+                      state: formData.state,
+                      zipCode: formData.zipCode,
+                    }
+                  };
+                  const response = await updateProfile(updateData);
+                  setProfile(response.data.user);
+                  updateUser(response.data.user);
+                  setMessage('Profile updated successfully!');
+                  setEditing(false);
+                  setTimeout(() => setMessage(''), 3000);
+                } catch (error) {
+                  setMessage(error.message || 'Failed to update profile');
+                  setTimeout(() => setMessage(''), 3000);
+                } finally {
+                  setLoading(false);
+                }
+              }} className="space-y-8">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <div className="space-y-2">
+                    <label className="input-label">Display Name</label>
+                    <input type="text" name="name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required className="input-field" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="input-label">Blood Group</label>
+                    <select name="bloodGroup" value={formData.bloodGroup} onChange={(e) => setFormData({...formData, bloodGroup: e.target.value})} className="input-field">
+                      <option value="A+">A+</option><option value="A-">A-</option>
+                      <option value="B+">B+</option><option value="B-">B-</option>
+                      <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                      <option value="O+">O+</option><option value="O-">O-</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="input-label">Phone Contact</label>
+                    <input type="tel" name="phone" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="input-field" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="input-label">Date of Birth</label>
+                    <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})} className="input-field" />
+                  </div>
+                </div>
+
+                <div className="pt-8 border-t border-slate-100">
+                  <h3 className="text-xl font-display font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <ShieldCheck className="w-6 h-6 text-sky-500" /> Residency details
+                  </h3>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="lg:col-span-2 space-y-2">
+                      <label className="input-label">Street Address</label>
+                      <input type="text" name="street" value={formData.street} onChange={(e) => setFormData({...formData, street: e.target.value})} className="input-field" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="input-label">City</label>
+                      <input type="text" name="city" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="input-field" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="input-label">Zip Code</label>
+                      <input type="text" name="zipCode" value={formData.zipCode} onChange={(e) => setFormData({...formData, zipCode: e.target.value})} className="input-field" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 pt-6">
+                  <button type="submit" className="btn-primary flex-[2]">Publish Changes</button>
+                  <button type="button" onClick={() => { setEditing(false); fetchData(); }} className="btn-secondary flex-1">Discard</button>
+                </div>
+              </form>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                {[
+                  { label: 'Name', value: profile?.name, icon: User, color: 'text-sky-500', bg: 'bg-sky-50' },
+                  { label: 'Role', value: profile?.role, icon: ShieldCheck, color: 'text-indigo-500', bg: 'bg-indigo-50', capitalize: true },
+                  { label: 'Blood Group', value: profile?.bloodGroup, icon: Activity, color: 'text-rose-500', bg: 'bg-rose-50' },
+                  { label: 'Phone', value: profile?.phone || 'Not linked', icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+                  { label: 'Email', value: profile?.email, icon: Bell, color: 'text-amber-500', bg: 'bg-amber-50', full: true },
+                  { label: 'Birth Date', value: profile?.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString(undefined, { dateStyle: 'long' }) : 'Not set', icon: Calendar, color: 'text-purple-500', bg: 'bg-purple-50' }
+                ].map((item, idx) => (
+                  <div key={idx} className={`p-6 rounded-3xl bg-slate-50/50 border border-slate-100 hover:bg-white transition-all group ${item.full ? 'md:col-span-2' : ''}`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`p-2 rounded-xl bg-white shadow-sm group-hover:${item.bg} group-hover:${item.color} transition-all`}>
+                        <item.icon className="w-5 h-5" />
+                      </div>
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.label}</span>
+                    </div>
+                    <p className={`text-xl font-bold text-slate-900 ${item.capitalize ? 'capitalize' : ''}`}>{item.value}</p>
+                  </div>
+                ))}
+
+                {profile?.address && (
+                  <div className="col-span-full mt-4 p-8 bg-slate-900 rounded-[40px] text-white relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-125 transition-transform duration-700">
+                      <Users className="w-48 h-48" />
+                    </div>
+                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Location Synchronized</p>
+                    <h4 className="text-3xl font-display font-black leading-tight max-w-2xl relative z-10">
+                      {profile.address.street && `${profile.address.street}, `}
+                      {profile.address.city && `${profile.address.city}, `}
+                      {profile.address.state && <span className="text-sky-400">{profile.address.state}</span>}
+                      {profile.address.zipCode && <span className="text-slate-500 block text-lg font-medium mt-2">{profile.address.zipCode}</span>}
+                    </h4>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 

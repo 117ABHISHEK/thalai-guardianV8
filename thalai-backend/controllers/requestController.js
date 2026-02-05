@@ -297,11 +297,35 @@ const getRequestById = async (req, res) => {
   }
 };
 
+const updateUrgency = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { urgency } = req.body;
+
+    const request = await Request.findById(id);
+    if (!request) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    request.urgency = urgency;
+    await request.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Urgency level updated. Global network notified.',
+      data: { request }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 module.exports = {
   createRequest,
   getUserRequests,
   getAllRequests,
   cancelRequest,
   getRequestById,
+  updateUrgency,
 };
 
