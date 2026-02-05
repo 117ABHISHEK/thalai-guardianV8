@@ -4,7 +4,7 @@ import api from '../api/auth';
 import { 
   Calendar, Clock, User, Activity, 
   CheckCircle2, AlertCircle, X, 
-  MoreHorizontal, ChevronRight, MessageSquare,
+  MoreHorizontal, MoreVertical, ChevronRight, MessageSquare,
   RefreshCw, CheckCircle, Info, Share2, FileText, Download
 } from 'lucide-react';
 
@@ -24,7 +24,7 @@ const AppointmentList = ({ role }) => {
 
   useEffect(() => {
     fetchAppointments();
-    if (role === 'donor') {
+    if (role === 'donor' || role === 'patient') {
       fetchDoctors();
     }
   }, [role]);
@@ -173,8 +173,8 @@ const AppointmentList = ({ role }) => {
 
   return (
     <div className="animate-reveal">
-      {/* Book Appointment Button for Donors */}
-      {role === 'donor' && (
+      {/* Book Appointment Button for Donors and Patients */}
+      {(role === 'donor' || role === 'patient') && (
         <div className="mb-8">
           <button 
             onClick={() => setShowBookModal(true)}
@@ -201,13 +201,13 @@ const AppointmentList = ({ role }) => {
                        {/* Date Block */}
                        <div className="w-20 bg-slate-50 border border-slate-100 rounded-2xl p-2 text-center flex flex-col items-center justify-center">
                           <span className="text-[10px] font-black uppercase text-slate-400 tracking-tight leading-none mb-1">
-                             {new Date(apt.date).toLocaleDateString(undefined, { month: 'short' })}
+                             {apt.date ? new Date(apt.date).toLocaleDateString(undefined, { month: 'short' }) : '---'}
                           </span>
                           <span className="text-2xl font-black text-slate-900 leading-none">
-                             {new Date(apt.date).getDate()}
+                             {apt.date ? new Date(apt.date).getDate() : '--'}
                           </span>
                           <span className="text-[10px] font-bold text-sky-500 mt-1 uppercase tracking-widest">
-                             {apt.time}
+                             {apt.time || '--:--'}
                           </span>
                        </div>
 
@@ -414,7 +414,7 @@ const AppointmentList = ({ role }) => {
                     <div className="flex items-center justify-between">
                        <div className="flex items-center gap-3">
                           <Calendar className="w-4 h-4 text-sky-500" />
-                          <p className="text-sm font-bold text-slate-700">{new Date(selectedApt.date).toLocaleDateString(undefined, { dateStyle: 'full' })}</p>
+                          <p className="text-sm font-bold text-slate-700">{selectedApt.date ? new Date(selectedApt.date).toLocaleDateString(undefined, { dateStyle: 'full' }) : 'No date set'}</p>
                        </div>
                        <div className="flex items-center gap-3">
                           <Clock className="w-4 h-4 text-sky-500" />

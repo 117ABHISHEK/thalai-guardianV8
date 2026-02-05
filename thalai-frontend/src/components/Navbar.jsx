@@ -148,7 +148,7 @@ const Navbar = () => {
                        )}
                     </div>
                     <div className="text-left">
-                      <p className="text-xs font-black text-slate-900 leading-none mb-1">{user.name.split(' ')[0]}</p>
+                      <p className="text-xs font-black text-slate-900 leading-none mb-1">{user?.name?.split(' ')[0] || 'User'}</p>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{user.role}</p>
                     </div>
                   </button>

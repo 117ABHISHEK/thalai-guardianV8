@@ -28,7 +28,7 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       const response = await getStats();
-      setStats(response.data);
+      setStats(response.data); // getStats already returns response.data (the body), and we want the 'data' field inside it
     } catch (err) {
       setError(err.message || 'Failed to sync central intelligence');
     } finally {
