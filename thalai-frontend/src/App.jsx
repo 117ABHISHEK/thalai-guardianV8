@@ -24,6 +24,7 @@ import AdminRequestManager from './pages/AdminRequestManager';
 import DonorMatchResults from './pages/DonorMatchResults';
 import DonorProfile from './pages/DonorProfile';
 import BookAppointment from './pages/BookAppointment';
+import SystemSettings from './pages/SystemSettings';
 
 // Home component that redirects based on auth status
 const Home = () => {
@@ -142,6 +143,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['admin']}>
                     <AdminRequestManager />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/settings"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <SystemSettings />
                   </ProtectedRoute>
                 }
               />

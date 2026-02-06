@@ -28,7 +28,7 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       const response = await getStats();
-      setStats(response.data); // getStats already returns response.data (the body), and we want the 'data' field inside it
+      setStats(response.data); // Backend returns { success: true, data: { ...stats } }
     } catch (err) {
       setError(err.message || 'Failed to sync central intelligence');
     } finally {
@@ -143,7 +143,7 @@ const AdminDashboard = () => {
                     {[
                       { label: 'Donor Verification', icon: UserCheck, path: '/admin/donor-verification', color: 'bg-sky-500' },
                       { label: 'Request Management', icon: ClipboardList, path: '/admin/requests', color: 'bg-emerald-500' },
-                      { label: 'System Settings', icon: Settings, path: '/settings', color: 'bg-slate-700' }
+                      { label: 'System Settings', icon: Settings, path: '/admin/settings', color: 'bg-slate-700' }
                     ].map((btn, i) => (
                       <button key={i} onClick={() => navigate(btn.path)} className="w-full flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all group/btn">
                          <div className="flex items-center gap-3">

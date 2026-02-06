@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { getUserRequests, cancelRequest } from '../api/requests';
 import { findMatches } from '../api/match';
@@ -263,7 +264,7 @@ const PatientRequestHistory = ({ onRequestCancelled }) => {
       )}
 
       {/* Details Modal */}
-      {showDetailsModal && selectedRequest && (
+      {showDetailsModal && selectedRequest && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-reveal">
            <div className="bg-white rounded-[48px] shadow-2xl w-full max-w-2xl overflow-hidden border border-white/20">
               <div className="p-10 bg-slate-900 text-white relative">
@@ -329,7 +330,8 @@ const PatientRequestHistory = ({ onRequestCancelled }) => {
                  </div>
               </div>
            </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

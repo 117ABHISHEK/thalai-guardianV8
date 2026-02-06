@@ -240,15 +240,16 @@ thalai-guardianV8/
 
 ## 📚 Documentation
 
-Comprehensive documentation is available in the project root:
+Comprehensive documentation is available in the `ReadmeDoc/` directory:
 
-- **[FINAL_STATUS.md](ReadmeDoc/FINAL_STATUS.md)** - ⭐ Start here for complete status
-- **[PRODUCTION_CHECKLIST.md](ReadmeDoc/PRODUCTION_CHECKLIST.md)** - Guide for Render/Vercel deployment
-- **[DONOR_ELIGIBILITY_SYSTEM.md](ReadmeDoc/DONOR_ELIGIBILITY_SYSTEM.md)** - Eligibility system details
-- **[DATABASE_SCHEMA_VERIFICATION.md](ReadmeDoc/DATABASE_SCHEMA_VERIFICATION.md)** - Database documentation
-- **[SEED_DOCUMENTATION.md](ReadmeDoc/SEED_DOCUMENTATION.md)** - Seed data guide
-
-See [DOCUMENTATION_INDEX.md](ReadmeDoc/DOCUMENTATION_INDEX.md) for complete list.
+- **[DOCUMENTATION_INDEX.md](ReadmeDoc/DOCUMENTATION_INDEX.md)** - 📚 **Start Here** for the complete documentation list.
+- **[FINAL_STATUS.md](ReadmeDoc/FINAL_STATUS.md)** - ⭐ Current project status and feature matrix.
+- **[DEPLOYMENT_PLAN.md](ReadmeDoc/DEPLOYMENT_PLAN.md)** - 📅 Strategic roadmap for production rollout.
+- **[DEPLOYMENT_GUIDE.md](ReadmeDoc/DEPLOYMENT_GUIDE.md)** - 🚀 Technical deployment steps (Node, Python, Nginx).
+- **[PRODUCTION_CHECKLIST.md](ReadmeDoc/PRODUCTION_CHECKLIST.md)** - ✅ Final security and performance audit.
+- **[SETUP_INSTRUCTIONS.md](ReadmeDoc/SETUP_INSTRUCTIONS.md)** - 🛠️ Detailed environment configuration guide.
+- **[QUICK_START_GUIDE.md](ReadmeDoc/QUICK_START_GUIDE.md)** - 🏃 Rapid feature testing and setup.
+- **[EMAIL_SETUP.md](ReadmeDoc/EMAIL_SETUP.md)** - 📧 Configuring SMTP and Nodemailer.
 
 ---
 

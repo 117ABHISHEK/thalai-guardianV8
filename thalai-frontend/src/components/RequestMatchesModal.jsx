@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { getTopMatches } from '../api/match';
 import { Search, X, User, MapPin, Phone, ShieldCheck, Zap, Activity, Heart, Target } from 'lucide-react';
 
+import { createPortal } from 'react-dom';
+
 const RequestMatchesModal = ({ requestId, onClose }) => {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +30,7 @@ const RequestMatchesModal = ({ requestId, onClose }) => {
     return 'text-amber-500 bg-amber-50 border-amber-100';
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
       <div className="bg-white rounded-[48px] shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-slide-up border border-white/20">
         {/* Header */}
@@ -134,7 +136,8 @@ const RequestMatchesModal = ({ requestId, onClose }) => {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

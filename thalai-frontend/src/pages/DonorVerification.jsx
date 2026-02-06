@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getDonors, verifyDonor } from '../api/admin';
@@ -227,7 +228,7 @@ const DonorVerification = () => {
       </div>
 
       {/* Hero Intelligence Modal */}
-      {showInfoModal && selectedHero && (
+      {showInfoModal && selectedHero && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
            <div className="bg-white rounded-[48px] shadow-2xl w-full max-w-2xl overflow-hidden border border-white/20">
               <div className="p-10 bg-slate-900 text-white relative">
@@ -290,7 +291,8 @@ const DonorVerification = () => {
                  </button>
               </div>
            </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -11,6 +11,9 @@ const {
   unassignPatientFromDoctor,
   getPatients,
   getAIStatus,
+  getAllUsers,
+  toggleUserStatus,
+  deleteUser,
 } = require('../controllers/adminController');
 const { protect } = require('../middleware/authMiddleware');
 const { allowRoles } = require('../middleware/roleMiddleware');
@@ -68,6 +71,16 @@ router.get('/patients', getPatients);
 // @desc    Get AI service health and status
 // @access  Private/Admin
 router.get('/ai-status', getAIStatus);
+
+// Account Settings / User Management routes
+// @route   GET /api/admin/users
+router.get('/users', getAllUsers);
+
+// @route   PATCH /api/admin/users/:userId/toggle-status
+router.patch('/users/:userId/toggle-status', toggleUserStatus);
+
+// @route   DELETE /api/admin/users/:userId
+router.delete('/users/:userId', deleteUser);
 
 module.exports = router;
 

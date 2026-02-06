@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { getDoctorStats, getAssignedPatients, getPatientDetails, updatePatientNotes as apiUpdateNotes, updatePatientMedicalData } from '../api/doctor';
 import { getProfile, updateProfile } from '../api/auth';
@@ -493,7 +494,7 @@ const DoctorDashboard = () => {
         )}
 
          {/* Improved Patient Details Modal */}
-         {selectedPatient && patientDetails && (
+         {selectedPatient && patientDetails && createPortal(
            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-reveal" style={{ margin: 0 }}>
              <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-[40px] shadow-2xl overflow-hidden flex flex-col border border-slate-200 relative" style={{ zIndex: 10000 }}>
               {/* Modal Header */}
@@ -805,9 +806,10 @@ const DoctorDashboard = () => {
                      </div>
                   </section>
               </div>
-            </div>
-          </div>
-        )}
+             </div>
+           </div>,
+           document.body
+         )}
       </div>
     </div>
   );

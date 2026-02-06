@@ -641,6 +641,138 @@ const getAIStatus = async (req, res) => {
   }
 };
 
+/**
+ * @route   GET /api/admin/users
+ * @desc    Get all users (excluding admins by default or with filter)
+ * @access  Private/Admin
+ */
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({ role: { $ne: 'admin' } })
+      .select('-password')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: users.length,
+      data: {
+        users,
+      },
+    });
+  } catch (error) {
+    console.error('Get all users error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @route   PATCH /api/admin/users/:userId/toggle-status
+ * @desc    Block or unblock a user
+ * @access  Private/Admin
+ */
+const toggleUserStatus = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    if (user.role === 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Cannot block reference admin nodes',
+      });
+    }
+
+    user.isActive = !user.isActive;
+    await user.save();
+
+    logger.info(`User ${user.isActive ? 'unblocked' : 'blocked'}`, { userId: user._id, adminId: req.user._id });
+
+    res.status(200).json({
+      success: true,
+      message: `User ${user.isActive ? 'activated' : 'deactivated'} successfully`,
+      data: {
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isActive: user.isActive,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Toggle user status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @route   DELETE /api/admin/users/:userId
+ * @desc    Permanently delete a user and their role profile
+ * @access  Private/Admin
+ */
+const deleteUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    if (user.role === 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Cannot delete central admin nodes',
+      });
+    }
+
+    // Delete role-specific profile
+    if (user.role === 'donor') {
+      await Donor.findOneAndDelete({ user: userId });
+    } else if (user.role === 'patient') {
+      await Patient.findOneAndDelete({ user: userId });
+    } else if (user.role === 'doctor') {
+      await Doctor.findOneAndDelete({ user: userId });
+    }
+
+    // Delete user
+    await User.findByIdAndDelete(userId);
+
+    logger.info('User permanently deleted', { userId, adminId: req.user._id });
+
+    res.status(200).json({
+      success: true,
+      message: 'User and associated profiles purged permanently',
+    });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getDonors,
   verifyDonor,
@@ -652,4 +784,7 @@ module.exports = {
   unassignPatientFromDoctor,
   getPatients,
   getAIStatus,
+  getAllUsers,
+  toggleUserStatus,
+  deleteUser,
 };

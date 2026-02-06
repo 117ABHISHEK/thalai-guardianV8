@@ -200,10 +200,12 @@ curl -X POST http://localhost:5000/api/admin/donors/verify \
 
 ## 📚 Documentation
 
-- `PRODUCTION_FEATURES_IMPLEMENTATION.md` - Detailed implementation
-- `PRODUCTION_FEATURES_COMPLETE_SUMMARY.md` - Complete summary
-- `IMPLEMENTATION_COMPLETE.md` - Final summary
-- `thalai-ai-service/README.md` - ML service docs
+For more detailed information, refer to:
+
+- **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** - Central hub for all docs.
+- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Learn how to go live.
+- **[FINAL_STATUS.md](FINAL_STATUS.md)** - Current development progress.
+- **[thalai-ai-service/README.md](../thalai-ai-service/README.md)** - ML service technical details.
 
 ## ⚠️ Important Notes
 
@@ -224,4 +226,3 @@ curl -X POST http://localhost:5000/api/admin/donors/verify \
 ---
 
 **All core backend functionality is ready to use!** ✅
-

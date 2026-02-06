@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import api from '../api/auth';
 
+import { createPortal } from 'react-dom';
+
 const AdminRequestManager = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -283,7 +285,7 @@ const AdminRequestManager = () => {
       </div>
 
       {/* Admin Protocol Modal */}
-      {showDetailsModal && selectedRequest && (
+      {showDetailsModal && selectedRequest && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-reveal">
            <div className="bg-white rounded-[48px] shadow-2xl w-full max-w-2xl overflow-hidden border border-white/20">
               <div className="p-10 bg-slate-900 text-white relative">
@@ -340,7 +342,8 @@ const AdminRequestManager = () => {
                  </div>
               </div>
            </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
