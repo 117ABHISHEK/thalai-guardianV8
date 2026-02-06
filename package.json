@@ -1,0 +1,17 @@
+{
+  "name": "thalai-guardian-v8-root",
+  "version": "1.0.0",
+  "description": "Monorepo root for ThalAI Guardian",
+  "scripts": {
+    "install-all": "npm install --prefix thalai-backend && npm install --prefix thalai-frontend && pip install -r thalai-ai-service/requirements.txt",
+    "setup-env": "node -e \"const fs=require('fs'); const env=fs.readFileSync('.env', 'utf8'); fs.writeFileSync('thalai-backend/.env', env); fs.writeFileSync('thalai-frontend/.env', env); fs.writeFileSync('thalai-ai-service/.env', env); console.log('✅ Env synchronized to all services')\"",
+    "backend": "npm start --prefix thalai-backend",
+    "frontend": "npm run dev --prefix thalai-frontend",
+    "ai": "cd thalai-ai-service && python app.py",
+    "start-all": "concurrently \"npm run backend\" \"npm run frontend\" \"npm run ai\"",
+    "build:frontend": "npm run build --prefix thalai-frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

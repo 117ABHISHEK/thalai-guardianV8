@@ -396,7 +396,7 @@ if __name__ == '__main__':
         print("Using rule-based fallback for predictions.")
     
     # Start server
-    port = int(os.getenv('PORT', 8000))
+    port = int(os.getenv('AI_PORT', os.getenv('PORT', 8000)))
     print(f"\nStarting ThalAI ML Service on port {port}...")
     print(f"Health check: http://localhost:{port}/health")
     print(f"Prediction endpoint: http://localhost:{port}/predict-next-transfusion")

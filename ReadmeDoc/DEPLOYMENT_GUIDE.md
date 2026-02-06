@@ -65,59 +65,69 @@ You must configure environment variables for all services. Refer to the table be
 
 ---
 
-## 📦 Deployment Steps
+## 📦 Deployment Strategy
 
-### Step 1: Clone and Prepare
+We support two primary methods for deployment. **Method 1 (Render Blueprint)** is highly recommended as it automates the linkage between all three services.
+
+---
+
+## ⚡ Method 1: Render Blueprint (One-Click) - RECOMMENDED
+
+This method uses the `render.yaml` file in the root directory to deploy the entire stack simultaneously.
+
+### Steps:
+
+1.  **Preparation**: Ensure your code is pushed to a GitHub/GitLab repository.
+2.  **Dashboard**: Go to [Render Dashboard](https://dashboard.render.com).
+3.  **New Blueprint**: Click **New +** and select **Blueprint**.
+4.  **Connect Repo**: Select your `thalai-guardianV8` repository.
+5.  **Configure Environment**:
+    - Render will detect the `thalai-global-secrets` group.
+    - Provide values for `MONGO_URI`, `GEMINI_API_KEY`, etc.
+6.  **Apply**: Click **Apply**. Render will now automatically:
+    - Deploy the **AI Service** (Python).
+    - Deploy the **Backend API** (Node).
+    - Deploy the **Frontend UI** (Static Site).
+    - Link them together using internal/external URLs automatically.
+
+---
+
+## 🛠️ Method 2: Manual Deployment
+
+If you prefer to deploy services individually, follow these settings for each:
+
+### 1. AI Service (Python Web Service)
+
+- **Root Directory**: `thalai-ai-service`
+- **Build Command**: `pip install -r requirements.txt`
+- **Start Command**: `gunicorn app:app`
+- **Env Vars**: See `.env.example` in the `thalai-ai-service` folder.
+
+### 2. Backend API (Node Web Service)
+
+- **Root Directory**: `thalai-backend`
+- **Build Command**: `npm install`
+- **Start Command**: `npm start`
+- **Env Vars**: See `.env.example` in the `thalai-backend` folder.
+
+### 3. Frontend (Static Site)
+
+- **Root Directory**: `thalai-frontend`
+- **Build Command**: `npm install && npm run build`
+- **Publish Directory**: `dist`
+- **Env Vars**: `VITE_API_URL` and `VITE_AI_SERVICE_URL`.
+
+---
+
+## 🔐 Master Environment Configuration
+
+For local development or manual deployment, use the **Master `.env.example`** located in the root directory.
+
+To sync the root `.env` to all sub-services:
 
 ```bash
-git clone <your-repo-url>
-cd thalai-guardianV8
+npm run setup-env
 ```
-
-### Step 2: Backend Deployment (Node.js)
-
-1. Navigate to the backend directory:
-   ```bash
-   cd thalai-backend
-   npm install --production
-   ```
-2. Create and configure `.env` file.
-3. Seed the database (if first time):
-   ```bash
-   npm run seed
-   ```
-4. Start with PM2:
-   ```bash
-   pm2 start server.js --name thalai-backend
-   ```
-
-### Step 3: AI Service Deployment (Python)
-
-1. Navigate to the AI service directory:
-   ```bash
-   cd ../thalai-ai-service
-   python -m venv venv
-   source venv/bin/activate # Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
-2. Start with Gunicorn:
-   ```bash
-   gunicorn -w 4 -b 0.0.0.0:8000 app:app --daemon
-   ```
-
-### Step 4: Frontend Deployment (React)
-
-1. Navigate to the frontend directory:
-   ```bash
-   cd ../thalai-frontend
-   npm install
-   ```
-2. Create and configure `.env` with production URLs.
-3. Build the application:
-   ```bash
-   npm run build
-   ```
-4. Deploy the `dist` folder to a static host (Vercel, Netlify) or serve via Nginx.
 
 ---
 

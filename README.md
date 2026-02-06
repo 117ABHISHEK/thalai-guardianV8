@@ -26,92 +26,48 @@ ThalAI Guardian is a comprehensive blood donor eligibility and patient managemen
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Monorepo Mode)
 
-### Prerequisites
+The project is now configured as a monorepo. You can manage all three services (Backend, Frontend, AI) from the root directory.
 
-- Node.js (v14+)
-- MongoDB (v4.4+)
-- Python (v3.8+)
-
-### Installation
+### 📦 Installation
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd thalai-guardianV8
-
-# Install backend dependencies
-cd thalai-backend
+# Install everything (Root, Backend, Frontend)
 npm install
-
-# Install frontend dependencies
-cd ../thalai-frontend
-npm install
-
-# Install AI service dependencies
-cd ../thalai-ai-service
-pip install -r requirements.txt
+npm run install-all
 ```
 
-### Environment Setup
+### ⚙️ Environment Setup
 
-Create `.env` files in backend and frontend directories:
-
-**Backend (.env)**:
-
-```env
-NODE_ENV=development
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/thalai-guardian
-JWT_SECRET=your_jwt_secret_key
-AI_SERVICE_URL=http://localhost:8000
-LOG_LEVEL=info
-```
-
-**Frontend (.env)**:
-
-```env
-VITE_API_URL=http://localhost:5000/api
-VITE_AI_SERVICE_URL=http://localhost:8000
-```
-
-### Seed Database
+1. Create a `.env` file in the **root** directory (use `.env.example` as a template).
+2. Sync the configuration to all services:
 
 ```bash
-cd thalai-backend
-npm run seed
+npm run setup-env
 ```
 
-This creates:
-
-- 1 Admin user
-- 10 Donor users (with varying eligibility statuses)
-- 10 Patient users (with complete medical history)
-- 200 Medical reports (10 per user)
-- 10 Blood requests
-
-### Start Services
+### 🏃 Running All Services (One Command)
 
 ```bash
-# Terminal 1 - Backend API
-cd thalai-backend
-npm run dev
-
-# Terminal 2 - Frontend
-cd thalai-frontend
-npm run dev
-
-# Terminal 3 - AI Service
-cd thalai-ai-service
-python app.py
+# Start Backend, Frontend, and AI Service simultaneously
+npm run start-all
 ```
 
-### Access Application
-
-- **Frontend**: http://localhost:5173 (Vite default)
+- **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:5000
 - **AI Service**: http://localhost:8000
+
+---
+
+## ☁️ Deployment (One-Click)
+
+This project includes a `render.yaml` Blueprint for simplified deployment on **Render**.
+
+1.  Go to [Render Dashboard](https://dashboard.render.com).
+2.  Click **New +** > **Blueprint**.
+3.  Connect this repository.
+4.  Render will automatically configure the AI Service, Backend, and Frontend for you!
 
 ---
 
@@ -180,6 +136,8 @@ Dashboard: /patient-dashboard
 
 ```
 thalai-guardianV8/
+├── package.json              # Monorepo Orchestrator (One-command run)
+├── render.yaml               # Render Blueprint (One-click deploy)
 ├── thalai-frontend/          # React frontend application
 │   ├── src/
 │   │   ├── components/       # UI Widgets (Prediction, Matching, History)
@@ -205,12 +163,9 @@ thalai-guardianV8/
 │   └── requirements.txt
 │
 └── ReadmeDoc/                # Complete documentation
-    ├── FINAL_STATUS.md      # ⭐ Current status
-    ├── PRODUCTION_CHECKLIST.md
-    ├── DEPLOYMENT_GUIDE.md
-    ├── DONOR_ELIGIBILITY_SYSTEM.md
-    ├── DATABASE_SCHEMA_VERIFICATION.md
-    ├── SEED_DOCUMENTATION.md
+    ├── DOCUMENTATION_INDEX.md # 🚀 Start Here
+    ├── FINAL_STATUS.md       # ⭐ Project matrix
+    ├── DEPLOYMENT_PLAN.md    # 📅 Roadmap
     └── ... (11 total docs)
 ```
 
