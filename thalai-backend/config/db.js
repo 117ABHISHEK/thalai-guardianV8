@@ -3,7 +3,8 @@ require('dotenv').config();
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/thalai-guardian');
+    const mongoURI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/thalai-guardian';
+    const conn = await mongoose.connect(mongoURI);
 
     if (process.env.NODE_ENV !== 'test') {
       console.log(`✅ MongoDB Connected: ${conn.connection.host}`);

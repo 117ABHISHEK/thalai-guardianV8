@@ -1,0 +1,16 @@
+.git
+node_modules
+thalai-backend/node_modules
+thalai-frontend/node_modules
+thalai-backend/logs
+thalai-backend/postman_collection.json
+thalai-ai-service/venv
+thalai-ai-service/__pycache__
+.env
+thalai-backend/.env
+thalai-frontend/.env
+thalai-ai-service/.env
+dist
+thalai-frontend/dist
+*.log
+.DS_Store
