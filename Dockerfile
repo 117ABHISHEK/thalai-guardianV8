@@ -29,10 +29,8 @@ COPY thalai-ai-service/ ./thalai-ai-service/
 EXPOSE 5000
 EXPOSE 8000
 
-# Create a start script
-RUN echo '#!/bin/bash\n\
-cd /app/thalai-ai-service && gunicorn -w 2 -b 0.0.0.0:8000 app:app & \n\
-cd /app/thalai-backend && npm start' > /app/start.sh
-RUN chmod +x /app/start.sh
+# 5. Setup startup script
+COPY start.sh /app/start.sh
+RUN sed -i 's/\r$//' /app/start.sh && chmod +x /app/start.sh
 
 CMD ["/app/start.sh"]
