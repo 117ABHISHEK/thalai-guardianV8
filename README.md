@@ -60,14 +60,16 @@ npm run start-all
 
 ---
 
-## ☁️ Deployment (One-Click)
+## ☁️ Deployment (Single Service)
 
-This project includes a `render.yaml` Blueprint for simplified deployment on **Render**.
+This project is optimized for a **One-Service Deployment** using Docker. This bundles the AI Service, Backend, and Frontend into a single container.
 
 1.  Go to [Render Dashboard](https://dashboard.render.com).
-2.  Click **New +** > **Blueprint**.
+2.  Click **New +** > **Web Service**.
 3.  Connect this repository.
-4.  Render will automatically configure the AI Service, Backend, and Frontend for you!
+4.  Render will detect the `Dockerfile`.
+5.  Set **Environment** to `Docker`.
+6.  Add your secrets (from `.env.example`) to the Environment Variables.
 
 ---
 

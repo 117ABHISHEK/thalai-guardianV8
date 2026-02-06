@@ -101,6 +101,20 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ message: 'ThalAI Guardian API is running' });
 });
 
+// Serve Static Assets in Production
+if (process.env.NODE_ENV === 'production' || process.env.SERVE_FRONTEND === 'true') {
+  const path = require('path');
+  const frontendPath = path.join(__dirname, '../thalai-frontend/dist');
+  
+  app.use(express.static(frontendPath));
+  
+  app.get('*', (req, res, next) => {
+    // If request is for an API route, pass it through (shouldn't happen with correct routing)
+    if (req.url.startsWith('/api')) return next();
+    res.sendFile(path.resolve(frontendPath, 'index.html'));
+  });
+}
+
 // 404 Handler
 app.use((req, res) => {
   res.status(404).json({

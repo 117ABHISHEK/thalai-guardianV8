@@ -1,56 +1,19 @@
 services:
-  # 1. AI Service (Python)
+  # 🚀 ONE SINGLE DEPLOYMENT (All-in-one Container)
   - type: web
-    name: thalai-ai-service
-    env: python
-    rootDir: thalai-ai-service
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    name: thalai-guardian-all-in-one
+    env: docker
+    plan: starter # Docker requires at least Starter plan on Render for reliability
     envVars:
-      - key: PORT
-        value: 8000
       - fromGroup: thalai-global-secrets
-
-  # 2. Backend API (Node.js)
-  - type: web
-    name: thalai-backend
-    env: node
-    rootDir: thalai-backend
-    buildCommand: npm install
-    startCommand: npm start
-    envVars:
+      - key: PORT
+        value: 5000
+      - key: AI_SERVICE_URL
+        value: http://localhost:8000
       - key: NODE_ENV
         value: production
-      - key: AI_SERVICE_URL
-        fromService:
-          name: thalai-ai-service
-          type: web
-          property: host
-      - key: MONGO_URI
-        sync: false # You will fill this in the Render Dashboard
-      - key: JWT_SECRET
-        generateValue: true
-      - fromGroup: thalai-global-secrets
-
-  # 3. Frontend (Static Site)
-  - type: static
-    name: thalai-guardian-ui
-    env: static
-    rootDir: thalai-frontend
-    buildCommand: npm install && npm run build
-    staticPublishDir: dist
-    envVars:
-      - key: VITE_API_URL
-        fromService:
-          name: thalai-backend
-          type: web
-          property: host
-      - key: VITE_AI_SERVICE_URL
-        fromService:
-          name: thalai-ai-service
-          type: web
-          property: host
-      - fromGroup: thalai-global-secrets
+      - key: SERVE_FRONTEND
+        value: "true"
 
 envVarGroups:
   - name: thalai-global-secrets
