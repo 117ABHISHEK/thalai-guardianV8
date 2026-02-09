@@ -32,7 +32,20 @@ const APPOINTMENT_STATUSES = ['scheduled', 'pending', 'completed', 'cancelled'];
 const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const getRandomInRange = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-// Helper to generate donor medical reports
+// Blood group compatibility helper
+const isBloodGroupCompatible = (donorGroup, patientGroup) => {
+  const compatibility = {
+    'O+': ['O+', 'A+', 'B+', 'AB+'],
+    'O-': ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'],
+    'A+': ['A+', 'AB+'],
+    'A-': ['A+', 'A-', 'AB+', 'AB-'],
+    'B+': ['B+', 'AB+'],
+    'B-': ['B+', 'B-', 'AB+', 'AB-'],
+    'AB+': ['AB+'],
+    'AB-': ['AB+', 'AB-'],
+  };
+  return compatibility[donorGroup]?.includes(patientGroup) || false;
+};
 const generateDonorReports = (count) => {
   const reports = [];
   for (let i = 0; i < count; i++) {
@@ -433,21 +446,33 @@ const seedData = async () => {
     
     for (let i = 0; i < 40; i++) {
         const r = getRandom(requests);
-        const d = getRandom(donors); // Donor model doc
         
-        await MatchLog.create({
-            requestId: r._id,
-            donorId: d._id,
-            matchScore: getRandomInRange(70, 99),
-            scoreBreakdown: {
-                bloodGroupMatch: 40,
-                locationScore: getRandomInRange(15, 30),
-                availabilityScore: 20,
-                donationFrequencyScore: 10,
-                aiPredictionScore: getRandomInRange(5, 10)
-            },
-            status: getRandom(['pending', 'contacted', 'accepted'])
-        });
+        // Find a compatible donor for this request
+        const compatibleDonors = [];
+        for (const donor of donors) {
+            const donorUser = await User.findById(donor.user);
+            if (donorUser && isBloodGroupCompatible(donorUser.bloodGroup, r.bloodGroup)) {
+                compatibleDonors.push(donor);
+            }
+        }
+
+        if (compatibleDonors.length > 0) {
+            const d = getRandom(compatibleDonors);
+            
+            await MatchLog.create({
+                requestId: r._id,
+                donorId: d._id,
+                matchScore: getRandomInRange(70, 99),
+                scoreBreakdown: {
+                    bloodGroupMatch: 40,
+                    locationScore: getRandomInRange(15, 30),
+                    availabilityScore: 20,
+                    donationFrequencyScore: 10,
+                    aiPredictionScore: getRandomInRange(5, 10)
+                },
+                status: getRandom(['pending', 'contacted', 'accepted'])
+            });
+        }
     }
     console.log('✅ Match Logs seeded.');
 
