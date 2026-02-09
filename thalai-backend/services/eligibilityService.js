@@ -79,24 +79,26 @@ const calculateNextPossibleDate = (lastDonationDate, donationFrequencyMonths = 3
 const validateBloodReport = (report) => {
   const issues = [];
 
-  // Hemoglobin check (minimum 12.5 g/dL for donors)
+  // Hemoglobin check (minimum 12.5 g/dL usually for donors, but let's use clinical hard range for model validity)
   if (report.hemoglobin !== undefined && report.hemoglobin !== null) {
     if (report.hemoglobin < 12.5) {
-      issues.push(`Hemoglobin too low: ${report.hemoglobin} g/dL (minimum 12.5 g/dL required)`);
+      issues.push(`Hemoglobin too low: ${report.hemoglobin} g/dL (minimum 12.5 g/dL required for donation)`);
     } else if (report.hemoglobin > 20) {
-      issues.push(`Hemoglobin abnormally high: ${report.hemoglobin} g/dL (requires medical review)`);
+      issues.push(`Hemoglobin abnormally high: ${report.hemoglobin} g/dL (Max hard limit is 20)`);
     }
   }
 
-  // Blood Pressure check (Systolic: 90-180, Diastolic: 60-100)
+  // Blood Pressure check (Systolic: 70-240 hard, Soft: 90-180)
   if (report.bpSystolic !== undefined && report.bpSystolic !== null) {
-    if (report.bpSystolic < 90 || report.bpSystolic > 180) {
-      issues.push(`Blood pressure out of range: ${report.bpSystolic}/${report.bpDiastolic || '?'} mmHg`);
+    if (report.bpSystolic < 70 || report.bpSystolic > 240) {
+      issues.push(`Systolic blood pressure outside HARD allowed range: ${report.bpSystolic} mmHg (allowed: 70-240)`);
+    } else if (report.bpSystolic < 90 || report.bpSystolic > 180) {
+      issues.push(`Systolic blood pressure in ALERT range: ${report.bpSystolic} mmHg (optimal: 90-180)`);
     }
   }
   if (report.bpDiastolic !== undefined && report.bpDiastolic !== null) {
-    if (report.bpDiastolic < 60 || report.bpDiastolic > 100) {
-      issues.push(`Diastolic BP out of range: ${report.bpDiastolic} mmHg (normal: 60-100)`);
+    if (report.bpDiastolic < 40 || report.bpDiastolic > 150) {
+       issues.push(`Diastolic blood pressure outside hard range: ${report.bpDiastolic} mmHg`);
     }
   }
 
@@ -107,12 +109,12 @@ const validateBloodReport = (report) => {
     }
   }
 
-  // Temperature check (normal: 36.1-37.2°C)
+  // Temperature check (Hard: 35-42.5, Soft: 36-40)
   if (report.temperature !== undefined && report.temperature !== null) {
-    if (report.temperature > 37.5) {
-      issues.push(`Temperature elevated: ${report.temperature}°C (may indicate infection)`);
-    } else if (report.temperature < 35.5) {
-      issues.push(`Temperature too low: ${report.temperature}°C`);
+    if (report.temperature < 35 || report.temperature > 42.5) {
+      issues.push(`Temperature outside HARD limit: ${report.temperature}°C`);
+    } else if (report.temperature < 36 || report.temperature > 40) {
+      issues.push(`Temperature in ALERT range: ${report.temperature}°C (check for fever)`);
     }
   }
 
@@ -338,20 +340,20 @@ const validateDonorRegistration = (donorData) => {
 
   // Height validation
   if (donorData.heightCm !== undefined) {
-    if (donorData.heightCm < 50 || donorData.heightCm > 250) {
+    if (donorData.heightCm < 45 || donorData.heightCm > 230) {
       errors.push({
         field: 'heightCm',
-        message: 'Height must be between 50 and 250 cm',
+        message: 'Height must be between 45 and 230 cm',
       });
     }
   }
 
   // Weight validation
   if (donorData.weightKg !== undefined) {
-    if (donorData.weightKg < 20 || donorData.weightKg > 250) {
+    if (donorData.weightKg < 2 || donorData.weightKg > 250) {
       errors.push({
         field: 'weightKg',
-        message: 'Weight must be between 20 and 250 kg',
+        message: 'Weight must be between 2 and 250 kg',
       });
     }
   }

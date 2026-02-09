@@ -1,4 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const Patient = require("../models/patientModel");
+const Donor = require("../models/donorModel");
+const { getPredictionStatus } = require("../utils/aiPrediction");
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -273,68 +276,110 @@ const detectIntent = (message) => {
 /**
  * Generate chatbot response
  */
-const generateResponse = async (message, user = null) => {
+const generateResponse = async (message, user = null, history = []) => {
   const intent = detectIntent(message);
   const responseData = responses[intent];
   const userName = user?.name ? user.name.split(' ')[0] : 'there';
-  const role = user?.role;
+  const role = user?.role || 'Guest';
   
   // Get base response (either string or from function)
-  const baseResponse = typeof responseData.response === 'function' 
+  let baseKnowledge = typeof responseData.response === 'function' 
     ? responseData.response(userName) 
     : responseData.response;
+
+  // FETCH DYNAMIC CLINICAL DATA (THE "API" PART)
+  let clinicalContext = "";
+  if (user && user._id) {
+    try {
+      if (role.toLowerCase() === 'patient' && (intent === 'transfusion_schedule' || intent === 'general')) {
+        const prediction = await getPredictionStatus(user._id);
+        if (prediction.success && prediction.prediction.predictedDate) {
+          clinicalContext += `\n- Next Transfusion Prediction (from AI Service): ${new Date(prediction.prediction.predictedDate).toDateString()}`;
+          clinicalContext += `\n- Confidence: ${(prediction.prediction.confidence * 100).toFixed(0)}%`;
+          clinicalContext += `\n- AI Explanation: ${prediction.prediction.explanation}`;
+        }
+      } else if (role.toLowerCase() === 'donor' && (intent === 'donor_guidelines' || intent === 'general')) {
+        const donorData = await Donor.findOne({ user: user._id });
+        if (donorData && donorData.lastDonationDate) {
+          clinicalContext += `\n- User's Last Donation: ${new Date(donorData.lastDonationDate).toDateString()}`;
+          if (donorData.nextPossibleDonationDate) {
+            clinicalContext += `\n- Next Possible Donation Date: ${new Date(donorData.nextPossibleDonationDate).toDateString()}`;
+            const eligible = donorData.nextPossibleDonationDate <= new Date() ? "Yes" : "No (Too soon)";
+            clinicalContext += `\n- Eligible Today based on interval: ${eligible}`;
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Clinical context fetch error:", err);
+    }
+  }
 
   let response;
   let confidence = 0.85;
 
   // Use Gemini if available to provide a smarter, contextual response
-  if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here') {
+  const apiKey = process.env.GEMINI_API_KEY;
+  const isApiConfigured = apiKey && apiKey.length > 10 && apiKey !== 'your_gemini_api_key_here';
+
+  if (isApiConfigured) {
     try {
+      const historyContext = history.length > 0 
+        ? history.map(h => `User: ${h.userMessage}\nAssistant: ${h.botResponse}`).join('\n')
+        : 'No previous history in this session.';
+
       const prompt = `
-User Context:
-- Name: ${userName}
-- Role: ${role || 'Visitor'}
-- Message: "${message}"
-- System Identified Intent: ${intent}
-- Base Knowledge Point: "${baseResponse}"
+Context:
+- Platform: ThalAI Guardian (Thalassemia Support Platform)
+- User Name: ${userName}
+- User Role: ${role}
+- Identified Topic: ${intent.replace('_', ' ')}
+- Reliable Base Info: "${baseKnowledge}"
+${clinicalContext ? `- USER CLINICAL DATA: ${clinicalContext}` : ""}
+
+Recent Chat History:
+${historyContext}
+
+Current User Message: "${message}"
 
 ${SYSTEM_PROMPT}
 
-Your Task:
-1. Provide a natural, empathetic response to the user's message.
-2. Use the "Base Knowledge Point" as your factual source for Thalassemia-specific info.
-3. If the user's question is specific (e.g., "what to avoid" in diet), focus your answer on those specific details while using the Base Knowledge as a guide.
-4. Maintain a supportive tone.
-5. If the identified intent is 'general', you have more freedom but stay within Thalassemia/Health bounds.
-6. Keep your answer concise (under 150 words).
+Task:
+Answer the current user message using the context and history.
+1. Be direct and helpful.
+2. Use the "Reliable Base Info" for ThalAI specific facts.
+3. If this is a follow-up question (check history), ensure your answer is contextual.
+4. Formatting: Use bold and lists where appropriate.
 `;
       const result = await model.generateContent(prompt);
       response = result.response.text();
       confidence = 0.98;
     } catch (error) {
       console.error('Gemini API Error:', error);
-      response = baseResponse;
+      response = baseKnowledge;
       confidence = 0.5;
     }
   } else {
     // Fallback to static response if no API key
-    response = baseResponse;
+    console.log('Gemini API not configured or key is placeholder. Using static response.');
+    response = baseKnowledge;
   }
   
-  // Only add tip for relevant intents for patients/donors
-  const tipIntents = ['thalassemia_info', 'symptoms', 'transfusion_schedule', 'emergency', 'general'];
-  if (tipIntents.includes(intent)) {
-    if (role === 'patient') {
-      response += '\n\n💡 Tip: You can create a blood request from your dashboard.';
-    } else if (role === 'donor') {
-      response += '\n\n💡 Tip: Keep your availability status updated to help patients.';
+  // Final polish - append context-aware tips if not already handled by AI
+  if (response.length < 500 && !response.includes('💡 Tip')) {
+    const tipIntents = ['thalassemia_info', 'symptoms', 'transfusion_schedule', 'emergency', 'general'];
+    if (tipIntents.includes(intent)) {
+      if (role.toLowerCase() === 'patient') {
+        response += '\n\n💡 Tip: Check your dashboard for the latest blood request status.';
+      } else if (role.toLowerCase() === 'donor') {
+        response += '\n\n💡 Tip: Ensure your availability status is "Active" to receive matches.';
+      }
     }
   }
   
   return {
     response,
     intent,
-    confidence: 0.85,
+    confidence,
   };
 };
 

@@ -60,7 +60,7 @@ const PatientRequestForm = ({ onRequestCreated }) => {
     try {
       const requestData = {
         bloodGroup: formData.bloodGroup,
-        unitsRequired: parseInt(formData.unitsRequired),
+        unitsRequired: parseFloat(formData.unitsRequired),
         urgency: formData.urgency,
         location: { hospital: formData.hospital, address: formData.address, city: formData.city, state: formData.state, zipCode: formData.zipCode },
         contactPerson: { name: formData.contactName, phone: formData.contactPhone, relationship: formData.contactRelationship },
@@ -162,9 +162,20 @@ const PatientRequestForm = ({ onRequestCreated }) => {
                      {bloodGroups.map(bg => <option key={bg} value={bg}>{bg}</option>)}
                   </select>
                </div>
-               <div className="space-y-2">
-                  <label className="input-label">Units (Quantity)</label>
-                  <input type="number" name="unitsRequired" value={formData.unitsRequired} onChange={handleChange} className="input-field" min="1" max="10" required />
+                <div className="space-y-2">
+                  <label className="input-label">Units Required</label>
+                  <input 
+                    type="number" 
+                    name="unitsRequired" 
+                    value={formData.unitsRequired} 
+                    onChange={handleChange} 
+                    className={`input-field ${formData.unitsRequired > 3 ? 'border-amber-400 bg-amber-50' : ''}`} 
+                    min="0.5" 
+                    max="6" 
+                    step="0.5"
+                    required 
+                  />
+                  <p className="text-[10px] text-rose-500 font-bold mt-1">Hard: 0.5-6 | Alert: &gt;3 units</p>
                </div>
                <div className="space-y-2">
                   <label className="input-label">Urgency Priority</label>

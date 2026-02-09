@@ -25,6 +25,7 @@ import DonorMatchResults from './pages/DonorMatchResults';
 import DonorProfile from './pages/DonorProfile';
 import BookAppointment from './pages/BookAppointment';
 import SystemSettings from './pages/SystemSettings';
+import AccountSettings from './pages/AccountSettings';
 
 // Home component that redirects based on auth status
 const Home = () => {
@@ -171,9 +172,19 @@ function App() {
                 }
               />
               
+              {/* Account Settings Route */}
+              <Route
+                path="/account-settings"
+                element={
+                  <ProtectedRoute>
+                    <AccountSettings />
+                  </ProtectedRoute>
+                }
+              />
+              
               {/* Redirects for links in Navbar/Footer */}
               <Route path="/emergency" element={<Navigate to="/requests" replace />} />
-              <Route path="/settings" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/settings" element={<Navigate to="/account-settings" replace />} />
               
               {/* Generic dashboard route */}
               <Route path="/dashboard" element={<DashboardRoute />} />

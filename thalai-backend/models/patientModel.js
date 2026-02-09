@@ -28,13 +28,14 @@ const patientSchema = new mongoose.Schema(
         units: {
           type: Number,
           required: true,
-          min: [1, 'At least 1 unit required'],
+          min: [0.5, 'Minimum 0.5 units required'],
+          max: [6, 'Maximum 6 units allowed per entry'],
         },
         hb_value: {
           type: Number,
           required: true,
-          min: [0, 'Hemoglobin value must be positive'],
-          max: [20, 'Hemoglobin value seems unrealistic'],
+          min: [2, 'Hemoglobin must be at least 2 g/dL'],
+          max: [20, 'Hemoglobin cannot exceed 20 g/dL'],
         },
         notes: {
           type: String,
@@ -108,8 +109,8 @@ const patientSchema = new mongoose.Schema(
     // Current health metrics
     currentHb: {
       type: Number,
-      min: [0, 'Hemoglobin must be positive'],
-      max: [20, 'Hemoglobin value seems unrealistic'],
+      min: [2, 'Hemoglobin must be at least 2 g/dL'],
+      max: [20, 'Hemoglobin cannot exceed 20 g/dL'],
     },
     currentHbDate: {
       type: Date,
@@ -117,13 +118,13 @@ const patientSchema = new mongoose.Schema(
     // Health metrics
     heightCm: {
       type: Number,
-      min: [0, 'Height must be positive'],
-      max: [300, 'Height seems unrealistic'],
+      min: [45, 'Height must be at least 45 cm'],
+      max: [230, 'Height cannot exceed 230 cm'],
     },
     weightKg: {
       type: Number,
-      min: [0, 'Weight must be positive'],
-      max: [500, 'Weight seems unrealistic'],
+      min: [2, 'Weight must be at least 2 kg'],
+      max: [250, 'Weight cannot exceed 250 kg'],
     },
     // Advanced Clinical Parameters for AI
     thalassemiaType: {
@@ -156,24 +157,28 @@ const patientSchema = new mongoose.Schema(
         // Thalassemia specific parameters
         hemoglobin: {
           type: Number, // g/dL
-          min: 0,
-          max: 25,
+          min: [2, 'Min Hb is 2 g/dL'],
+          max: [20, 'Max Hb is 20 g/dL'],
         },
         ferritin: {
           type: Number, // ng/mL
-          min: 0,
+          min: [10, 'Min Ferritin is 10 ng/mL'],
+          max: [15000, 'Max Ferritin is 15000 ng/mL'],
         },
         sgpt: {
           type: Number, // U/L (ALT)
-          min: 0,
+          min: [0, 'Min SGPT is 0 U/L'],
+          max: [2000, 'SGPT seems unrealistic (> 2000 U/L)'],
         },
         sgot: {
           type: Number, // U/L (AST)
-          min: 0,
+          min: [0, 'Min SGOT is 0 U/L'],
+          max: [2000, 'SGOT seems unrealistic (> 2000 U/L)'],
         },
         creatinine: {
           type: Number, // mg/dL
-          min: 0,
+          min: [0, 'Min Creatinine is 0 mg/dL'],
+          max: [15, 'Creatinine seems unrealistic (> 15 mg/dL)'],
         },
         notes: {
           type: String,
@@ -185,13 +190,13 @@ const patientSchema = new mongoose.Schema(
         },
         heightCm: {
           type: Number,
-          min: 0,
-          max: 300,
+          min: [45, 'Min height is 45 cm'],
+          max: [230, 'Max height is 230 cm'],
         },
         weightKg: {
           type: Number,
-          min: 0,
-          max: 500,
+          min: [2, 'Min weight is 2 kg'],
+          max: [250, 'Max weight is 250 kg'],
         },
         addedBy: {
           type: mongoose.Schema.Types.ObjectId,

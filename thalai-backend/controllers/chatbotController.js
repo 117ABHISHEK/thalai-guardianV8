@@ -18,10 +18,21 @@ const askChatbot = async (req, res) => {
       });
     }
 
+    // Fetch recent session history for context
+    let history = [];
+    if (sessionId) {
+      history = await ChatbotLog.find({ sessionId })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .select('userMessage botResponse');
+      history = history.reverse();
+    }
+
     // Generate response
     const result = await chatbotService.generateResponse(
       message,
-      req.user || null
+      req.user || null,
+      history
     );
 
     // Get recommendations

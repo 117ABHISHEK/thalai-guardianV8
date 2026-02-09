@@ -6,7 +6,8 @@ const TransfusionHistory = ({ history, onAdd, loading }) => {
     date: new Date().toISOString().split('T')[0],
     units: 1,
     hb_value: '',
-    doctor: ''
+    doctor: '',
+    hospital: ''
   });
 
   const handleChange = (e) => {
@@ -23,7 +24,7 @@ const TransfusionHistory = ({ history, onAdd, loading }) => {
     onAdd({
       ...newTransfusion,
       date: new Date(newTransfusion.date),
-      units: parseInt(newTransfusion.units),
+      units: parseFloat(newTransfusion.units),
       hb_value: parseFloat(newTransfusion.hb_value)
     });
     setShowAdd(false);
@@ -31,7 +32,8 @@ const TransfusionHistory = ({ history, onAdd, loading }) => {
       date: new Date().toISOString().split('T')[0],
       units: 1,
       hb_value: '',
-      doctor: ''
+      doctor: '',
+      hospital: ''
     });
   };
 
@@ -65,17 +67,20 @@ const TransfusionHistory = ({ history, onAdd, loading }) => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-blue-700 mb-1">Units</label>
+              <label className="block text-sm font-medium text-blue-700 mb-1">Units (Blood)</label>
               <input
                 type="number"
                 name="units"
-                min="1"
-                max="10"
+                min="0.5"
+                max="6"
+                step="0.5"
                 value={newTransfusion.units}
                 onChange={handleChange}
-                className="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className={`w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm ${newTransfusion.units > 3 ? 'border-amber-400 bg-amber-50' : ''}`}
                 required
+                placeholder="e.g. 1"
               />
+              <p className="text-[10px] text-blue-500 mt-1 font-bold">Hard: 0.5-6 | Alert: &gt;3 units</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-blue-700 mb-1">Hb Level (g/dL)</label>
@@ -83,14 +88,15 @@ const TransfusionHistory = ({ history, onAdd, loading }) => {
                 type="number"
                 name="hb_value"
                 step="0.1"
-                min="1"
-                max="25"
+                min="2"
+                max="20"
                 placeholder="e.g. 9.5"
                 value={newTransfusion.hb_value}
                 onChange={handleChange}
-                className="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className={`w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm ${newTransfusion.hb_value && (newTransfusion.hb_value < 5 || newTransfusion.hb_value > 18) ? 'border-amber-400 bg-amber-50' : ''}`}
                 required
               />
+              <p className="text-[10px] text-blue-500 mt-1 font-bold">Hard: 2-20 | Alert: &lt;5 or &gt;18 g/dL</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-blue-700 mb-1">Doctor/Clinic</label>

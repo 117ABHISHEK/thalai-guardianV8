@@ -202,16 +202,36 @@ const DonorRegister = () => {
                         <label className="input-label">Vertical Metric (Height CM)</label>
                         <div className="relative group">
                            <Ruler className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
-                           <input type="number" name="heightCm" value={formData.heightCm} onChange={handleChange} className="input-field pl-12" placeholder="175" />
+                           <input 
+                              type="number" 
+                              name="heightCm" 
+                              value={formData.heightCm} 
+                              onChange={handleChange} 
+                              className={`input-field pl-12 ${formData.heightCm && (formData.heightCm < 60 || formData.heightCm > 210) ? 'border-amber-400 bg-amber-50' : ''}`} 
+                              placeholder="175"
+                              min="45"
+                              max="230"
+                           />
                         </div>
+                        <p className="text-[9px] text-slate-400 font-bold px-2">Hard: 45-230 | Soft: 60-210 cm</p>
                      </div>
 
                      <div className="space-y-2">
                         <label className="input-label">Mass Metric (Weight KG)</label>
                         <div className="relative group">
                            <Weight className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
-                           <input type="number" name="weightKg" value={formData.weightKg} onChange={handleChange} className="input-field pl-12" placeholder="70" />
+                           <input 
+                              type="number" 
+                              name="weightKg" 
+                              value={formData.weightKg} 
+                              onChange={handleChange} 
+                              className={`input-field pl-12 ${formData.weightKg && (formData.weightKg < 10 || formData.weightKg > 200) ? 'border-amber-400 bg-amber-50' : ''}`} 
+                              placeholder="70"
+                              min="2"
+                              max="250"
+                           />
                         </div>
+                        <p className="text-[9px] text-slate-400 font-bold px-2">Hard: 2-250 | Alert: &lt;10 or &gt;200 kg</p>
                      </div>
                   </div>
                </section>

@@ -128,7 +128,7 @@ const HealthMetricsForm = ({ initialData, onSave, loading, role = 'patient' }) =
                                 {role === 'patient' && (
                                     <div className="md:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-3 bg-blue-50 p-3 rounded-lg">
                                         <div className="md:col-span-3">
-                                            <p className="text-xs font-semibold text-blue-800 mb-2">Thalassemia Parameters</p>
+                                            <p className="text-xs font-semibold text-blue-800 mb-2">Thalassemia Parameters (Indian Clinical Standards)</p>
                                         </div>
                                         <div>
                                             <label className="block text-xs text-gray-500 mb-1">Hemoglobin (g/dL)</label>
@@ -137,10 +137,13 @@ const HealthMetricsForm = ({ initialData, onSave, loading, role = 'patient' }) =
                                                 name="hemoglobin"
                                                 value={newReport.hemoglobin || ''}
                                                 onChange={handleReportChange}
-                                                className="input-field w-full p-2 border rounded text-sm"
-                                                placeholder="e.g. 9.5"
+                                                className={`input-field w-full p-2 border rounded text-sm ${newReport.hemoglobin && (newReport.hemoglobin < 5 || newReport.hemoglobin > 18) ? 'border-amber-400 bg-amber-50' : ''}`}
+                                                placeholder="2 - 20"
                                                 step="0.1"
+                                                min="2"
+                                                max="20"
                                             />
+                                            <p className="text-[9px] text-blue-600 mt-0.5 font-bold">Hard: 2-20 | Soft: 5-18 g/dL</p>
                                         </div>
                                         <div>
                                             <label className="block text-xs text-gray-500 mb-1">Ferritin (ng/mL)</label>
@@ -149,9 +152,12 @@ const HealthMetricsForm = ({ initialData, onSave, loading, role = 'patient' }) =
                                                 name="ferritin"
                                                 value={newReport.ferritin || ''}
                                                 onChange={handleReportChange}
-                                                className="input-field w-full p-2 border rounded text-sm"
-                                                placeholder="e.g. 1200"
+                                                className={`input-field w-full p-2 border rounded text-sm ${newReport.ferritin > 5000 ? 'border-amber-400 bg-amber-50' : ''}`}
+                                                placeholder="10 - 15000"
+                                                min="10"
+                                                max="15000"
                                             />
+                                            <p className="text-[9px] text-blue-600 mt-0.5 font-bold">Alert: &gt;5000 ng/mL</p>
                                         </div>
                                         <div>
                                             <label className="block text-xs text-gray-500 mb-1">Creatinine (mg/dL)</label>
@@ -161,30 +167,37 @@ const HealthMetricsForm = ({ initialData, onSave, loading, role = 'patient' }) =
                                                 value={newReport.creatinine || ''}
                                                 onChange={handleReportChange}
                                                 className="input-field w-full p-2 border rounded text-sm"
-                                                placeholder="e.g. 0.8"
-                                                step="0.1"
+                                                placeholder="0 - 15"
+                                                step="0.01"
+                                                min="0"
+                                                max="15"
                                             />
+                                            <p className="text-[9px] text-blue-600 mt-0.5">Normal: 0.7-1.3</p>
                                         </div>
                                         <div>
-                                            <label className="block text-xs text-gray-500 mb-1">SGPT (ALT)</label>
+                                            <label className="block text-xs text-gray-500 mb-1">SGPT (ALT) - U/L</label>
                                             <input
                                                 type="number"
                                                 name="sgpt"
                                                 value={newReport.sgpt || ''}
                                                 onChange={handleReportChange}
                                                 className="input-field w-full p-2 border rounded text-sm"
-                                                placeholder="e.g. 35"
+                                                placeholder="0 - 2000"
+                                                min="0"
+                                                max="2000"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs text-gray-500 mb-1">SGOT (AST)</label>
+                                            <label className="block text-xs text-gray-500 mb-1">SGOT (AST) - U/L</label>
                                             <input
                                                 type="number"
                                                 name="sgot"
                                                 value={newReport.sgot || ''}
                                                 onChange={handleReportChange}
                                                 className="input-field w-full p-2 border rounded text-sm"
-                                                placeholder="e.g. 40"
+                                                placeholder="0 - 2000"
+                                                min="0"
+                                                max="2000"
                                             />
                                         </div>
                                     </div>
@@ -203,31 +216,39 @@ const HealthMetricsForm = ({ initialData, onSave, loading, role = 'patient' }) =
                                                 name="hemoglobin"
                                                 value={newReport.hemoglobin || ''}
                                                 onChange={handleReportChange}
-                                                className="input-field w-full p-2 border rounded text-sm"
-                                                placeholder="e.g. 13.5"
+                                                className={`input-field w-full p-2 border rounded text-sm ${newReport.hemoglobin && (newReport.hemoglobin < 5 || newReport.hemoglobin > 18) ? 'border-amber-400 bg-amber-50' : ''}`}
+                                                placeholder="2 - 20"
                                                 step="0.1"
+                                                min="2"
+                                                max="20"
                                             />
+                                            <p className="text-[9px] text-green-600 mt-0.5 font-bold">Hard: 2-20 | Need 12.5+ for donation</p>
                                         </div>
                                         <div>
-                                            <label className="block text-xs text-gray-500 mb-1">BP Systolic</label>
+                                            <label className="block text-xs text-gray-500 mb-1">BP Systolic (mmHg)</label>
                                             <input
                                                 type="number"
                                                 name="bpSystolic"
                                                 value={newReport.bpSystolic || ''}
                                                 onChange={handleReportChange}
-                                                className="input-field w-full p-2 border rounded text-sm"
-                                                placeholder="e.g. 120"
+                                                className={`input-field w-full p-2 border rounded text-sm ${newReport.bpSystolic && (newReport.bpSystolic < 90 || newReport.bpSystolic > 180) ? 'border-amber-400 bg-amber-50' : ''}`}
+                                                placeholder="70-240"
+                                                min="70"
+                                                max="240"
                                             />
+                                            <p className="text-[9px] text-green-600 mt-0.5 font-bold">Hard: 70-240 | Soft: 90-180</p>
                                         </div>
                                         <div>
-                                            <label className="block text-xs text-gray-500 mb-1">BP Diastolic</label>
+                                            <label className="block text-xs text-gray-500 mb-1">BP Diastolic (mmHg)</label>
                                             <input
                                                 type="number"
                                                 name="bpDiastolic"
                                                 value={newReport.bpDiastolic || ''}
                                                 onChange={handleReportChange}
                                                 className="input-field w-full p-2 border rounded text-sm"
-                                                placeholder="e.g. 80"
+                                                placeholder="60-90"
+                                                min="40"
+                                                max="150"
                                             />
                                         </div>
                                         <div>
@@ -238,7 +259,9 @@ const HealthMetricsForm = ({ initialData, onSave, loading, role = 'patient' }) =
                                                 value={newReport.pulseRate || ''}
                                                 onChange={handleReportChange}
                                                 className="input-field w-full p-2 border rounded text-sm"
-                                                placeholder="e.g. 72"
+                                                placeholder="60-100"
+                                                min="30"
+                                                max="250"
                                             />
                                         </div>
                                         <div>
@@ -248,10 +271,13 @@ const HealthMetricsForm = ({ initialData, onSave, loading, role = 'patient' }) =
                                                 name="temperature"
                                                 value={newReport.temperature || ''}
                                                 onChange={handleReportChange}
-                                                className="input-field w-full p-2 border rounded text-sm"
-                                                placeholder="e.g. 37.0"
+                                                className={`input-field w-full p-2 border rounded text-sm ${newReport.temperature && (newReport.temperature < 36 || newReport.temperature > 40) ? 'border-amber-400 bg-amber-50' : ''}`}
+                                                placeholder="35-42.5"
                                                 step="0.1"
+                                                min="35"
+                                                max="42.5"
                                             />
+                                            <p className="text-[9px] text-green-600 mt-0.5 font-bold">Hard: 35-42.5 | Fever: &gt;37.5°C</p>
                                         </div>
                                     </div>
                                 )}
@@ -263,11 +289,12 @@ const HealthMetricsForm = ({ initialData, onSave, loading, role = 'patient' }) =
                                         name="heightCm"
                                         value={newReport.heightCm || ''}
                                         onChange={handleReportChange}
-                                        className="input-field w-full p-2 border rounded text-sm"
-                                        placeholder="e.g. 175"
-                                        min="0"
-                                        max="300"
+                                        className={`input-field w-full p-2 border rounded text-sm ${newReport.heightCm && (newReport.heightCm < 60 || newReport.heightCm > 210) ? 'border-amber-400 bg-amber-50' : ''}`}
+                                        placeholder="45 - 230"
+                                        min="45"
+                                        max="230"
                                     />
+                                    <p className="text-[9px] text-gray-500 mt-0.5 font-bold">Hard: 45-230 | Soft: 60-210</p>
                                 </div>
                                 <div>
                                     <label className="block text-xs text-gray-500 mb-1">Weight (kg)</label>
@@ -276,11 +303,12 @@ const HealthMetricsForm = ({ initialData, onSave, loading, role = 'patient' }) =
                                         name="weightKg"
                                         value={newReport.weightKg || ''}
                                         onChange={handleReportChange}
-                                        className="input-field w-full p-2 border rounded text-sm"
-                                        placeholder="e.g. 70"
-                                        min="0"
-                                        max="500"
+                                        className={`input-field w-full p-2 border rounded text-sm ${newReport.weightKg && (newReport.weightKg < 10 || newReport.weightKg > 200) ? 'border-amber-400 bg-amber-50' : ''}`}
+                                        placeholder="2 - 250"
+                                        min="2"
+                                        max="250"
                                     />
+                                    <p className="text-[9px] text-gray-500 mt-0.5 font-bold">Hard: 2-250 | Alert: &lt;10 or &gt;200</p>
                                 </div>
 
                                 <div className="md:col-span-2">

@@ -66,6 +66,9 @@ const generatePatientReports = (count) => {
       sgpt: Math.floor(15 + Math.random() * 60),
       sgot: Math.floor(15 + Math.random() * 60),
       creatinine: parseFloat((0.4 + Math.random() * 1).toFixed(1)),
+      bpSystolic: Math.floor(100 + Math.random() * 30),
+      bpDiastolic: Math.floor(60 + Math.random() * 20),
+      temperature: parseFloat((36.3 + Math.random() * 0.9).toFixed(1)),
       heightCm: Math.floor(130 + Math.random() * 40),
       weightKg: Math.floor(30 + Math.random() * 35),
       notes: i === 0 ? 'Regular transfusion cycle observation.' : `Clinical Log #${count - i}`
@@ -99,8 +102,14 @@ const seedData = async () => {
       role: 'admin',
       bloodGroup: 'O+',
       phone: '+91-9999999999',
-      address: { street: 'Main Command Hub', city: 'Mumbai', state: 'Maharashtra', zipCode: '400001' },
+      address: { 
+        street: 'Main Command Hub, Administrative Block', 
+        city: 'Mumbai', 
+        state: 'Maharashtra', 
+        zipCode: '400001' 
+      },
       dateOfBirth: new Date('1985-01-01'),
+      profilePicture: 'https://i.pravatar.cc/150?img=33',
       isActive: true
     });
 
@@ -114,8 +123,14 @@ const seedData = async () => {
         role: 'doctor',
         bloodGroup: getRandom(BLOOD_GROUPS),
         phone: `+91-90000000${i.toString().padStart(2, '0')}`,
-        address: { street: `${i} Medical Street`, city: getRandom(CITIES), state: 'Maharashtra', zipCode: '400001' },
-        dateOfBirth: new Date('1975-01-01'),
+        address: { 
+          street: `${i} Medical Street, Healthcare Complex`, 
+          city: getRandom(CITIES), 
+          state: 'Maharashtra', 
+          zipCode: `4000${getRandomInRange(10, 99)}` 
+        },
+        dateOfBirth: new Date(1970 + getRandomInRange(0, 20), getRandomInRange(0, 11), getRandomInRange(1, 28)),
+        profilePicture: `https://i.pravatar.cc/150?img=${20 + i}`,
         isActive: true
       });
 
@@ -127,7 +142,7 @@ const seedData = async () => {
         experience: getRandomInRange(5, 25),
         hospital: {
           name: `${getRandom(CITIES)} Care Hospital`,
-          address: { street: 'Medical Row', city: u.address.city, state: 'Maharashtra', zipCode: '400001' }
+          address: { street: 'Medical Row', city: u.address.city, state: 'Maharashtra', zipCode: u.address.zipCode }
         },
         isVerified: true,
         verifiedBy: admin._id,
@@ -139,6 +154,28 @@ const seedData = async () => {
 
     // 3. Patients (45)
     const patientUsers = [];
+    const patientComorbidities = [
+      { condition: 'Iron Overload', treatment: 'Chelation therapy with Deferasirox', notes: 'Regular monitoring required', severity: 'moderate' },
+      { condition: 'Osteoporosis', treatment: 'Calcium and Vitamin D supplementation', notes: 'Annual bone density scan', severity: 'mild' },
+      { condition: 'Hypothyroidism', treatment: 'Levothyroxine 50mcg daily', notes: 'TSH levels monitored quarterly', severity: 'mild' },
+      { condition: 'Diabetes Type 2', treatment: 'Metformin 500mg twice daily', notes: 'Diet controlled, HbA1c monitored', severity: 'moderate' },
+      { condition: 'Cardiac Complications', treatment: 'Regular echocardiography', notes: 'Iron-induced cardiomyopathy monitoring', severity: 'severe' }
+    ];
+
+    // Profile picture URLs (using placeholder service)
+    const profilePictures = [
+      'https://i.pravatar.cc/150?img=1',
+      'https://i.pravatar.cc/150?img=2',
+      'https://i.pravatar.cc/150?img=3',
+      'https://i.pravatar.cc/150?img=5',
+      'https://i.pravatar.cc/150?img=8',
+      'https://i.pravatar.cc/150?img=9',
+      'https://i.pravatar.cc/150?img=12',
+      'https://i.pravatar.cc/150?img=13',
+      'https://i.pravatar.cc/150?img=14',
+      'https://i.pravatar.cc/150?img=16'
+    ];
+
     for (let i = 1; i <= 45; i++) {
       const u = await User.create({
         name: `${getRandom(FIRST_NAMES)} ${getRandom(LAST_NAMES)}`,
@@ -147,20 +184,46 @@ const seedData = async () => {
         role: 'patient',
         bloodGroup: getRandom(BLOOD_GROUPS),
         phone: `+91-91000000${i.toString().padStart(2, '0')}`,
-        address: { street: `${i} Patient Colony`, city: getRandom(CITIES), state: 'Maharashtra', zipCode: '400001' },
-        dateOfBirth: new Date('2010-01-01'),
+        address: { 
+          street: `${i} Patient Colony, Ward ${getRandomInRange(1, 10)}`, 
+          city: getRandom(CITIES), 
+          state: 'Maharashtra', 
+          zipCode: `4000${getRandomInRange(10, 99)}` 
+        },
+        dateOfBirth: new Date(2000 + getRandomInRange(0, 15), getRandomInRange(0, 11), getRandomInRange(1, 28)),
+        profilePicture: Math.random() > 0.3 ? getRandom(profilePictures) : '', // 70% have profile pictures
         isActive: true
       });
 
       const transfusionHistory = [];
+      const locations = ['City Hospital', 'Central Blood Bank', 'Regional Medical Center', 'District Hospital'];
       for (let j = 0; j < 5; j++) {
         transfusionHistory.push({
           date: new Date(Date.now() - (j * 20 * 24 * 60 * 60 * 1000)),
           units: getRandomInRange(1, 2),
           hb_value: parseFloat((7 + Math.random() * 3).toFixed(1)),
-          hospital: 'City Hospital',
-          doctor: `Dr. ${getRandom(LAST_NAMES)}`
+          location: getRandom(locations),
+          bloodGroup: u.bloodGroup,
+          hospital: getRandom(locations),
+          doctor: `Dr. ${getRandom(LAST_NAMES)}`,
+          notes: j === 0 ? 'Most recent transfusion, patient tolerated well' : `Routine transfusion cycle ${j + 1}`
         });
+      }
+
+      // Generate comorbidities for some patients
+      const comorbidities = [];
+      if (Math.random() > 0.5) { // 50% of patients have comorbidities
+        const numConditions = getRandomInRange(1, 2);
+        for (let j = 0; j < numConditions; j++) {
+          const comorbidity = getRandom(patientComorbidities);
+          comorbidities.push({
+            condition: comorbidity.condition,
+            severity: comorbidity.severity,
+            diagnosisDate: new Date(Date.now() - getRandomInRange(365, 2190) * 24 * 60 * 60 * 1000), // 1-6 years ago
+            treatment: comorbidity.treatment,
+            notes: comorbidity.notes
+          });
+        }
       }
 
       const p = await Patient.create({
@@ -176,6 +239,7 @@ const seedData = async () => {
         splenectomy: Math.random() > 0.8,
         transfusionHistory,
         medicalReports: generatePatientReports(5),
+        comorbidities: comorbidities,
         currentHb: parseFloat((8 + Math.random() * 2).toFixed(1)),
         currentHbDate: new Date()
       });
@@ -191,47 +255,87 @@ const seedData = async () => {
 
     // 4. Donors (44)
     const donorUsers = [];
+    const donorConditions = [
+      { condition: 'Seasonal Allergies', details: 'Mild pollen sensitivity, managed with antihistamines', contraindication: false },
+      { condition: 'Hypertension (Controlled)', details: 'Blood pressure managed with lifestyle modifications', contraindication: false },
+      { condition: 'Asthma (Mild)', details: 'Exercise-induced, well controlled with inhaler', contraindication: false },
+      { condition: 'Previous Fracture', details: 'Healed wrist fracture from 2018, no complications', contraindication: false },
+      { condition: 'Migraine', details: 'Occasional migraines, 2-3 times per year', contraindication: false },
+      { condition: 'Vitamin D Deficiency', details: 'Supplementing with 2000 IU daily', contraindication: false }
+    ];
+
     for (let i = 1; i <= 44; i++) {
-      const u = await User.create({
-        name: `${getRandom(FIRST_NAMES)} ${getRandom(LAST_NAMES)}`,
-        email: `donor${i}@thalai.com`,
-        password: 'password123',
-        role: 'donor',
-        bloodGroup: getRandom(BLOOD_GROUPS),
-        phone: `+91-92000000${i.toString().padStart(2, '0')}`,
-        address: { street: `${i} Donor Lane`, city: getRandom(CITIES), state: 'Maharashtra', zipCode: '400001' },
-        dateOfBirth: new Date('1990-01-01'),
-        isActive: true
-      });
-
-      const isVerified = Math.random() > 0.2;
-      const donor = await Donor.create({
-        user: u._id,
-        dob: u.dateOfBirth,
-        heightCm: getRandomInRange(150, 190),
-        weightKg: getRandomInRange(50, 90),
-        medicalReports: generateDonorReports(5),
-        lastDonationDate: isVerified ? new Date(Date.now() - 100 * 24 * 60 * 60 * 1000) : null,
-        totalDonations: isVerified ? getRandomInRange(1, 10) : 0,
-        isVerified,
-        verifiedBy: isVerified ? admin._id : null,
-        verifiedAt: isVerified ? new Date() : null,
-        availabilityStatus: isVerified,
-        healthClearance: isVerified,
-        eligibilityStatus: isVerified ? 'eligible' : 'deferred'
-      });
-
-      if (isVerified) {
-        await DonorHistory.create({
-          donorId: donor._id,
-          donationDate: new Date(Date.now() - 110 * 24 * 60 * 60 * 1000),
-          bloodGroup: u.bloodGroup,
-          unitsDonated: 1,
-          location: { hospital: 'Main Blood Bank', city: u.address.city, state: 'Maharashtra' },
-          healthStatus: 'excellent'
+      try {
+        const age = getRandomInRange(18, 55); // Donors aged 18-55
+        const dobYear = new Date().getFullYear() - age;
+        
+        const u = await User.create({
+          name: `${getRandom(FIRST_NAMES)} ${getRandom(LAST_NAMES)}`,
+          email: `donor${i}@thalai.com`,
+          password: 'password123',
+          role: 'donor',
+          bloodGroup: getRandom(BLOOD_GROUPS),
+          phone: `+91-92000000${i.toString().padStart(2, '0')}`,
+          address: { 
+            street: `${i} Donor Lane, Sector ${getRandomInRange(1, 20)}`, 
+            city: getRandom(CITIES), 
+            state: 'Maharashtra', 
+            zipCode: `4000${getRandomInRange(10, 99)}` 
+          },
+          dateOfBirth: new Date(dobYear, getRandomInRange(0, 11), getRandomInRange(1, 28)),
+          profilePicture: Math.random() > 0.4 ? getRandom(profilePictures) : '', // 60% have profile pictures
+          isActive: true
         });
+
+        const isVerified = Math.random() > 0.2;
+        
+        // Generate medical history (some donors have conditions, some don't)
+        const medicalHistory = [];
+        if (Math.random() > 0.4) { // 60% of donors have some medical history
+          const numConditions = getRandomInRange(1, 3);
+          for (let j = 0; j < numConditions; j++) {
+            const condition = getRandom(donorConditions);
+            medicalHistory.push({
+              condition: condition.condition,
+              details: condition.details,
+              diagnosisDate: new Date(Date.now() - getRandomInRange(365, 1825) * 24 * 60 * 60 * 1000), // 1-5 years ago
+              isContraindication: condition.contraindication
+            });
+          }
+        }
+
+        const donor = await Donor.create({
+          user: u._id,
+          dob: u.dateOfBirth,
+          heightCm: getRandomInRange(150, 190),
+          weightKg: getRandomInRange(50, 90),
+          medicalHistory: medicalHistory,
+          medicalReports: generateDonorReports(5),
+          lastDonationDate: isVerified ? new Date(Date.now() - getRandomInRange(90, 180) * 24 * 60 * 60 * 1000) : null,
+          totalDonations: isVerified ? getRandomInRange(1, 10) : 0,
+          isVerified,
+          verifiedBy: isVerified ? admin._id : null,
+          verifiedAt: isVerified ? new Date() : null,
+          availabilityStatus: isVerified,
+          healthClearance: isVerified,
+          eligibilityStatus: isVerified ? 'eligible' : 'deferred',
+          eligibilityReason: isVerified ? 'All health parameters within acceptable range' : 'Pending admin review and health clearance'
+        });
+
+        if (isVerified) {
+          await DonorHistory.create({
+            donorId: donor._id,
+            donationDate: new Date(Date.now() - getRandomInRange(100, 200) * 24 * 60 * 60 * 1000),
+            bloodGroup: u.bloodGroup,
+            unitsDonated: 1,
+            location: { hospital: 'Main Blood Bank', city: u.address.city, state: 'Maharashtra' },
+            healthStatus: 'excellent'
+          });
+        }
+        donorUsers.push(u);
+      } catch (err) {
+        console.error(`Error creating donor ${i}:`, err);
       }
-      donorUsers.push(u);
     }
     console.log('✅ Donors seeded.');
 

@@ -32,13 +32,13 @@ const donorSchema = new mongoose.Schema(
     // Physical metrics
     heightCm: {
       type: Number,
-      min: [50, 'Height must be at least 50 cm'],
-      max: [250, 'Height must not exceed 250 cm'],
+      min: [45, 'Height must be at least 45 cm'],
+      max: [230, 'Height cannot exceed 230 cm'],
     },
     weightKg: {
       type: Number,
-      min: [20, 'Weight must be at least 20 kg'],
-      max: [250, 'Weight must not exceed 250 kg'],
+      min: [2, 'Weight must be at least 2 kg'],
+      max: [250, 'Weight cannot exceed 250 kg'],
     },
     // Medical history
     medicalHistory: [
@@ -76,28 +76,28 @@ const donorSchema = new mongoose.Schema(
         // Donor specific vitals
         hemoglobin: {
           type: Number, // g/dL
-          min: 0,
-          max: 25,
+          min: [2, 'Min Hb is 2 g/dL'],
+          max: [20, 'Max Hb is 20 g/dL'],
         },
         bpSystolic: {
           type: Number, // mmHg
-          min: 0,
-          max: 300,
+          min: [70, 'Systolic BP must be at least 70 mmHg'],
+          max: [240, 'Systolic BP cannot exceed 240 mmHg'],
         },
         bpDiastolic: {
           type: Number, // mmHg
-          min: 0,
-          max: 200,
+          min: [40, 'Diastolic BP must be at least 40 mmHg'],
+          max: [150, 'Diastolic BP cannot exceed 150 mmHg'],
         },
         pulseRate: {
           type: Number, // bpm
-          min: 0,
-          max: 250,
+          min: [30, 'Pulse rate must be at least 30 bpm'],
+          max: [250, 'Pulse rate cannot exceed 250 bpm'],
         },
         temperature: {
           type: Number, // Celsius
-          min: 0,
-          max: 50,
+          min: [35, 'Temperature must be at least 35°C'],
+          max: [42.5, 'Temperature cannot exceed 42.5°C'],
         },
         notes: {
           type: String,
@@ -109,13 +109,13 @@ const donorSchema = new mongoose.Schema(
         },
         heightCm: {
           type: Number,
-          min: 0,
-          max: 300,
+          min: [45, 'Min height is 45 cm'],
+          max: [230, 'Max height is 230 cm'],
         },
         weightKg: {
           type: Number,
-          min: 0,
-          max: 500,
+          min: [2, 'Min weight is 2 kg'],
+          max: [250, 'Max weight is 250 kg'],
         },
       },
     ],
