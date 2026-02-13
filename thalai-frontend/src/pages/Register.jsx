@@ -50,26 +50,98 @@ const Register = () => {
   };
 
   const handleChange = (e) => {
+    let { name, value } = e.target;
+    
+    // Real-time Sanitization
+    switch (name) {
+      case 'name':
+      case 'city':
+      case 'state':
+        // Only alphabets and spaces
+        value = value.replace(/[^a-zA-Z\s]/g, '');
+        break;
+      case 'phone':
+        // Only numbers, max 10
+        value = value.replace(/\D/g, '').slice(0, 10);
+        break;
+      case 'zipCode':
+        // Only numbers, max 6
+        value = value.replace(/\D/g, '').slice(0, 6);
+        break;
+      case 'experience':
+        // Only numbers
+        value = value.replace(/\D/g, '');
+        break;
+      default:
+        break;
+    }
+
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
     setError('');
   };
 
   const validateStep1 = () => {
-    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword || !formData.role || !formData.bloodGroup) {
-      setError('Please fill all required fields');
+    if (!formData.name.trim()) {
+      setError('Full Name is required');
       return false;
     }
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+    if (formData.name.length < 2) {
+      setError('Name must be at least 2 characters');
+      return false;
+    }
+    if (!formData.email.match(/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/)) {
+      setError('Please enter a valid email address');
       return false;
     }
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters');
       return false;
     }
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return false;
+    }
+    if (!formData.bloodGroup) {
+      setError('Please select a Blood Group');
+      return false;
+    }
+    return true;
+  };
+
+  const validateStep2 = () => {
+    // Phone Validation
+    if (!formData.phone || formData.phone.length !== 10) {
+      setError('Phone number must be exactly 10 digits');
+      return false;
+    }
+    const fraudPatterns = [
+      '1234567890', '0123456789', '9876543210', '0000000000',
+      '1111111111', '2222222222', '3333333333', '4444444444', 
+      '5555555555', '6666666666', '7777777777', '8888888888', '9999999999'
+    ];
+    if (fraudPatterns.includes(formData.phone)) {
+      setError('Please enter a valid, verifiable phone number');
+      return false;
+    }
+
+    // Address Validation
+    if (!formData.street.trim()) { setError('Street address is required'); return false; }
+    if (!formData.city.trim()) { setError('City is required'); return false; }
+    if (!formData.state.trim()) { setError('State is required'); return false; }
+    
+    if (!formData.zipCode || formData.zipCode.length !== 6) {
+      setError('Zip code must be exactly 6 digits');
+      return false;
+    }
+
+    if (!formData.dateOfBirth) {
+      setError('Date of Birth is required');
+      return false;
+    }
+    
     return true;
   };
 
@@ -79,6 +151,10 @@ const Register = () => {
 
     if (!validateStep1()) {
       setStep(1);
+      return;
+    }
+
+    if (!validateStep2()) {
       return;
     }
 

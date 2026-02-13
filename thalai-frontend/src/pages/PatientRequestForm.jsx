@@ -47,15 +47,55 @@ const PatientRequestForm = ({ onRequestCreated }) => {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    
+    // Sanitization
+    if (['city', 'state', 'contactName'].includes(name)) {
+      value = value.replace(/[^a-zA-Z\s]/g, '');
+    }
+    if (name === 'zipCode') {
+      value = value.replace(/\D/g, '').slice(0, 6);
+    }
+    if (name === 'contactPhone') {
+      value = value.replace(/\D/g, '').slice(0, 10);
+    }
+    if (name === 'unitsRequired') {
+      if (parseFloat(value) < 0) value = 0;
+      if (parseFloat(value) > 10) value = 10;
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
+  const validateForm = () => {
+    if (formData.contactPhone.length !== 10) {
+      setMessage('Contact phone must be exactly 10 digits');
+      return false;
+    }
+    const fraudPatterns = [
+      '1234567890', '0123456789', '9876543210', '0000000000',
+      '1111111111', '2222222222', '3333333333', '4444444444', 
+      '5555555555', '6666666666', '7777777777', '8888888888', '9999999999'
+    ];
+    if (fraudPatterns.includes(formData.contactPhone)) {
+      setMessage('Please enter a valid, verifiable emergency contact number');
+      return false;
+    }
+    if (!formData.bloodGroup || !formData.hospital || !formData.address || !formData.city || !formData.state || !formData.zipCode || !formData.contactName) {
+        setMessage('Please fill all required operational fields');
+        return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setMessage('');
+    
+    if (!validateForm()) return;
+
+    setLoading(true);
 
     try {
       const requestData = {

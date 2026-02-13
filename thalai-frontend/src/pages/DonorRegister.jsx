@@ -73,7 +73,19 @@ const DonorRegister = () => {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    
+    // Sanitization
+    switch (name) {
+      case 'heightCm':
+      case 'weightKg':
+      case 'donationFrequencyMonths':
+         value = value.replace(/\D/g, '');
+         break;
+      default:
+         break;
+    }
+
     setFormData({ ...formData, [name]: value });
     if (errors[name]) setErrors({ ...errors, [name]: '' });
   };

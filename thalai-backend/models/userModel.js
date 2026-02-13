@@ -7,6 +7,9 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Name is required'],
       trim: true,
+      match: [/^[a-zA-Z\s]+$/, 'Name must contain only alphabets'],
+      minlength: [2, 'Name must be at least 2 characters'],
+      maxlength: [50, 'Name cannot exceed 50 characters'],
     },
     email: {
       type: String,
@@ -35,12 +38,66 @@ const userSchema = new mongoose.Schema(
     phone: {
       type: String,
       trim: true,
+      validate: {
+        validator: function(v) {
+          // Allow simplified +91 format or plain 10 digits during seed, but strictly validate format
+          // Strip non-digits
+          const digits = v.replace(/\D/g, '');
+          
+          // Check for valid length (10 for India/standard, or 12 with 91)
+          if (digits.length !== 10 && digits.length !== 12) {
+            return false;
+          }
+          
+          // Extract the last 10 digits (the actual number)
+          const number = digits.slice(-10);
+          
+          // Fraud checks
+          const fraudPatterns = [
+            '1234567890',
+            '0123456789',
+            '9876543210',
+            '0000000000',
+            '1111111111',
+            '2222222222',
+            '3333333333',
+            '4444444444',
+            '5555555555',
+            '6666666666',
+            '7777777777',
+            '8888888888',
+            '9999999999'
+          ];
+          
+          return !fraudPatterns.includes(number);
+        },
+        message: 'Please enter a valid, verifiable phone number (10 digits). Routine sequences are blocked.'
+      }
     },
     address: {
-      street: String,
-      city: String,
-      state: String,
-      zipCode: String,
+      street: {
+        type: String,
+        trim: true,
+        required: [true, 'Street address is required for verification']
+      },
+      city: {
+        type: String,
+        trim: true,
+        match: [/^[a-zA-Z\s]+$/, 'City must contain only alphabets'],
+        required: [true, 'City is required']
+      },
+      state: {
+        type: String,
+        trim: true,
+        match: [/^[a-zA-Z\s]+$/, 'State must contain only alphabets'],
+        required: [true, 'State is required']
+      },
+      zipCode: {
+        type: String,
+        trim: true,
+        match: [/^\d{6}$/, 'Zip code must be exactly 6 digits'],
+        required: [true, 'Zip code is required']
+      },
     },
     dateOfBirth: {
       type: Date,

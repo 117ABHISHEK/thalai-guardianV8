@@ -64,9 +64,26 @@ const AccountSettings = () => {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+
+    // Sanitization
+    if (name === 'name') {
+      value = value.replace(/[^a-zA-Z\s]/g, '');
+    }
+    if (name === 'phone') {
+      value = value.replace(/\D/g, '').slice(0, 10);
+    }
+
     if (name.startsWith('address.')) {
       const addressField = name.split('.')[1];
+      
+      if (addressField === 'city' || addressField === 'state') {
+        value = value.replace(/[^a-zA-Z\s]/g, '');
+      }
+      if (addressField === 'zipCode') {
+        value = value.replace(/\D/g, '').slice(0, 6);
+      }
+
       setFormData(prev => ({
         ...prev,
         address: { ...prev.address, [addressField]: value }

@@ -102,16 +102,35 @@ app.get('/api/health', (req, res) => {
 });
 
 // Serve Static Assets in Production
+// Serve Static Assets in Production
 if (process.env.NODE_ENV === 'production' || process.env.SERVE_FRONTEND === 'true') {
   const path = require('path');
+  const fs = require('fs');
   const frontendPath = path.join(__dirname, '../thalai-frontend/dist');
   
+  console.log(`📂 Checking frontend build at: ${frontendPath}`);
+  
+  if (fs.existsSync(frontendPath)) {
+    console.log('✅ Frontend build folder found!');
+    console.log('   Contents:', fs.readdirSync(frontendPath));
+  } else {
+    console.error('❌ Frontend build folder NOT found!');
+    console.error('   Expected path:', frontendPath);
+    console.error('   Current directory:', __dirname);
+  }
+
   app.use(express.static(frontendPath));
   
   app.get('*', (req, res, next) => {
     // If request is for an API route, pass it through (shouldn't happen with correct routing)
     if (req.url.startsWith('/api')) return next();
-    res.sendFile(path.resolve(frontendPath, 'index.html'));
+    
+    const indexPath = path.resolve(frontendPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(404).send('Frontend not built or index.html missing.');
+    }
   });
 }
 
