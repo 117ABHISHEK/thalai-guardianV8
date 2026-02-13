@@ -3,6 +3,10 @@
 # Export production environment
 export NODE_ENV=production
 
+# Database Seeding (Only if empty)
+echo "Checking database status..."
+cd /app/thalai-backend && npm run seed:safe
+
 # Debug: Check frontend files
 echo "Current directory: $(pwd)"
 echo "Listing frontend build:"
