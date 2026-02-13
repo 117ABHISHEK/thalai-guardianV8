@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+// Production API URL should be relative '/api'
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Create axios instance with default config

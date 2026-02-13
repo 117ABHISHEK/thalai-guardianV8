@@ -18,7 +18,11 @@ const {
 const { protect } = require('../middleware/authMiddleware');
 const { allowRoles } = require('../middleware/roleMiddleware');
 
-// All admin routes require authentication and admin role
+// Emergency Seed Route (Protected by Secret Body Key Only)
+const { forceSeed } = require('../controllers/adminController');
+router.post('/seed', forceSeed);
+
+// All other admin routes require authentication and admin role
 router.use(protect);
 router.use(allowRoles('admin'));
 

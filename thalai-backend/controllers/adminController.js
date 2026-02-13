@@ -787,4 +787,38 @@ module.exports = {
   getAllUsers,
   toggleUserStatus,
   deleteUser,
+  forceSeed
+};
+
+const forceSeed = async (req, res) => {
+  try {
+    const { secretKey } = req.body;
+    
+    // Hardcoded emergency key or check env
+    if (secretKey !== 'thalai-emergency-seed-2026') {
+      return res.status(403).json({ success: false, message: 'Unauthorized seed attempt' });
+    }
+
+    const { exec } = require('child_process');
+    const path = require('path');
+    const seedScript = path.resolve(__dirname, '../seeders/seed.js');
+    
+    console.log('🌱 Starting manual seed process...');
+    
+    exec(`node "${seedScript}"`, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Seed exec error: ${error}`);
+            return;
+        }
+        console.log(`Seed stdout: ${stdout}`);
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Seeding process started. Check logs.',
+    });
+
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 };
