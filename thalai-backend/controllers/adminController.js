@@ -773,23 +773,6 @@ const deleteUser = async (req, res) => {
   }
 };
 
-module.exports = {
-  getDonors,
-  verifyDonor,
-  getEligibilityReport,
-  getStats,
-  getDoctors,
-  verifyDoctor,
-  assignPatientToDoctor,
-  unassignPatientFromDoctor,
-  getPatients,
-  getAIStatus,
-  getAllUsers,
-  toggleUserStatus,
-  deleteUser,
-  forceSeed
-};
-
 const forceSeed = async (req, res) => {
   try {
     const { secretKey } = req.body;
@@ -808,9 +791,10 @@ const forceSeed = async (req, res) => {
     exec(`node "${seedScript}"`, (error, stdout, stderr) => {
         if (error) {
             console.error(`Seed exec error: ${error}`);
-            return;
+            // continuing anyway
         }
-        console.log(`Seed stdout: ${stdout}`);
+        if (stdout) console.log(`Seed stdout: ${stdout}`);
+        if (stderr) console.error(`Seed stderr: ${stderr}`);
     });
 
     res.status(200).json({
@@ -821,4 +805,21 @@ const forceSeed = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
+};
+
+module.exports = {
+  getDonors,
+  verifyDonor,
+  getEligibilityReport,
+  getStats,
+  getDoctors,
+  verifyDoctor,
+  assignPatientToDoctor,
+  unassignPatientFromDoctor,
+  getPatients,
+  getAIStatus,
+  getAllUsers,
+  toggleUserStatus,
+  deleteUser,
+  forceSeed,
 };
