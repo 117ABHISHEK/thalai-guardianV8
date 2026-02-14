@@ -350,11 +350,11 @@ const generateResponse = async (message, user = null, history = []) => {
 
       // Exhaustive list including older stable IDs
       const attempts = [
+        { model: "gemini-2.0-flash", version: "v1beta" },
+        { model: "gemini-2.0-flash-lite", version: "v1beta" },
         { model: "gemini-1.5-flash", version: "v1" },
         { model: "gemini-1.5-flash", version: "v1beta" },
-        { model: "gemini-1.0-pro", version: "v1" },
-        { model: "gemini-pro", version: "v1" },
-        { model: "gemini-1.5-pro", version: "v1" }
+        { model: "gemini-pro", version: "v1" }
       ];
       
       let lastError = null;
