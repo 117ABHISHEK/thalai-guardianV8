@@ -419,12 +419,40 @@ Task: Answer based on the Base Info and Thalassemia context. Be empathetic and c
         }
       }
 
+      // --- PHASE 3: RAW HTTP FALLBACK (The Nuclear Option) ---
+      // If we reach here, SDK failed. Try direct REST API calls.
+      console.log('🔄 Chatbot: SDK failed. Attempting Raw HTTP Fallback...');
+      
+      for (const attempt of attempts) {
+        try {
+          const restUrl = `https://generativelanguage.googleapis.com/${attempt.version}/models/${attempt.model}:generateContent?key=${apiKey}`;
+          
+          const restPayload = {
+            contents: [{
+              parts: [{ text: `${SYSTEM_PROMPT}\n\nContext: ${baseKnowledge}\n\nUser: ${message}` }]
+            }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
+          };
+
+          const restResponse = await axios.post(restUrl, restPayload);
+          
+          if (restResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+            response = restResponse.data.candidates[0].content.parts[0].text;
+            confidence = 0.95;
+            console.log(`🚀 [REST SUCCESS] Connected via Raw HTTP using ${attempt.model} (${attempt.version})`);
+            break;
+          }
+        } catch (restErr) {
+          console.warn(`❌ REST Attempt failed for ${attempt.model}:`, restErr.response?.data?.error?.message || restErr.message);
+        }
+      }
+
       if (!response && lastError) throw lastError;
 
     } catch (error) {
       console.error('❌ Gemini Exhaustive Search Failed:', error.message);
       if (error.message.includes('404')) {
-        console.error('🚨 [CRITICAL] 404 NOT FOUND: The key works but has NO MODELS attached. This key is from Cloud Console without AI enabled. PLEASE use AI Studio (aistudio.google.com).');
+        console.error('🚨 [CRITICAL] 404 NOT FOUND: Your key is not authorized for Generative AI. PLEASE use AI Studio (aistudio.google.com).');
       }
       response = baseKnowledge;
       confidence = 0.5;
