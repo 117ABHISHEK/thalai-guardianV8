@@ -332,18 +332,28 @@ const generateResponse = async (message, user = null, history = []) => {
 
   if (isApiConfigured) {
     try {
+      const axios = require('axios');
       if (!genAI) {
         const { GoogleGenerativeAI } = require("@google/generative-ai");
         genAI = new GoogleGenerativeAI(apiKey);
         console.log(`🤖 Chatbot: SDK Initialized (Key: ${apiKey.substring(0, 8)}...)`);
+        
+        // Scout for allowed models to debug 404s
+        try {
+          const scout = await axios.get(`https://generativelanguage.googleapis.com/v1/models?key=${apiKey}`);
+          const models = scout.data.models ? scout.data.models.map(m => m.name.replace('models/', '')) : [];
+          console.log('📡 [SCOUT] Models allowed for this key:', models.join(', '));
+        } catch (sErr) {
+          console.error('📡 [SCOUT] Failed to list models:', sErr.response?.data?.error?.message || sErr.message);
+        }
       }
 
-      // Exhaustive list of possible model-version combinations
+      // Exhaustive list including older stable IDs
       const attempts = [
         { model: "gemini-1.5-flash", version: "v1" },
         { model: "gemini-1.5-flash", version: "v1beta" },
+        { model: "gemini-1.0-pro", version: "v1" },
         { model: "gemini-pro", version: "v1" },
-        { model: "gemini-pro", version: "v1beta" },
         { model: "gemini-1.5-pro", version: "v1" }
       ];
       
@@ -395,7 +405,7 @@ Task: Answer based on the Base Info and Thalassemia context. Be empathetic and c
     } catch (error) {
       console.error('❌ Gemini Exhaustive Search Failed:', error.message);
       if (error.message.includes('404')) {
-        console.error('🚨 [CRITICAL] 404 NOT FOUND: Your API Key is valid but NOT ENABLED for AI. Please go to aistudio.google.com and create a NEW key there.');
+        console.error('🚨 [CRITICAL] 404 NOT FOUND: The key works but has NO MODELS attached. This key is from Cloud Console without AI enabled. PLEASE use AI Studio (aistudio.google.com).');
       }
       response = baseKnowledge;
       confidence = 0.5;
