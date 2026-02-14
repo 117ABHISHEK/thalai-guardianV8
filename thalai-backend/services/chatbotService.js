@@ -336,20 +336,17 @@ const generateResponse = async (message, user = null, history = []) => {
       if (!genAI) {
         const { GoogleGenerativeAI } = require("@google/generative-ai");
         genAI = new GoogleGenerativeAI(apiKey);
-        console.log('🤖 Chatbot: SDK Initialized.');
+        console.log(`🤖 Chatbot: SDK Initialized with Key: ${apiKey.substring(0, 8)}...`);
       }
 
-      // Try multiple models in order of preference (forcing v1 stable API)
-      const tryModels = ["gemini-1.5-flash", "gemini-1.5-pro"];
+      // Try multiple models - Let SDK decide version unless it fails
+      const tryModels = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
       let lastError = null;
 
       for (const modelName of tryModels) {
         try {
-          // Explicitly use apiVersion 'v1' to avoid v1beta 404s
-          const currentModel = genAI.getGenerativeModel(
-            { model: modelName },
-            { apiVersion: 'v1' }
-          );
+          // Standard initialization (no forced version)
+          const currentModel = genAI.getGenerativeModel({ model: modelName });
           
           const historyContext = history.length > 0 
             ? history.map(h => `User: ${h.userMessage}\nAssistant: ${h.botResponse}`).join('\n')
@@ -381,24 +378,21 @@ Answer the current user message using the context and history.
           response = result.response.text();
           confidence = 0.98;
           
-          // If we reached here, it worked!
-          console.log(`✅ Chatbot logic active using model: ${modelName} (v1)`);
-          break; // Exit loop
+          console.log(`✅ Chatbot active using model: ${modelName}`);
+          break; 
         } catch (err) {
           lastError = err;
-          console.warn(`⚠️ Model ${modelName} (v1) failed:`, err.message);
-          continue; // Try next one
+          console.warn(`⚠️ Model ${modelName} failed:`, err.message);
+          continue; 
         }
       }
 
-      if (!response && lastError) {
-        throw lastError; // Rethrow to catch below
-      }
+      if (!response && lastError) throw lastError;
 
     } catch (error) {
       console.error('❌ Gemini All Models Failed:', error.message);
-      if (error.message.includes('API_KEY_INVALID') || error.message.includes('API key not valid')) {
-        console.error('🚨 [CRITICAL] YOUR GEMINI API KEY IS INVALID. Check Render Env Variables.');
+      if (error.message.includes('404')) {
+        console.error('� [DIAGNOSTIC] 404 Model Not Found. This usually means the API key is not from AI Studio or the Generative Language API is not enabled.');
       }
       response = baseKnowledge;
       confidence = 0.5;
