@@ -332,20 +332,29 @@ const generateResponse = async (message, user = null, history = []) => {
 
   if (isApiConfigured) {
     try {
-      // Lazy initialization of Gemini
       if (!genAI) {
         const { GoogleGenerativeAI } = require("@google/generative-ai");
         genAI = new GoogleGenerativeAI(apiKey);
         console.log(`🤖 Chatbot: SDK Initialized (Key: ${apiKey.substring(0, 8)}...)`);
       }
 
-      // Final attempt model list - including every possible variant
-      const tryModels = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro", "models/gemini-1.5-flash"];
+      // Exhaustive list of possible model-version combinations
+      const attempts = [
+        { model: "gemini-1.5-flash", version: "v1" },
+        { model: "gemini-1.5-flash", version: "v1beta" },
+        { model: "gemini-pro", version: "v1" },
+        { model: "gemini-pro", version: "v1beta" },
+        { model: "gemini-1.5-pro", version: "v1" }
+      ];
+      
       let lastError = null;
 
-      for (const modelName of tryModels) {
+      for (const attempt of attempts) {
         try {
-          const currentModel = genAI.getGenerativeModel({ model: modelName });
+          const currentModel = genAI.getGenerativeModel(
+            { model: attempt.model },
+            { apiVersion: attempt.version }
+          );
           
           const historyContext = history.length > 0 
             ? history.map(h => `User: ${h.userMessage}\nAssistant: ${h.botResponse}`).join('\n')
@@ -356,32 +365,27 @@ Context:
 - Platform: ThalAI Guardian (Thalassemia Support Platform)
 - User Name: ${userName}
 - User Role: ${role}
-- Identified Topic: ${intent.replace('_', ' ')}
-- Reliable Base Info: "${baseKnowledge}"
-${clinicalContext ? `- USER CLINICAL DATA: ${clinicalContext}` : ""}
+- Topic: ${intent.replace('_', ' ')}
+- Base Info: "${baseKnowledge}"
 
-Recent Chat History:
+Recent History:
 ${historyContext}
 
-Current User Message: "${message}"
+User Message: "${message}"
 
 ${SYSTEM_PROMPT}
 
-Task:
-Answer the current user message using the context and history.
-1. Be direct and helpful.
-2. Use the "Reliable Base Info" for ThalAI specific facts.
-3. Formatting: Use bold and lists where appropriate.
+Task: Answer based on the Base Info and Thalassemia context. Be empathetic and concise.
 `;
           const result = await currentModel.generateContent(prompt);
           response = result.response.text();
           confidence = 0.98;
           
-          console.log(`✅ Chatbot active using model: ${modelName}`);
+          console.log(`✅ Chatbot Connected! Using ${attempt.model} (${attempt.version})`);
           break; 
         } catch (err) {
           lastError = err;
-          console.warn(`⚠️ Model ${modelName} attempt failed:`, err.message);
+          console.warn(`⚠️ Attempt failed: ${attempt.model} on ${attempt.version}`);
           continue; 
         }
       }
@@ -389,9 +393,9 @@ Answer the current user message using the context and history.
       if (!response && lastError) throw lastError;
 
     } catch (error) {
-      console.error('❌ Gemini All Models Failed:', error.message);
+      console.error('❌ Gemini Exhaustive Search Failed:', error.message);
       if (error.message.includes('404')) {
-        console.error('🚨 [ACTION REQUIRED] 404 Error: The Generative Language API is NOT enabled for this key. Use AI Studio (aistudio.google.com) to create a fresh key.');
+        console.error('🚨 [CRITICAL] 404 NOT FOUND: Your API Key is valid but NOT ENABLED for AI. Please go to aistudio.google.com and create a NEW key there.');
       }
       response = baseKnowledge;
       confidence = 0.5;
