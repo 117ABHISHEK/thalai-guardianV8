@@ -389,22 +389,32 @@ const generateResponse = async (message, user = null, history = []) => {
             ? history.map(h => `User: ${h.userMessage}\nAssistant: ${h.botResponse}`).join('\n')
             : 'No previous history in this session.';
 
+          // If intent is general, don't force it to use the "didn't catch that" text as the source of truth
+          const isGeneral = intent === 'general';
+          const promptBaseInfo = isGeneral 
+            ? "No specific thalassemia fact found for this query." 
+            : `RELIABLE FACT: "${baseKnowledge}"`;
+
           const prompt = `
 Context:
 - Platform: ThalAI Guardian (Thalassemia Support Platform)
 - User Name: ${userName}
 - User Role: ${role}
-- Topic: ${intent.replace('_', ' ')}
-- Base Info: "${baseKnowledge}"
+- Identified Topic: ${intent.replace('_', ' ')}
+- ${promptBaseInfo}
+${clinicalContext ? `- USER CLINICAL DATA: ${clinicalContext}` : ""}
 
 Recent History:
 ${historyContext}
 
-User Message: "${message}"
+Current Message: "${message}"
 
 ${SYSTEM_PROMPT}
 
-Task: Answer based on the Base Info and Thalassemia context. Be empathetic and concise.
+Task:
+1. If the message is a general query (like "what is a cat" or "who made you"), answer it directly but keep it brief.
+2. If it's medical or platform-specific, use the "RELIABLE FACT" and platform context.
+3. Be professional and empathetic.
 `;
           const result = await currentModel.generateContent(prompt);
           response = result.response.text();
@@ -419,31 +429,32 @@ Task: Answer based on the Base Info and Thalassemia context. Be empathetic and c
         }
       }
 
-      // --- PHASE 3: RAW HTTP FALLBACK (The Nuclear Option) ---
-      // If we reach here, SDK failed. Try direct REST API calls.
-      console.log('🔄 Chatbot: SDK failed. Attempting Raw HTTP Fallback...');
-      
-      for (const attempt of attempts) {
-        try {
-          const restUrl = `https://generativelanguage.googleapis.com/${attempt.version}/models/${attempt.model}:generateContent?key=${apiKey}`;
-          
-          const restPayload = {
-            contents: [{
-              parts: [{ text: `${SYSTEM_PROMPT}\n\nContext: ${baseKnowledge}\n\nUser: ${message}` }]
-            }],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
-          };
+      // --- PHASE 3: RAW HTTP FALLBACK (Only if Phase 2 failed) ---
+      if (!response) {
+        console.log('🔄 Chatbot: SDK failed. Attempting Raw HTTP Fallback...');
+        
+        for (const attempt of attempts) {
+          try {
+            const restUrl = `https://generativelanguage.googleapis.com/${attempt.version}/models/${attempt.model}:generateContent?key=${apiKey}`;
+            
+            const restPayload = {
+              contents: [{
+                parts: [{ text: `${SYSTEM_PROMPT}\n\nContext: ${baseKnowledge}\n\nUser: ${message}` }]
+              }],
+              generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
+            };
 
-          const restResponse = await axios.post(restUrl, restPayload);
-          
-          if (restResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-            response = restResponse.data.candidates[0].content.parts[0].text;
-            confidence = 0.95;
-            console.log(`🚀 [REST SUCCESS] Connected via Raw HTTP using ${attempt.model} (${attempt.version})`);
-            break;
+            const restResponse = await axios.post(restUrl, restPayload);
+            
+            if (restResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+              response = restResponse.data.candidates[0].content.parts[0].text;
+              confidence = 0.95;
+              console.log(`🚀 [REST SUCCESS] Connected via Raw HTTP using ${attempt.model} (${attempt.version})`);
+              break;
+            }
+          } catch (restErr) {
+            console.warn(`❌ REST Attempt failed for ${attempt.model}:`, restErr.response?.data?.error?.message || restErr.message);
           }
-        } catch (restErr) {
-          console.warn(`❌ REST Attempt failed for ${attempt.model}:`, restErr.response?.data?.error?.message || restErr.message);
         }
       }
 
