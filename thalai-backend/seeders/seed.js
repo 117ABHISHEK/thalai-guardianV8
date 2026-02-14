@@ -114,7 +114,7 @@ const seedData = async () => {
       password: 'password123',
       role: 'admin',
       bloodGroup: 'O+',
-      phone: '+91-9999999999',
+      phone: '9123456789', // Unique safe number
       address: { 
         street: 'Main Command Hub, Administrative Block', 
         city: 'Mumbai', 
@@ -126,6 +126,13 @@ const seedData = async () => {
       isActive: true
     });
 
+    const generateIndianPhone = () => {
+      // Starts with 6-9, then 9 random digits. ensuring not repetitive
+      const start = Math.floor(Math.random() * 4) + 6; // 6,7,8,9
+      const rest = Math.floor(Math.random() * 900000000) + 100000000;
+      return `${start}${rest}`;
+    };
+
     // 2. Doctors (10)
     const doctorUsers = [];
     for (let i = 1; i <= 10; i++) {
@@ -135,7 +142,7 @@ const seedData = async () => {
         password: 'password123',
         role: 'doctor',
         bloodGroup: getRandom(BLOOD_GROUPS),
-        phone: `+91-90000000${i.toString().padStart(2, '0')}`,
+        phone: generateIndianPhone(),
         address: { 
           street: `${i} Medical Street, Healthcare Complex`, 
           city: getRandom(CITIES), 
@@ -167,14 +174,6 @@ const seedData = async () => {
 
     // 3. Patients (45)
     const patientUsers = [];
-    const patientComorbidities = [
-      { condition: 'Iron Overload', treatment: 'Chelation therapy with Deferasirox', notes: 'Regular monitoring required', severity: 'moderate' },
-      { condition: 'Osteoporosis', treatment: 'Calcium and Vitamin D supplementation', notes: 'Annual bone density scan', severity: 'mild' },
-      { condition: 'Hypothyroidism', treatment: 'Levothyroxine 50mcg daily', notes: 'TSH levels monitored quarterly', severity: 'mild' },
-      { condition: 'Diabetes Type 2', treatment: 'Metformin 500mg twice daily', notes: 'Diet controlled, HbA1c monitored', severity: 'moderate' },
-      { condition: 'Cardiac Complications', treatment: 'Regular echocardiography', notes: 'Iron-induced cardiomyopathy monitoring', severity: 'severe' }
-    ];
-
     // Profile picture URLs (using placeholder service)
     const profilePictures = [
       'https://i.pravatar.cc/150?img=1',
@@ -189,24 +188,32 @@ const seedData = async () => {
       'https://i.pravatar.cc/150?img=16'
     ];
 
+    const patientComorbidities = [
+      { condition: 'Iron Overload', treatment: 'Chelation therapy with Deferasirox', notes: 'Regular monitoring required', severity: 'moderate' },
+      { condition: 'Osteoporosis', treatment: 'Calcium and Vitamin D supplementation', notes: 'Annual bone density scan', severity: 'mild' },
+      { condition: 'Hypothyroidism', treatment: 'Levothyroxine 50mcg daily', notes: 'TSH levels monitored quarterly', severity: 'mild' },
+      { condition: 'Diabetes Type 2', treatment: 'Metformin 500mg twice daily', notes: 'Diet controlled, HbA1c monitored', severity: 'moderate' },
+      { condition: 'Cardiac Complications', treatment: 'Regular echocardiography', notes: 'Iron-induced cardiomyopathy monitoring', severity: 'severe' }
+    ];
+
     for (let i = 1; i <= 45; i++) {
-      const u = await User.create({
-        name: `${getRandom(FIRST_NAMES)} ${getRandom(LAST_NAMES)}`,
-        email: `patient${i}@thalai.com`,
-        password: 'password123',
-        role: 'patient',
-        bloodGroup: getRandom(BLOOD_GROUPS),
-        phone: `+91-91000000${i.toString().padStart(2, '0')}`,
-        address: { 
-          street: `${i} Patient Colony, Ward ${getRandomInRange(1, 10)}`, 
-          city: getRandom(CITIES), 
-          state: 'Maharashtra', 
-          zipCode: `4000${getRandomInRange(10, 99)}` 
-        },
-        dateOfBirth: new Date(2000 + getRandomInRange(0, 15), getRandomInRange(0, 11), getRandomInRange(1, 28)),
-        profilePicture: Math.random() > 0.3 ? getRandom(profilePictures) : '', // 70% have profile pictures
-        isActive: true
-      });
+        const u = await User.create({
+          name: `${getRandom(FIRST_NAMES)} ${getRandom(LAST_NAMES)}`,
+          email: `patient${i}@thalai.com`,
+          password: 'password123',
+          role: 'patient',
+          bloodGroup: getRandom(BLOOD_GROUPS),
+          phone: generateIndianPhone(),
+          address: { 
+            street: `${i} Patient Colony, Ward ${getRandomInRange(1, 10)}`, 
+            city: getRandom(CITIES), 
+            state: 'Maharashtra', 
+            zipCode: `4000${getRandomInRange(10, 99)}` 
+          },
+          dateOfBirth: new Date(2000 + getRandomInRange(0, 15), getRandomInRange(0, 11), getRandomInRange(1, 28)),
+          profilePicture: Math.random() > 0.3 ? getRandom(profilePictures) : '', // 70% have profile pictures
+          isActive: true
+        });
 
       const transfusionHistory = [];
       const locations = ['City Hospital', 'Central Blood Bank', 'Regional Medical Center', 'District Hospital'];
