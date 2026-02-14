@@ -58,7 +58,7 @@ Current counts:
 Would you like to go to your request history?`,
   },
   thalassemia_info: {
-    patterns: ['what is', 'thalassemia', 'definition', 'causes', 'inherited', 'genetic'],
+    patterns: ['thalassemia', 'definition', 'causes', 'inherited', 'genetic', 'it', 'condition'],
     response: `Thalassemia is an inherited blood disorder where the body makes an abnormal form of hemoglobin. Hemoglobin is the protein in red blood cells that carries oxygen.
 
 Key concepts:
@@ -333,18 +333,25 @@ const generateResponse = async (message, user = null, history = []) => {
   if (isApiConfigured) {
     try {
       // Lazy initialization of Gemini
-      if (!genAI || !model) {
+      if (!genAI) {
         const { GoogleGenerativeAI } = require("@google/generative-ai");
         genAI = new GoogleGenerativeAI(apiKey);
-        model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        console.log('🤖 Chatbot: Gemini AI Initialized successfully.');
+        console.log('🤖 Chatbot: SDK Initialized.');
       }
 
-      const historyContext = history.length > 0 
-        ? history.map(h => `User: ${h.userMessage}\nAssistant: ${h.botResponse}`).join('\n')
-        : 'No previous history in this session.';
+      // Try multiple models in order of preference
+      const tryModels = ["gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-pro"];
+      let lastError = null;
 
-      const prompt = `
+      for (const modelName of tryModels) {
+        try {
+          const currentModel = genAI.getGenerativeModel({ model: modelName });
+          
+          const historyContext = history.length > 0 
+            ? history.map(h => `User: ${h.userMessage}\nAssistant: ${h.botResponse}`).join('\n')
+            : 'No previous history in this session.';
+
+          const prompt = `
 Context:
 - Platform: ThalAI Guardian (Thalassemia Support Platform)
 - User Name: ${userName}
@@ -364,16 +371,32 @@ Task:
 Answer the current user message using the context and history.
 1. Be direct and helpful.
 2. Use the "Reliable Base Info" for ThalAI specific facts.
-3. If the user asks something non-medical or unrelated, briefly answer if safe or redirect back to platform help.
-4. Formatting: Use bold and lists where appropriate.
+3. Formatting: Use bold and lists where appropriate.
 `;
-      const result = await model.generateContent(prompt);
-      response = result.response.text();
-      confidence = 0.98;
+          const result = await currentModel.generateContent(prompt);
+          response = result.response.text();
+          confidence = 0.98;
+          
+          // If we reached here, it worked!
+          if (modelName !== tryModels[0]) {
+            console.log(`✅ Chatbot logic recovered using fallback model: ${modelName}`);
+          }
+          break; // Exit loop
+        } catch (err) {
+          lastError = err;
+          console.warn(`⚠️ Model ${modelName} failed:`, err.message);
+          continue; // Try next one
+        }
+      }
+
+      if (!response && lastError) {
+        throw lastError; // Rethrow to catch below
+      }
+
     } catch (error) {
-      console.error('❌ Gemini API Error:', error.message);
-      if (error.message.includes('API_KEY_INVALID')) {
-        console.error('🚨 YOUR GEMINI API KEY IS INVALID. Please check Render Environment Variables.');
+      console.error('❌ Gemini All Models Failed:', error.message);
+      if (error.message.includes('API_KEY_INVALID') || error.message.includes('API key not valid')) {
+        console.error('🚨 [CRITICAL] YOUR GEMINI API KEY IS INVALID. Check Render Env Variables.');
       }
       response = baseKnowledge;
       confidence = 0.5;
