@@ -336,16 +336,15 @@ const generateResponse = async (message, user = null, history = []) => {
       if (!genAI) {
         const { GoogleGenerativeAI } = require("@google/generative-ai");
         genAI = new GoogleGenerativeAI(apiKey);
-        console.log(`🤖 Chatbot: SDK Initialized with Key: ${apiKey.substring(0, 8)}...`);
+        console.log(`🤖 Chatbot: SDK Initialized (Key: ${apiKey.substring(0, 8)}...)`);
       }
 
-      // Try multiple models - Let SDK decide version unless it fails
-      const tryModels = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+      // Final attempt model list - including every possible variant
+      const tryModels = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro", "models/gemini-1.5-flash"];
       let lastError = null;
 
       for (const modelName of tryModels) {
         try {
-          // Standard initialization (no forced version)
           const currentModel = genAI.getGenerativeModel({ model: modelName });
           
           const historyContext = history.length > 0 
@@ -382,7 +381,7 @@ Answer the current user message using the context and history.
           break; 
         } catch (err) {
           lastError = err;
-          console.warn(`⚠️ Model ${modelName} failed:`, err.message);
+          console.warn(`⚠️ Model ${modelName} attempt failed:`, err.message);
           continue; 
         }
       }
@@ -392,7 +391,7 @@ Answer the current user message using the context and history.
     } catch (error) {
       console.error('❌ Gemini All Models Failed:', error.message);
       if (error.message.includes('404')) {
-        console.error('� [DIAGNOSTIC] 404 Model Not Found. This usually means the API key is not from AI Studio or the Generative Language API is not enabled.');
+        console.error('🚨 [ACTION REQUIRED] 404 Error: The Generative Language API is NOT enabled for this key. Use AI Studio (aistudio.google.com) to create a fresh key.');
       }
       response = baseKnowledge;
       confidence = 0.5;
