@@ -348,14 +348,33 @@ const generateResponse = async (message, user = null, history = []) => {
         }
       }
 
-      // Exhaustive list including older stable IDs
-      const attempts = [
-        { model: "gemini-2.0-flash", version: "v1beta" },
-        { model: "gemini-2.0-flash-lite", version: "v1beta" },
+      // Dynamic Discovery: Use models found by Scout first
+      let scoutedModelNames = [];
+      try {
+        const scout = await axios.get(`https://generativelanguage.googleapis.com/v1/models?key=${apiKey}`);
+        scoutedModelNames = scout.data.models ? scout.data.models.map(m => m.name.replace('models/', '')) : [];
+        if (scoutedModelNames.length > 0) {
+          console.log(`📡 [DYNAMIC] Trying scouted models: ${scoutedModelNames.slice(0, 3).join(', ')}`);
+        }
+      } catch (e) {
+        console.warn('Scout failed, using defaults.');
+      }
+
+      // Exhaustive list - Prioritizing models the Scout actually found
+      const attempts = [];
+      
+      // Add scouted models to the top of the list
+      scoutedModelNames.slice(0, 3).forEach(m => {
+        attempts.push({ model: m, version: "v1" });
+        attempts.push({ model: m, version: "v1beta" });
+      });
+
+      // Standard search if scout found nothing or top few fail
+      attempts.push(
+        { model: "gemini-2.0-flash", version: "v1" },
         { model: "gemini-1.5-flash", version: "v1" },
-        { model: "gemini-1.5-flash", version: "v1beta" },
         { model: "gemini-pro", version: "v1" }
-      ];
+      );
       
       let lastError = null;
 
