@@ -217,7 +217,7 @@ For blood requirement, create an urgent request on ThalAI Guardian.`,
 
 🔍 FIND DONORS:
 • System automatically matches donors
-• View matches in "Request History"
+• View matches in "Request History" section
 • Top matches are notified automatically
 
 👤 FOR DONORS:
@@ -252,12 +252,15 @@ const detectIntent = (message) => {
   const lowerMessage = message.toLowerCase().trim();
   
   // Special handling for legacy/short words
-  if (lowerMessage === 'how') return 'system_help';
+  if (lowerMessage === 'how' || lowerMessage.includes('how to use')) return 'system_help';
   if (['thx', 'ok', 'bye'].includes(lowerMessage)) return 'thanks';
+
+  // Specific check for info to avoid overriding casual questions
+  if (lowerMessage.includes('what is thalassemia') || lowerMessage.includes('tell me about thalassemia')) return 'thalassemia_info';
 
   // Check each intent
   for (const [intent, data] of Object.entries(responses)) {
-    if (intent === 'general') continue;
+    if (intent === 'general' || intent === 'thalassemia_info') continue;
     
     for (const pattern of data.patterns) {
       const regex = new RegExp(`\\b${pattern}\\b`, 'i');
@@ -266,6 +269,10 @@ const detectIntent = (message) => {
       }
     }
   }
+
+  // Fallback to thalassemia_info ONLY if keywords present (since it's the main topic)
+  const thalassemiaKeywords = ['thalassemia', 'genetic', 'hemoglobin', 'inherited'];
+  if (thalassemiaKeywords.some(k => lowerMessage.includes(k))) return 'thalassemia_info';
   
   return 'general';
 };
@@ -315,12 +322,12 @@ const generateResponse = async (message, user = null, history = []) => {
   let confidence = 0.85;
 
   // Use Gemini if available to provide a smarter, contextual response
-  // Determine if AI should be used
-  const apiKey = process.env.GEMINI_API_KEY;
-  const isApiConfigured = apiKey && apiKey.length > 5 && apiKey !== 'your_gemini_api_key_here';
-  
+  const rawApiKey = process.env.GEMINI_API_KEY;
+  const apiKey = rawApiKey ? rawApiKey.trim() : null;
+  const isApiConfigured = apiKey && apiKey.length > 10 && apiKey !== 'your_gemini_api_key_here';
+
   if (!isApiConfigured) {
-    console.log('🤖 Chatbot: Gemini API Key missing or placeholder. Falling back to static knowledge.');
+    console.log('🤖 Chatbot: Gemini API Key missing or too short. Key Start:', apiKey ? apiKey.substring(0, 4) : 'NULL');
   }
 
   if (isApiConfigured) {
@@ -330,7 +337,7 @@ const generateResponse = async (message, user = null, history = []) => {
         const { GoogleGenerativeAI } = require("@google/generative-ai");
         genAI = new GoogleGenerativeAI(apiKey);
         model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        console.log('🤖 Chatbot: Gemini AI Initialized.');
+        console.log('🤖 Chatbot: Gemini AI Initialized successfully.');
       }
 
       const historyContext = history.length > 0 
@@ -357,20 +364,21 @@ Task:
 Answer the current user message using the context and history.
 1. Be direct and helpful.
 2. Use the "Reliable Base Info" for ThalAI specific facts.
-3. If this is a follow-up question (check history), ensure your answer is contextual.
+3. If the user asks something non-medical or unrelated, briefly answer if safe or redirect back to platform help.
 4. Formatting: Use bold and lists where appropriate.
 `;
       const result = await model.generateContent(prompt);
       response = result.response.text();
       confidence = 0.98;
     } catch (error) {
-      console.error('Gemini API Error:', error);
+      console.error('❌ Gemini API Error:', error.message);
+      if (error.message.includes('API_KEY_INVALID')) {
+        console.error('🚨 YOUR GEMINI API KEY IS INVALID. Please check Render Environment Variables.');
+      }
       response = baseKnowledge;
       confidence = 0.5;
     }
   } else {
-    // Fallback to static response if no API key
-    console.log('Gemini API not configured or key is placeholder. Using static response.');
     response = baseKnowledge;
   }
   
