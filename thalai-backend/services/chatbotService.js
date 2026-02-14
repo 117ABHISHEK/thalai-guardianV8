@@ -339,13 +339,17 @@ const generateResponse = async (message, user = null, history = []) => {
         console.log('🤖 Chatbot: SDK Initialized.');
       }
 
-      // Try multiple models in order of preference
-      const tryModels = ["gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-pro"];
+      // Try multiple models in order of preference (forcing v1 stable API)
+      const tryModels = ["gemini-1.5-flash", "gemini-1.5-pro"];
       let lastError = null;
 
       for (const modelName of tryModels) {
         try {
-          const currentModel = genAI.getGenerativeModel({ model: modelName });
+          // Explicitly use apiVersion 'v1' to avoid v1beta 404s
+          const currentModel = genAI.getGenerativeModel(
+            { model: modelName },
+            { apiVersion: 'v1' }
+          );
           
           const historyContext = history.length > 0 
             ? history.map(h => `User: ${h.userMessage}\nAssistant: ${h.botResponse}`).join('\n')
@@ -378,13 +382,11 @@ Answer the current user message using the context and history.
           confidence = 0.98;
           
           // If we reached here, it worked!
-          if (modelName !== tryModels[0]) {
-            console.log(`✅ Chatbot logic recovered using fallback model: ${modelName}`);
-          }
+          console.log(`✅ Chatbot logic active using model: ${modelName} (v1)`);
           break; // Exit loop
         } catch (err) {
           lastError = err;
-          console.warn(`⚠️ Model ${modelName} failed:`, err.message);
+          console.warn(`⚠️ Model ${modelName} (v1) failed:`, err.message);
           continue; // Try next one
         }
       }
