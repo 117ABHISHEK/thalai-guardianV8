@@ -136,9 +136,9 @@ const seedData = async () => {
     // 2. Doctors (10)
     const doctorUsers = [];
     for (let i = 1; i <= 10; i++) {
-      const u = await User.create({
-        name: `Dr. ${getRandom(FIRST_NAMES)} ${getRandom(LAST_NAMES)}`,
-        email: `doctor${i}@thalai.com`,
+        const u = await User.create({
+          name: `Dr ${getRandom(FIRST_NAMES)} ${getRandom(LAST_NAMES)}`, // Removed dot to pass validation
+          email: `doctor${i}@thalai.com`,
         password: 'password123',
         role: 'doctor',
         bloodGroup: getRandom(BLOOD_GROUPS),
