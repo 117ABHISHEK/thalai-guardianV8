@@ -4,8 +4,9 @@ const Donor = require("../models/donorModel");
 const { getPredictionStatus } = require("../utils/aiPrediction");
 
 // Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+// Initialize at top-level but allow re-initialization if needed
+let genAI;
+let model;
 
 const SYSTEM_PROMPT = `You are ThalAI Guardian, a specialized AI assistant for Thalassemia patients and blood donors. 
 Your goal is to provide accurate, empathetic, and helpful information about Thalassemia.
@@ -23,13 +24,13 @@ Guidelines:
 
 const responses = {
   greetings: {
-    patterns: ['hi', 'hello', 'hey', 'start', 'greetings', 'who are you', 'how are you'],
-    response: (name) => `Hello ${name}! I'm your ThalAI Guardian assistant. I'm here to support you as a member of our community.
-
+    patterns: ['hi', 'hello', 'hey', 'start', 'greetings', 'who are you', 'how are you', 'helo', 'hii', 'hy'],
+    response: (name) => `Hello ${name}! I'm your ThalAI Guardian assistant. I'm here to support you with any questions about Thalassemia or blood donation.
+    
 How can I help you today?`,
   },
   thanks: {
-    patterns: ['thanks', 'thank you', 'ok', 'alright', 'bye', 'goodbye', 'thx', 'thnk', 'tks', 'cool', 'great'],
+    patterns: ['thanks', 'thank you', 'ok', 'alright', 'bye', 'goodbye', 'thx', 'thnk', 'tks', 'cool', 'great', 'thanks for help'],
     response: (name) => `You're very welcome, ${name}! If you have more questions later, I'm always here to help. Stay healthy! (⊙ˍ⊙)`,
   },
   appointment: {
@@ -234,17 +235,13 @@ Need more help? Contact admin support.`,
   },
   general: {
     patterns: [],
-    response: `I'm not sure I fully understand that. However, I can help you with:
-
-• Transfusion schedules
-• Donor guidelines
-• Thalassemia information
-• Iron overload & Chelation
-• Diet advice
-• Symptoms information
-• Emergency support
-
-What would you like to know?`,
+    response: `I'm here to support you with Thalassemia management and blood donation. 
+    
+It seems I didn't quite catch that. Could you try rephrasing or asking about:
+• Thalassemia symptoms or schedules
+• Donor guidelines & eligibility
+• Diet and iron overload advice
+• Emergency support`,
   },
 };
 
@@ -318,11 +315,24 @@ const generateResponse = async (message, user = null, history = []) => {
   let confidence = 0.85;
 
   // Use Gemini if available to provide a smarter, contextual response
+  // Determine if AI should be used
   const apiKey = process.env.GEMINI_API_KEY;
-  const isApiConfigured = apiKey && apiKey.length > 10 && apiKey !== 'your_gemini_api_key_here';
+  const isApiConfigured = apiKey && apiKey.length > 5 && apiKey !== 'your_gemini_api_key_here';
+  
+  if (!isApiConfigured) {
+    console.log('🤖 Chatbot: Gemini API Key missing or placeholder. Falling back to static knowledge.');
+  }
 
   if (isApiConfigured) {
     try {
+      // Lazy initialization of Gemini
+      if (!genAI || !model) {
+        const { GoogleGenerativeAI } = require("@google/generative-ai");
+        genAI = new GoogleGenerativeAI(apiKey);
+        model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        console.log('🤖 Chatbot: Gemini AI Initialized.');
+      }
+
       const historyContext = history.length > 0 
         ? history.map(h => `User: ${h.userMessage}\nAssistant: ${h.botResponse}`).join('\n')
         : 'No previous history in this session.';
