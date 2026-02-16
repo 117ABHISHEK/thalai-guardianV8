@@ -88,6 +88,11 @@ const patientSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    predictionUrgency: {
+      type: String,
+      enum: ['normal', 'soon', 'urgent', 'overdue'],
+      default: 'normal',
+    },
     // Medical information
     comorbidities: [
       {

@@ -300,6 +300,7 @@ const generateResponse = async (message, user = null, history = []) => {
         if (prediction.success && prediction.prediction.predictedDate) {
           clinicalContext += `\n- Next Transfusion Prediction (from AI Service): ${new Date(prediction.prediction.predictedDate).toDateString()}`;
           clinicalContext += `\n- Confidence: ${(prediction.prediction.confidence * 100).toFixed(0)}%`;
+          clinicalContext += `\n- Urgency: ${prediction.prediction.urgency.toUpperCase()}`;
           clinicalContext += `\n- AI Explanation: ${prediction.prediction.explanation}`;
         }
       } else if (role.toLowerCase() === 'donor' && (intent === 'donor_guidelines' || intent === 'general')) {

@@ -83,6 +83,7 @@ const updateTransfusionPrediction = async (patientId) => {
       patient.predictedNextTransfusionDate = new Date(response.data.predictedNextDate);
       patient.predictionConfidence = response.data.confidence || 0.5;
       patient.predictionExplanation = response.data.explanation || 'Prediction based on transfusion history';
+      patient.predictionUrgency = response.data.urgency || 'normal';
       patient.predictionLastUpdated = new Date();
       
       await patient.save();
@@ -133,6 +134,7 @@ const getPredictionStatus = async (patientId) => {
         predictedDate: patient.predictedNextTransfusionDate,
         confidence: patient.predictionConfidence,
         explanation: patient.predictionExplanation,
+        urgency: patient.predictionUrgency || 'normal',
         lastUpdated: patient.predictionLastUpdated
       }
     };

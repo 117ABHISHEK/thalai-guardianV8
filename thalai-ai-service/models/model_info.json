@@ -15,29 +15,29 @@
     "has_comorbidities"
   ],
   "feature_importance": {
-    "mean_interval_days": 10141910.28514862,
-    "hb_trend": 168405.23553848267,
-    "units_per_transfusion_avg": 27367.990922927856,
-    "days_since_last_transfusion": 303149.0366039276,
-    "age": 79867.2112121582,
-    "weightKg": 89819.90789222717,
-    "thal_encoded": 3807750.539505005,
-    "splenectomy": 189116.3218460083,
-    "ferritin": 181067.79816627502,
-    "last_hb": 37349.70951652527,
-    "last_units": 3362.8156967163086,
-    "recent_hb_avg": 67725.33917999268,
-    "has_comorbidities": 1999.6184692382812
+    "mean_interval_days": 73056029.26499939,
+    "hb_trend": 739895.75831604,
+    "units_per_transfusion_avg": 99584.6428527832,
+    "days_since_last_transfusion": 1554243.111480713,
+    "age": 639715.9676971436,
+    "weightKg": 829650.8018493652,
+    "thal_encoded": 27266136.446166992,
+    "splenectomy": 1937129.4089355469,
+    "ferritin": 1294323.7830200195,
+    "last_hb": 67087.94013977051,
+    "last_units": 9405.732940673828,
+    "recent_hb_avg": 153729.02792358398,
+    "has_comorbidities": 41132.636154174805
   },
   "metrics": {
     "test": {
-      "mae": 4.792124134281692,
-      "rmse": 7.078256212571691,
-      "r2": 0.7817157173543718
+      "mae": 4.340907419749695,
+      "rmse": 6.525509539761482,
+      "r2": 0.8208648139061621
     },
-    "coverage_7_days": 0.7972116603295311,
-    "coverage_14_days": 0.9493029150823827
+    "coverage_7_days": 0.8396327649934422,
+    "coverage_14_days": 0.9564802670800048
   },
-  "trained_at": "2026-02-05T10:06:12.347193",
+  "trained_at": "2026-02-16T09:44:24.165827",
   "model_version": "1.0.0"
 }

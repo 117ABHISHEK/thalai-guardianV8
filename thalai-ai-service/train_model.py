@@ -151,4 +151,4 @@ def train_model(n_patients=2000, test_size=0.15, random_state=42):
     return model, feature_importance, metrics
 
 if __name__ == '__main__':
-    model, feature_importance, metrics = train_model(n_patients=200, random_state=42)
+    model, feature_importance, metrics = train_model(n_patients=2000, random_state=42)
