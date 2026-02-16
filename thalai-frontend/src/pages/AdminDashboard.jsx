@@ -47,8 +47,8 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-transparent font-body pb-64 animate-slide-up">
       {/* Central Command Header */}
-      <div className="glass border-b border-slate-100 sticky top-20 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="glass border-b border-slate-100 sticky top-16 md:top-20 z-40">
+        <div className="container-custom py-6 md:py-8">
            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 animate-reveal">
               <div>
                  <div className="flex items-center gap-2 mb-2">
@@ -74,7 +74,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="container-custom py-8 md:py-10">
         {error && (
           <div className="mb-8 animate-reveal">
              <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700 flex items-center gap-3">
@@ -85,7 +85,7 @@ const AdminDashboard = () => {
         )}
 
         {/* Intelligence Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-10">
            <StatCard title="Global Patients" value={stats?.totalPatients || 0} icon={<Users className="w-6 h-6" />} color="blue" subtitle="Total registered receivers" />
            <StatCard title="Hero Database" value={stats?.totalDonors || 0} icon={<Droplets className="w-6 h-6" />} color="red" subtitle="Registered potential donors" />
            <StatCard title="Verified Nodes" value={stats?.verifiedDonors || 0} icon={<ShieldCheck className="w-6 h-6" />} color="green" subtitle="Medical cleared profiles" />

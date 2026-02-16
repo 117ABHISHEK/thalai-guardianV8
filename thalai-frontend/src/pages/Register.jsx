@@ -380,7 +380,7 @@ const Register = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4 md:col-span-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:col-span-2">
                       <div className="space-y-2">
                         <label className="input-label">City</label>
                         <input type="text" name="city" value={formData.city} onChange={handleChange} className="input-field" placeholder="City" />

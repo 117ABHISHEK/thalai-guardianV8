@@ -86,116 +86,118 @@ const HealthMetricsForm = ({ initialData, onSave, loading, role = 'patient' }) =
     return (
         <div className="space-y-6">
             <form onSubmit={handleSubmit}>
-                <div className="mb-6">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900">Medical Reports</h3>
+                <div className="mb-10">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                           <h3 className="text-2xl font-display font-black text-slate-900">Medical Reports</h3>
+                           <p className="text-slate-500 text-sm font-medium">Historical clinical parameters tracking</p>
+                        </div>
                         <button
                             type="button"
                             onClick={() => setShowAddReport(!showAddReport)}
-                            className="text-sm bg-blue-50 text-blue-600 px-3 py-1 rounded hover:bg-blue-100 transition-colors"
+                            className="btn-secondary px-6"
                         >
-                            {showAddReport ? 'Cancel' : '+ Add Report'}
+                            {showAddReport ? 'Cancel Entry' : '+ Log New Report'}
                         </button>
                     </div>
 
                     {showAddReport && (
-                        <div className="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-200">
-                            <h4 className="text-sm font-medium text-gray-700 mb-3">New Report Details</h4>
-                            <div className="grid md:grid-cols-2 gap-4 mb-3">
-                                <div className="md:col-span-2">
-                                    <label className="block text-xs text-gray-500 mb-1">Report Title*</label>
+                        <div className="bg-slate-50 border border-slate-100 p-6 md:p-8 rounded-[32px] mb-10 animate-reveal shadow-sm">
+                            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">New Clinical Entry</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+                                <div className="sm:col-span-2 space-y-2">
+                                    <label className="input-label">Report Title*</label>
                                     <input
                                         type="text"
                                         name="title"
                                         value={newReport.title}
                                         onChange={handleReportChange}
-                                        className="input-field w-full p-2 border rounded text-sm"
+                                        className="input-field"
                                         placeholder="e.g. Blood Test, Thalassemia Profile"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-xs text-gray-500 mb-1">Date</label>
+                                <div className="sm:col-span-2 space-y-2">
+                                    <label className="input-label">Report Date</label>
                                     <input
                                         type="date"
                                         name="reportDate"
                                         value={newReport.reportDate}
                                         onChange={handleReportChange}
-                                        className="input-field w-full p-2 border rounded text-sm"
+                                        className="input-field"
                                     />
                                 </div>
 
                                 {/* Thalassemia Specific Parameters (Patient Only) */}
                                 {role === 'patient' && (
-                                    <div className="md:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-3 bg-blue-50 p-3 rounded-lg">
-                                        <div className="md:col-span-3">
-                                            <p className="text-xs font-semibold text-blue-800 mb-2">Thalassemia Parameters (Indian Clinical Standards)</p>
+                                    <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 bg-sky-50/50 p-6 rounded-[24px] border border-sky-100">
+                                        <div className="sm:col-span-2 lg:col-span-3">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-sky-600 mb-2">Thalassemia Parameters</p>
                                         </div>
-                                        <div>
-                                            <label className="block text-xs text-gray-500 mb-1">Hemoglobin (g/dL)</label>
+                                        <div className="space-y-1">
+                                            <label className="input-label text-[10px]">Hemoglobin (g/dL)</label>
                                             <input
                                                 type="number"
                                                 name="hemoglobin"
                                                 value={newReport.hemoglobin || ''}
                                                 onChange={handleReportChange}
-                                                className={`input-field w-full p-2 border rounded text-sm ${newReport.hemoglobin && (newReport.hemoglobin < 5 || newReport.hemoglobin > 18) ? 'border-amber-400 bg-amber-50' : ''}`}
+                                                className={`input-field ${newReport.hemoglobin && (newReport.hemoglobin < 5 || newReport.hemoglobin > 18) ? 'border-amber-400 bg-amber-50' : ''}`}
                                                 placeholder="2 - 20"
                                                 step="0.1"
                                                 min="2"
                                                 max="20"
                                             />
-                                            <p className="text-[9px] text-blue-600 mt-0.5 font-bold">Hard: 2-20 | Soft: 5-18 g/dL</p>
+                                            <p className="text-[9px] text-sky-600 mt-1 font-bold">Recommended: 9-11 g/dL</p>
                                         </div>
-                                        <div>
-                                            <label className="block text-xs text-gray-500 mb-1">Ferritin (ng/mL)</label>
+                                        <div className="space-y-1">
+                                            <label className="input-label text-[10px]">Ferritin (ng/mL)</label>
                                             <input
                                                 type="number"
                                                 name="ferritin"
                                                 value={newReport.ferritin || ''}
                                                 onChange={handleReportChange}
-                                                className={`input-field w-full p-2 border rounded text-sm ${newReport.ferritin > 5000 ? 'border-amber-400 bg-amber-50' : ''}`}
+                                                className={`input-field ${newReport.ferritin > 5000 ? 'border-amber-400 bg-amber-50' : ''}`}
                                                 placeholder="10 - 15000"
                                                 min="10"
                                                 max="15000"
                                             />
-                                            <p className="text-[9px] text-blue-600 mt-0.5 font-bold">Alert: &gt;5000 ng/mL</p>
+                                            <p className="text-[9px] text-sky-600 mt-1 font-bold">Alert: &gt;2500 ng/mL</p>
                                         </div>
-                                        <div>
-                                            <label className="block text-xs text-gray-500 mb-1">Creatinine (mg/dL)</label>
+                                        <div className="space-y-1">
+                                            <label className="input-label text-[10px]">Creatinine (mg/dL)</label>
                                             <input
                                                 type="number"
                                                 name="creatinine"
                                                 value={newReport.creatinine || ''}
                                                 onChange={handleReportChange}
-                                                className="input-field w-full p-2 border rounded text-sm"
-                                                placeholder="0 - 15"
+                                                className="input-field"
+                                                placeholder="0.7-1.3"
                                                 step="0.01"
                                                 min="0"
                                                 max="15"
                                             />
-                                            <p className="text-[9px] text-blue-600 mt-0.5">Normal: 0.7-1.3</p>
                                         </div>
-                                        <div>
-                                            <label className="block text-xs text-gray-500 mb-1">SGPT (ALT) - U/L</label>
+                                        <div className="space-y-1">
+                                            <label className="input-label text-[10px]">SGPT (ALT) - U/L</label>
                                             <input
                                                 type="number"
                                                 name="sgpt"
                                                 value={newReport.sgpt || ''}
                                                 onChange={handleReportChange}
-                                                className="input-field w-full p-2 border rounded text-sm"
-                                                placeholder="0 - 2000"
+                                                className="input-field"
+                                                placeholder="Normal: < 40"
                                                 min="0"
                                                 max="2000"
                                             />
                                         </div>
-                                        <div>
-                                            <label className="block text-xs text-gray-500 mb-1">SGOT (AST) - U/L</label>
+                                        <div className="space-y-1">
+                                            <label className="input-label text-[10px]">SGOT (AST) - U/L</label>
                                             <input
                                                 type="number"
                                                 name="sgot"
                                                 value={newReport.sgot || ''}
                                                 onChange={handleReportChange}
-                                                className="input-field w-full p-2 border rounded text-sm"
-                                                placeholder="0 - 2000"
+                                                className="input-field"
+                                                placeholder="Normal: < 40"
                                                 min="0"
                                                 max="2000"
                                             />
@@ -205,132 +207,93 @@ const HealthMetricsForm = ({ initialData, onSave, loading, role = 'patient' }) =
 
                                 {/* Donor Vitals (Donor Only) */}
                                 {role === 'donor' && (
-                                    <div className="md:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-3 bg-green-50 p-3 rounded-lg">
-                                        <div className="md:col-span-3">
-                                            <p className="text-xs font-semibold text-green-800 mb-2">Donor Vitals</p>
+                                    <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 bg-emerald-50/50 p-6 rounded-[24px] border border-emerald-100">
+                                        <div className="sm:col-span-2 lg:col-span-3">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-2">Donor Vitals</p>
                                         </div>
-                                        <div>
-                                            <label className="block text-xs text-gray-500 mb-1">Hemoglobin (g/dL)</label>
+                                        <div className="space-y-1">
+                                            <label className="input-label text-[10px]">Hemoglobin (g/dL)</label>
                                             <input
                                                 type="number"
                                                 name="hemoglobin"
                                                 value={newReport.hemoglobin || ''}
                                                 onChange={handleReportChange}
-                                                className={`input-field w-full p-2 border rounded text-sm ${newReport.hemoglobin && (newReport.hemoglobin < 5 || newReport.hemoglobin > 18) ? 'border-amber-400 bg-amber-50' : ''}`}
-                                                placeholder="2 - 20"
+                                                className={`input-field ${newReport.hemoglobin && (newReport.hemoglobin < 12.5) ? 'border-amber-400 bg-amber-50' : ''}`}
+                                                placeholder="Min: 12.5"
                                                 step="0.1"
-                                                min="2"
-                                                max="20"
                                             />
-                                            <p className="text-[9px] text-green-600 mt-0.5 font-bold">Hard: 2-20 | Need 12.5+ for donation</p>
+                                            <p className="text-[9px] text-emerald-600 mt-1 font-bold">Requirement: &gt;12.5 g/dL</p>
                                         </div>
-                                        <div>
-                                            <label className="block text-xs text-gray-500 mb-1">BP Systolic (mmHg)</label>
-                                            <input
-                                                type="number"
-                                                name="bpSystolic"
-                                                value={newReport.bpSystolic || ''}
-                                                onChange={handleReportChange}
-                                                className={`input-field w-full p-2 border rounded text-sm ${newReport.bpSystolic && (newReport.bpSystolic < 90 || newReport.bpSystolic > 180) ? 'border-amber-400 bg-amber-50' : ''}`}
-                                                placeholder="70-240"
-                                                min="70"
-                                                max="240"
-                                            />
-                                            <p className="text-[9px] text-green-600 mt-0.5 font-bold">Hard: 70-240 | Soft: 90-180</p>
+                                        <div className="space-y-1">
+                                            <label className="input-label text-[10px]">BP Systolic/Diastolic</label>
+                                            <div className="flex items-center gap-2">
+                                               <input
+                                                   type="number"
+                                                   name="bpSystolic"
+                                                   value={newReport.bpSystolic || ''}
+                                                   onChange={handleReportChange}
+                                                   className="input-field p-2"
+                                                   placeholder="Sys"
+                                               />
+                                               <span className="text-slate-400">/</span>
+                                               <input
+                                                   type="number"
+                                                   name="bpDiastolic"
+                                                   value={newReport.bpDiastolic || ''}
+                                                   onChange={handleReportChange}
+                                                   className="input-field p-2"
+                                                   placeholder="Dia"
+                                               />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label className="block text-xs text-gray-500 mb-1">BP Diastolic (mmHg)</label>
-                                            <input
-                                                type="number"
-                                                name="bpDiastolic"
-                                                value={newReport.bpDiastolic || ''}
-                                                onChange={handleReportChange}
-                                                className="input-field w-full p-2 border rounded text-sm"
-                                                placeholder="60-90"
-                                                min="40"
-                                                max="150"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs text-gray-500 mb-1">Pulse (bpm)</label>
+                                        <div className="space-y-1">
+                                            <label className="input-label text-[10px]">Pulse (bpm)</label>
                                             <input
                                                 type="number"
                                                 name="pulseRate"
                                                 value={newReport.pulseRate || ''}
                                                 onChange={handleReportChange}
-                                                className="input-field w-full p-2 border rounded text-sm"
+                                                className="input-field"
                                                 placeholder="60-100"
-                                                min="30"
-                                                max="250"
                                             />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs text-gray-500 mb-1">Temp (°C)</label>
-                                            <input
-                                                type="number"
-                                                name="temperature"
-                                                value={newReport.temperature || ''}
-                                                onChange={handleReportChange}
-                                                className={`input-field w-full p-2 border rounded text-sm ${newReport.temperature && (newReport.temperature < 36 || newReport.temperature > 40) ? 'border-amber-400 bg-amber-50' : ''}`}
-                                                placeholder="35-42.5"
-                                                step="0.1"
-                                                min="35"
-                                                max="42.5"
-                                            />
-                                            <p className="text-[9px] text-green-600 mt-0.5 font-bold">Hard: 35-42.5 | Fever: &gt;37.5°C</p>
                                         </div>
                                     </div>
                                 )}
 
-                                <div>
-                                    <label className="block text-xs text-gray-500 mb-1">Height (cm)</label>
-                                    <input
-                                        type="number"
-                                        name="heightCm"
-                                        value={newReport.heightCm || ''}
-                                        onChange={handleReportChange}
-                                        className={`input-field w-full p-2 border rounded text-sm ${newReport.heightCm && (newReport.heightCm < 60 || newReport.heightCm > 210) ? 'border-amber-400 bg-amber-50' : ''}`}
-                                        placeholder="45 - 230"
-                                        min="45"
-                                        max="230"
-                                    />
-                                    <p className="text-[9px] text-gray-500 mt-0.5 font-bold">Hard: 45-230 | Soft: 60-210</p>
+                                <div className="space-y-2">
+                                    <label className="input-label">Physical Dimensions</label>
+                                    <div className="flex items-center gap-4">
+                                       <div className="flex-1 space-y-1">
+                                          <input name="heightCm" value={newReport.heightCm || ''} onChange={handleReportChange} className="input-field p-2" placeholder="H (cm)" />
+                                          <p className="text-[8px] font-bold text-slate-400">Height</p>
+                                       </div>
+                                       <div className="flex-1 space-y-1">
+                                          <input name="weightKg" value={newReport.weightKg || ''} onChange={handleReportChange} className="input-field p-2" placeholder="W (kg)" />
+                                          <p className="text-[8px] font-bold text-slate-400">Weight</p>
+                                       </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-xs text-gray-500 mb-1">Weight (kg)</label>
-                                    <input
-                                        type="number"
-                                        name="weightKg"
-                                        value={newReport.weightKg || ''}
-                                        onChange={handleReportChange}
-                                        className={`input-field w-full p-2 border rounded text-sm ${newReport.weightKg && (newReport.weightKg < 10 || newReport.weightKg > 200) ? 'border-amber-400 bg-amber-50' : ''}`}
-                                        placeholder="2 - 250"
-                                        min="2"
-                                        max="250"
-                                    />
-                                    <p className="text-[9px] text-gray-500 mt-0.5 font-bold">Hard: 2-250 | Alert: &lt;10 or &gt;200</p>
-                                </div>
-
-                                <div className="md:col-span-2">
-                                    <label className="block text-xs text-gray-500 mb-1">Notes</label>
+                                
+                                <div className="sm:col-span-2 space-y-2">
+                                    <label className="input-label">Clinical Synthesis (Notes)</label>
                                     <textarea
                                         name="notes"
                                         value={newReport.notes}
                                         onChange={handleReportChange}
-                                        className="input-field w-full p-2 border rounded text-sm"
-                                        rows="2"
-                                        placeholder="Additional details..."
+                                        className="input-field min-h-[100px] resize-none"
+                                        placeholder="Specific observation notes..."
                                     ></textarea>
                                 </div>
                             </div>
-                            <div className="flex justify-end">
+                            <div className="flex justify-end gap-4">
+                                <button type="button" onClick={() => setShowAddReport(false)} className="btn-secondary px-8">Discard</button>
                                 <button
                                     type="button"
                                     onClick={addReport}
                                     disabled={!newReport.title}
-                                    className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+                                    className="btn-primary px-10 disabled:opacity-50"
                                 >
-                                    Add to List
+                                    Index Report
                                 </button>
                             </div>
                         </div>

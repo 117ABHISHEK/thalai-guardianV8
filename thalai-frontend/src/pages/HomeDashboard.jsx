@@ -29,21 +29,21 @@ const HomeDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-transparent font-body overflow-x-hidden">
+    <div className="min-h-screen bg-transparent font-body overflow-x-hidden selection:bg-sky-100">
       {/* Hero Section */}
-      <section className="relative pt-16 pb-32 lg:pt-32 lg:pb-48 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative pt-12 pb-24 lg:pt-32 lg:pb-48 overflow-hidden">
+        <div className="container-custom">
            <div className="text-center space-y-8 animate-reveal">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-50 border border-sky-100 text-sky-600 text-xs font-black uppercase tracking-widest shadow-sm">
                  <Sparkles className="w-4 h-4" /> AI-Powered Life Saving Network
               </div>
               
-              <h1 className="text-6xl md:text-8xl font-display font-black text-slate-900 tracking-tight leading-[0.9]">
-                Thal<span className="text-sky-500">AI</span> <br className="hidden md:block" />
+              <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-display font-black text-slate-900 tracking-tighter leading-[0.85]">
+                Thal<span className="text-sky-500">AI</span> <br className="hidden sm:block" />
                 <span className="text-gradient">Guardian</span>
               </h1>
               
-              <p className="text-xl md:text-2xl text-slate-500 max-w-2xl mx-auto leading-relaxed font-medium">
+              <p className="text-lg md:text-2xl text-slate-500 max-w-2xl mx-auto leading-relaxed font-medium px-4 md:px-0">
                 The next generation of blood donor matching. Intelligent, fast, and secure care for Thalassemia patients.
               </p>
 
@@ -77,11 +77,11 @@ const HomeDashboard = () => {
       </section>
 
       {/* Stats Section with Glass Effect */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10 animate-reveal" style={{ animationDelay: '0.2s' }}>
-        <div className="glass rounded-[48px] p-8 lg:p-12 shadow-2xl shadow-slate-200/50">
+      <section className="container-custom -mt-16 md:-mt-20 relative z-10 animate-reveal" style={{ animationDelay: '0.2s' }}>
+        <div className="glass rounded-[32px] md:rounded-[48px] p-6 lg:p-12 shadow-2xl shadow-slate-200/50">
            {!loading && stats && <PublicStats stats={stats} />}
            {loading && (
-             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
                 {[1,2,3,4].map(i => (
                   <div key={i} className="animate-pulse space-y-4">
                      <div className="w-12 h-12 bg-slate-100 rounded-2xl" />
@@ -95,7 +95,7 @@ const HomeDashboard = () => {
       </section>
 
       {/* Features Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32">
+      <section className="container-custom py-24 md:py-32">
         <div className="text-center mb-20 animate-reveal">
            <h2 className="text-4xl md:text-5xl font-display font-black text-slate-900 mb-4">How We Protect</h2>
            <p className="text-slate-500 font-medium text-lg">Advanced technology meets compassionate care</p>
@@ -137,8 +137,8 @@ const HomeDashboard = () => {
       </section>
 
       {/* Previews with modern separation */}
-      <section className="bg-slate-50/50 py-32 border-y border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="bg-slate-50/50 py-24 md:py-32 border-y border-slate-100">
+        <div className="container-custom">
           <div className="grid lg:grid-cols-2 gap-16">
             <div className="animate-reveal">
                <div className="mb-10">
@@ -163,8 +163,8 @@ const HomeDashboard = () => {
       </section>
 
       {/* Bold CTA */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 mb-10">
-        <div className="relative rounded-[60px] overflow-hidden bg-slate-900 p-12 md:p-24 text-center">
+      <section className="container-custom py-24 md:py-32 mb-10">
+        <div className="relative rounded-[40px] md:rounded-[60px] overflow-hidden bg-slate-900 p-8 md:p-24 text-center">
            {/* Abstract mesh in CTA */}
            <div className="absolute inset-0 opacity-20 pointer-events-none">
               <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-sky-500 rounded-full blur-[100px]" />

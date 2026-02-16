@@ -188,11 +188,11 @@ const DonorRegister = () => {
 
             <form onSubmit={handleSubmit} className="space-y-12 animate-reveal" style={{ animationDelay: '0.1s' }}>
                {/* Biological Context */}
-               <section className="card-premium">
+               <section className="card-premium p-6 md:p-8">
                   <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-8 border-b border-slate-100 pb-4">
                      <Heart className="w-4 h-4 text-rose-500" /> Biological Context
                   </h4>
-                  <div className="grid md:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
                      <div className="space-y-2">
                         <label className="input-label">Chronological Identity (DOB)</label>
                         <div className="relative group">
@@ -249,11 +249,11 @@ const DonorRegister = () => {
                </section>
 
                {/* Donation History */}
-               <section className="card-premium">
+               <section className="card-premium p-6 md:p-8">
                   <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-8 border-b border-slate-100 pb-4">
                      <Activity className="w-4 h-4 text-sky-500" /> Donation Cycle
                   </h4>
-                  <div className="grid md:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
                      <div className="space-y-2">
                         <label className="input-label">Last Successful Cycle</label>
                         <input type="date" name="lastDonationDate" value={formData.lastDonationDate} onChange={handleChange} className="input-field" />
@@ -266,7 +266,7 @@ const DonorRegister = () => {
                </section>
 
                {/* Medical Registry */}
-               <section className="card-premium">
+               <section className="card-premium p-6 md:p-8">
                   <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
                     <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                        <Stethoscope className="w-4 h-4 text-emerald-500" /> Medical Registry
@@ -279,18 +279,27 @@ const DonorRegister = () => {
                   <div className="space-y-6">
                      {formData.medicalHistory.map((entry, idx) => (
                         <div key={idx} className="p-6 bg-slate-50 border border-slate-100 rounded-[32px] relative group/row">
-                           <div className="grid md:grid-cols-2 gap-4">
-                              <input type="text" placeholder="Condition (e.g. Hypertension)" value={entry.condition} onChange={(e) => handleMedicalHistoryChange(idx, 'condition', e.target.value)} className="input-field bg-white" />
-                              <input type="date" value={entry.diagnosisDate} onChange={(e) => handleMedicalHistoryChange(idx, 'diagnosisDate', e.target.value)} className="input-field bg-white" />
-                              <textarea placeholder="Observation details..." value={entry.details} onChange={(e) => handleMedicalHistoryChange(idx, 'details', e.target.value)} className="input-field bg-white md:col-span-2" rows="2" />
+                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="space-y-1">
+                                 <label className="input-label text-[10px]">Condition</label>
+                                 <input type="text" placeholder="e.g. Hypertension" value={entry.condition} onChange={(e) => handleMedicalHistoryChange(idx, 'condition', e.target.value)} className="input-field bg-white" />
+                              </div>
+                              <div className="space-y-1">
+                                 <label className="input-label text-[10px]">Diagnosis Date</label>
+                                 <input type="date" value={entry.diagnosisDate} onChange={(e) => handleMedicalHistoryChange(idx, 'diagnosisDate', e.target.value)} className="input-field bg-white" />
+                              </div>
+                              <div className="sm:col-span-2 space-y-1">
+                                 <label className="input-label text-[10px]">Observations</label>
+                                 <textarea placeholder="Observation details..." value={entry.details} onChange={(e) => handleMedicalHistoryChange(idx, 'details', e.target.value)} className="input-field bg-white" rows="2" />
+                              </div>
                            </div>
-                           <button type="button" onClick={() => setFormData({...formData, medicalHistory: formData.medicalHistory.filter((_, i) => i !== idx)})} className="absolute -top-3 -right-3 p-2 bg-rose-500 text-white rounded-xl shadow-lg opacity-0 group-hover/row:opacity-100 transition-all hover:scale-110">
+                           <button type="button" onClick={() => setFormData({...formData, medicalHistory: formData.medicalHistory.filter((_, i) => i !== idx)})} className="absolute top-2 right-2 p-2 bg-rose-500 text-white rounded-xl shadow-lg opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all hover:scale-110">
                               <Trash2 className="w-4 h-4" />
                            </button>
                         </div>
                      ))}
-                  </div>
-               </section>
+                   </div>
+                </section>
 
                {/* Operational Actions */}
                <div className="flex flex-col sm:flex-row gap-4 pt-10">

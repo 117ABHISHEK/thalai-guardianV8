@@ -170,7 +170,7 @@ const PatientRequestForm = ({ onRequestCreated }) => {
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
   return (
-    <div className="max-w-4xl mx-auto animate-reveal">
+    <div className="container-custom max-w-4xl mx-auto animate-reveal py-8 md:py-12">
       <div className="mb-10">
          <div className="flex items-center gap-3 mb-4">
             <span className="px-4 py-1 bg-rose-50 text-rose-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-rose-100">
@@ -190,11 +190,11 @@ const PatientRequestForm = ({ onRequestCreated }) => {
 
       <form onSubmit={handleSubmit} className="space-y-10">
          {/* Vital Configuration */}
-         <section className="card-premium">
+         <section className="card-premium p-6 md:p-8">
             <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-8 border-b border-slate-100 pb-4">
                <Droplets className="w-4 h-4 text-rose-500" /> Vital Configuration
             </h4>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                <div className="space-y-2">
                   <label className="input-label">Blood Requirement</label>
                   <select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} className="input-field" required>
@@ -217,7 +217,7 @@ const PatientRequestForm = ({ onRequestCreated }) => {
                   />
                   <p className="text-[10px] text-rose-500 font-bold mt-1">Hard: 0.5-6 | Alert: &gt;3 units</p>
                </div>
-               <div className="space-y-2">
+               <div className="space-y-2 sm:col-span-2 lg:col-span-1">
                   <label className="input-label">Urgency Priority</label>
                   <select name="urgency" value={formData.urgency} onChange={handleChange} className="input-field font-black uppercase text-[10px] tracking-widest" required>
                      <option value="low">Low Priority</option>
@@ -230,7 +230,7 @@ const PatientRequestForm = ({ onRequestCreated }) => {
          </section>
 
          {/* Medical Logistics */}
-         <section className="card-premium">
+         <section className="card-premium p-6 md:p-8">
             <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-8 border-b border-slate-100 pb-4">
                <MapPin className="w-4 h-4 text-sky-500" /> Clinical Logistics
             </h4>
@@ -242,7 +242,7 @@ const PatientRequestForm = ({ onRequestCreated }) => {
                      <input type="text" name="hospital" value={formData.hospital} onChange={handleChange} className="input-field pl-12" placeholder="Central City Medical" />
                   </div>
                </div>
-               <div className="grid md:grid-cols-3 gap-4">
+               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-1"><label className="input-label text-[10px]">City</label><input type="text" name="city" value={formData.city} onChange={handleChange} className="input-field py-2.5" /></div>
                   <div className="space-y-1"><label className="input-label text-[10px]">State/Region</label><input type="text" name="state" value={formData.state} onChange={handleChange} className="input-field py-2.5" /></div>
                   <div className="space-y-1"><label className="input-label text-[10px]">Postal Code</label><input type="text" name="zipCode" value={formData.zipCode} onChange={handleChange} className="input-field py-2.5" /></div>
@@ -251,11 +251,11 @@ const PatientRequestForm = ({ onRequestCreated }) => {
          </section>
 
          {/* Protocol Contact */}
-         <section className="card-premium">
+         <section className="card-premium p-6 md:p-8">
             <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-8 border-b border-slate-100 pb-4">
                <User className="w-4 h-4 text-emerald-500" /> Operational Contact
             </h4>
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                <div className="space-y-2">
                   <label className="input-label">On-site Contact</label>
                   <input type="text" name="contactName" value={formData.contactName} onChange={handleChange} className="input-field" placeholder="Full Name" />
@@ -271,7 +271,7 @@ const PatientRequestForm = ({ onRequestCreated }) => {
          </section>
 
          {/* Additional Synthesis */}
-         <section className="card-premium">
+         <section className="card-premium p-6 md:p-8">
             <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">
                <FileText className="w-4 h-4 text-indigo-500" /> Supplementary Case Notes
             </h4>

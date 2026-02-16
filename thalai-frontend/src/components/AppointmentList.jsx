@@ -193,9 +193,9 @@ const AppointmentList = ({ role }) => {
            <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-2 font-black">Book a consultation to start</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-x-auto md:overflow-visible pb-4 no-scrollbar">
            {appointments.map((apt) => (
-              <div key={apt._id} className={`card-premium group hover:shadow-2xl hover:shadow-slate-200/50 transition-all border border-slate-100 bg-white p-6 relative ${activeDropdown === apt._id ? 'z-50' : 'z-0'}`}>
+              <div key={apt._id} className={`card-premium group hover:shadow-2xl hover:shadow-slate-200/50 transition-all border border-slate-100 bg-white p-6 relative min-w-[320px] md:min-w-0 ${activeDropdown === apt._id ? 'z-50' : 'z-0'}`}>
                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="flex items-center gap-6">
                        {/* Date Block */}

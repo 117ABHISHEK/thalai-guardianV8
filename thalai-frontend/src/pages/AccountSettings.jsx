@@ -198,12 +198,12 @@ const AccountSettings = () => {
   return (
     <div className="min-h-screen bg-transparent font-body pb-32 animate-reveal">
       {/* Header */}
-      <div className="glass border-b border-slate-100 sticky top-20 z-40">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="glass border-b border-slate-100 sticky top-16 md:top-20 z-40">
+        <div className="container-custom py-6 md:py-8">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => navigate(`/${user?.role}-dashboard`)} 
-              className="p-3 bg-white border border-slate-100 rounded-2xl hover:bg-slate-50 transition-all"
+              className="p-3 bg-white border border-slate-100 rounded-2xl hover:bg-slate-50 transition-all shadow-sm"
             >
               <ArrowLeft className="w-5 h-5 text-slate-400" />
             </button>
@@ -213,7 +213,7 @@ const AccountSettings = () => {
                   User Control Panel
                 </span>
               </div>
-              <h1 className="text-3xl font-display font-black text-slate-900 tracking-tight">
+              <h1 className="text-2xl md:text-3xl font-display font-black text-slate-900 tracking-tight">
                 Account <span className="text-sky-500">Settings</span>
               </h1>
             </div>
@@ -221,7 +221,7 @@ const AccountSettings = () => {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="container-custom py-8 md:py-10">
         {/* Message Alert */}
         {message.text && (
           <div className={`mb-6 p-4 rounded-2xl flex items-center gap-3 animate-reveal ${
@@ -230,7 +230,7 @@ const AccountSettings = () => {
             'bg-sky-50 border border-sky-100 text-sky-700'
           }`}>
             {message.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-            <span className="font-bold text-sm">{message.text}</span>
+            <span className="font-bold text-sm tracking-tight">{message.text}</span>
           </div>
         )}
 
@@ -335,27 +335,29 @@ const AccountSettings = () => {
                 </select>
               </div>
 
-              <div className="space-y-2 md:col-span-2">
+              <div className="space-y-4 md:col-span-2">
                 <label className="flex items-center gap-2 text-sm font-black text-slate-700 uppercase tracking-widest">
                   <MapPin className="w-4 h-4" />
-                  Address
+                  Residency Details
                 </label>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    name="address.street"
-                    value={formData.address.street}
-                    onChange={handleChange}
-                    placeholder="Street"
-                    className="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
+                    <input
+                      type="text"
+                      name="address.street"
+                      value={formData.address.street}
+                      onChange={handleChange}
+                      placeholder="Street Address"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
+                    />
+                  </div>
                   <input
                     type="text"
                     name="address.city"
                     value={formData.address.city}
                     onChange={handleChange}
                     placeholder="City"
-                    className="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
                   />
                   <input
                     type="text"
@@ -363,7 +365,7 @@ const AccountSettings = () => {
                     value={formData.address.state}
                     onChange={handleChange}
                     placeholder="State"
-                    className="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
                   />
                   <input
                     type="text"
@@ -371,7 +373,7 @@ const AccountSettings = () => {
                     value={formData.address.zipCode}
                     onChange={handleChange}
                     placeholder="ZIP Code"
-                    className="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
                   />
                 </div>
               </div>

@@ -111,26 +111,26 @@ const RequestsPage = () => {
   })) || [];
 
   return (
-    <div className="min-h-screen bg-transparent font-body py-20 pb-40 animate-slide-up">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-transparent font-body py-12 md:py-20 pb-40 animate-slide-up">
+      <div className="container-custom">
         
         {/* Header Section */}
-        <div className="mb-20 animate-reveal">
+        <div className="mb-12 md:mb-20 animate-reveal">
            <div className="flex items-center gap-3 mb-4">
               <span className="px-4 py-1 bg-rose-50 text-rose-600 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-rose-100">
                 Live Requirement Map
               </span>
            </div>
-           <h1 className="text-5xl md:text-6xl font-display font-black text-slate-900 tracking-tight leading-none mb-6">
+           <h1 className="text-4xl md:text-6xl font-display font-black text-slate-900 tracking-tight leading-tight mb-6">
              Patient <span className="text-gradient">Requests</span>
            </h1>
-           <p className="text-xl text-slate-500 max-w-2xl font-medium leading-relaxed">
+           <p className="text-lg md:text-xl text-slate-500 max-w-2xl font-medium leading-relaxed">
              Monitoring real-time blood requirements across the network. Urgent cases are prioritized by our AI matching engine.
            </p>
         </div>
 
         {/* Analytics Section */}
-        <div className="grid lg:grid-cols-2 gap-10 mb-16 animate-reveal" style={{ animationDelay: '0.1s' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 mb-16 animate-reveal" style={{ animationDelay: '0.1s' }}>
           {statusData.length > 0 && (
             <div className="card-premium h-full">
                <div className="flex items-center gap-3 mb-8">
@@ -185,17 +185,17 @@ const RequestsPage = () => {
         </div>
 
         {/* Hero CTA for Donors */}
-        <div className="mt-20 p-12 bg-white border border-slate-100 rounded-[48px] flex flex-col md:flex-row items-center justify-between gap-8 animate-reveal" style={{ animationDelay: '0.3s' }}>
+        <div className="mt-20 p-8 md:p-12 bg-white border border-slate-100 rounded-[32px] md:rounded-[48px] flex flex-col md:flex-row items-center justify-between gap-8 animate-reveal" style={{ animationDelay: '0.3s' }}>
            <div className="flex items-center gap-6">
-              <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-[28px] flex items-center justify-center shadow-xl shadow-rose-200/50">
-                 <Droplets className="w-10 h-10" />
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-rose-50 text-rose-500 rounded-[24px] md:rounded-[28px] flex items-center justify-center shadow-xl shadow-rose-200/50 flex-shrink-0">
+                 <Droplets className="w-8 h-8 md:w-10 md:h-10" />
               </div>
               <div className="text-left">
-                 <h3 className="text-3xl font-display font-black text-slate-900">Response is Action</h3>
-                 <p className="text-slate-500 font-medium">Your donation can close these pending requests today.</p>
+                 <h3 className="text-2xl md:text-3xl font-display font-black text-slate-900">Response is Action</h3>
+                 <p className="text-slate-500 font-medium text-sm md:text-base">Your donation can close these pending requests today.</p>
               </div>
            </div>
-           <button onClick={() => navigate('/register')} className="btn-primary py-5 px-12 text-lg shadow-2xl shadow-sky-500/20 group">
+           <button onClick={() => navigate('/register')} className="btn-primary w-full md:w-auto py-4 md:py-5 px-12 text-lg shadow-2xl shadow-sky-500/20 group">
               Become a Hero <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
            </button>
         </div>

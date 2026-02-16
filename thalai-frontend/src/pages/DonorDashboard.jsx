@@ -130,8 +130,8 @@ const DonorDashboard = () => {
   return (
     <div className="min-h-screen bg-transparent font-body pb-64 animate-slide-up">
       {/* Premium Header */}
-      <div className="glass border-b border-slate-100 sticky top-20 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="glass border-b border-slate-100 sticky top-16 md:top-20 z-40">
+        <div className="container-custom py-6 md:py-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-6 animate-reveal">
               <ProfilePictureUpload size="w-20 h-20" />
@@ -170,7 +170,7 @@ const DonorDashboard = () => {
         </div>
 
         {/* Improved Tabs */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-custom">
           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
             {tabs.map((tab) => (
               <button
@@ -190,7 +190,7 @@ const DonorDashboard = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="container-custom py-8 md:py-12">
         {message && (
           <div className="mb-8 animate-reveal">
             <div className={`p-4 rounded-[20px] flex items-center gap-3 border shadow-sm ${
@@ -209,7 +209,7 @@ const DonorDashboard = () => {
         {activeTab === 'overview' && (
           <div className="space-y-10">
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               <StatCard
                 title="Donations Saved"
                 value={availability?.totalDonations || 0}
@@ -400,7 +400,7 @@ const DonorDashboard = () => {
                   setLoading(false);
                 }
               }} className="space-y-8">
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                   <div className="space-y-2">
                     <label className="input-label">Display Name</label>
                     <input type="text" name="name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required className="input-field" />
@@ -428,8 +428,8 @@ const DonorDashboard = () => {
                   <h3 className="text-xl font-display font-bold text-slate-900 mb-6 flex items-center gap-2">
                     <ShieldCheck className="w-6 h-6 text-sky-500" /> Residency details
                   </h3>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="lg:col-span-2 space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="sm:col-span-2 lg:col-span-2 space-y-2">
                       <label className="input-label">Street Address</label>
                       <input type="text" name="street" value={formData.street} onChange={(e) => setFormData({...formData, street: e.target.value})} className="input-field" />
                     </div>
@@ -449,8 +449,8 @@ const DonorDashboard = () => {
                   <button type="button" onClick={() => { setEditing(false); fetchData(); }} className="btn-secondary flex-1">Discard</button>
                 </div>
               </form>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
                 {[
                   { label: 'Name', value: profile?.name, icon: User, color: 'text-sky-500', bg: 'bg-sky-50' },
                   { label: 'Role', value: profile?.role, icon: ShieldCheck, color: 'text-indigo-500', bg: 'bg-indigo-50', capitalize: true },

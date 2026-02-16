@@ -194,21 +194,21 @@ const DoctorDashboard = () => {
   return (
     <div className="min-h-screen bg-transparent font-body pb-64 animate-slide-up">
       {/* Premium Medical Header */}
-      <div className="glass border-b border-slate-100 sticky top-20 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="glass border-b border-slate-100 sticky top-16 md:top-20 z-40">
+        <div className="container-custom py-6 md:py-10">
            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 animate-reveal">
               <div className="flex items-center gap-6">
-                 <ProfilePictureUpload size="w-20 h-20" />
+                 <ProfilePictureUpload size="w-16 h-16 md:w-20 md:h-20" />
                  <div>
                     <div className="flex items-center gap-2 mb-2">
                        <span className="px-3 py-1 bg-sky-50 text-sky-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-sky-100">
                           Medical Practitioner Hub
                        </span>
                     </div>
-                    <h1 className="text-4xl font-display font-black text-slate-900 tracking-tight leading-tight">
+                    <h1 className="text-3xl md:text-4xl font-display font-black text-slate-900 tracking-tight leading-tight">
                        Doctor <span className="text-sky-500 text-gradient">{user?.name}</span>
                     </h1>
-                    <p className="text-slate-500 font-medium mt-1">Reviewing clinical care for <span className="text-slate-900 font-bold">{stats.activePatientsCount} patients</span></p>
+                    <p className="text-slate-500 font-medium mt-1 text-sm md:text-base">Reviewing clinical care for <span className="text-slate-900 font-bold">{stats.activePatientsCount} patients</span></p>
                  </div>
               </div>
 
@@ -225,7 +225,7 @@ const DoctorDashboard = () => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-custom">
           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
             {tabs.map((tab) => (
               <button
@@ -245,7 +245,7 @@ const DoctorDashboard = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="container-custom py-8 md:py-12">
         {activeTab === 'patients' ? (
           <div className="space-y-10 animate-reveal">
              {/* Key Metrics */}
@@ -421,8 +421,8 @@ const DoctorDashboard = () => {
 
                       <div className="pt-8 border-t border-slate-100">
                         <h3 className="text-xl font-display font-bold text-slate-900 mb-6">Clinic Address</h3>
-                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                           <div className="lg:col-span-2 space-y-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                           <div className="sm:col-span-2 lg:col-span-2 space-y-2">
                               <label className="input-label">Street</label>
                               <input type="text" name="street" value={formData.street} onChange={handleProfileChange} className="input-field" />
                            </div>
