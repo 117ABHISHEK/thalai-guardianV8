@@ -43,7 +43,12 @@ const Navbar = () => {
     }
   };
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    if (path.includes('?')) {
+      return location.pathname + location.search === path;
+    }
+    return location.pathname === path;
+  };
 
   const handleLogout = () => {
     logout();
@@ -92,7 +97,7 @@ const Navbar = () => {
             <div className="p-2 sm:p-2.5 bg-sky-500 rounded-2xl shadow-lg shadow-sky-500/30">
               <Droplets className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <span className="text-lg sm:text-xl font-display font-black text-slate-900 tracking-tight hidden xs:block">
+            <span className="text-lg sm:text-xl font-display font-black text-slate-900 tracking-tight hidden sm:block">
               Thal<span className="text-sky-500">AI</span> Guardian
             </span>
           </Link>
@@ -131,10 +136,10 @@ const Navbar = () => {
                   </button>
 
                   {isNotificationOpen && (
-                    <>
+                    <div className="hidden md:block">
                       <div className="fixed inset-0 z-[9998]" onClick={() => setIsNotificationOpen(false)} />
                       <NotificationDropdown onClose={() => setIsNotificationOpen(false)} />
-                    </>
+                    </div>
                   )}
                 </div>
                 
@@ -204,80 +209,130 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Improved Mobile Overlay Menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-[1000] bg-white animate-reveal">
-           <div className="flex flex-col h-full">
-              <div className="container-custom h-16 flex items-center justify-between border-b border-slate-50">
-                 <div className="flex items-center gap-2.5">
-                    <div className="p-2 bg-sky-500 rounded-xl">
+      {/* Global Notification Dropdown for Mobile/Tablet */}
+      {isNotificationOpen && (
+        <div className="md:hidden">
+          <div className="fixed inset-0 z-[1001] bg-slate-900/20 backdrop-blur-[2px]" onClick={() => setIsNotificationOpen(false)} />
+          <div className="fixed top-20 right-4 left-4 z-[1002] animate-slide-up origin-top">
+            <NotificationDropdown onClose={() => setIsNotificationOpen(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Premium Mobile Overlay Menu */}
+      <div className={`fixed inset-0 z-[1000] md:hidden transition-all duration-500 ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        {/* Backdrop glass */}
+        <div className="absolute inset-0 bg-white/95 backdrop-blur-2xl" onClick={() => setIsMobileMenuOpen(false)} />
+        
+        {/* Menu Content */}
+        <div className={`absolute inset-y-0 right-0 w-full max-w-sm bg-white shadow-2xl transition-transform duration-500 ease-out ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+           <div className="flex flex-col h-full bg-slate-50/50">
+              <div className="p-6 flex items-center justify-between border-b border-slate-100 bg-white">
+                 <div className="flex items-center gap-3">
+                    <div className="p-2 bg-sky-500 rounded-xl shadow-lg shadow-sky-500/20">
                       <Droplets className="w-5 h-5 text-white" />
                     </div>
-                    <span className="text-lg font-display font-black text-slate-900">Guardian Menu</span>
+                    <span className="text-xl font-display font-black text-slate-900">Guardian <span className="text-sky-500">Menu</span></span>
                  </div>
-                 <button onClick={() => setIsMobileMenuOpen(false)} className="p-2.5 bg-slate-50 rounded-xl">
-                    <X className="w-6 h-6 text-slate-600" />
+                 <button 
+                  onClick={() => setIsMobileMenuOpen(false)} 
+                  className="p-3 bg-slate-100 text-slate-600 rounded-2xl hover:bg-slate-200 active:scale-90 transition-all font-bold"
+                 >
+                    <X className="w-5 h-5" />
                  </button>
               </div>
               
-              <div className="flex-grow overflow-y-auto px-6 py-10 space-y-2">
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-4">Navigation</p>
-                 {navLinks.map((link) => (
-                   <Link
-                     key={link.path}
-                     to={link.path}
-                     onClick={() => setIsMobileMenuOpen(false)}
-                     className={`flex items-center gap-5 px-6 py-4 rounded-3xl text-xl font-bold transition-all ${
-                       isActive(link.path)
-                         ? 'bg-sky-50 text-sky-600'
-                         : 'text-slate-600 hover:bg-slate-50'
-                     }`}
-                   >
-                     <div className={`p-2 rounded-xl ${isActive(link.path) ? 'bg-white shadow-sm' : 'bg-slate-100'}`}>
-                        <link.icon className="w-6 h-6" />
-                     </div>
-                     {link.name}
-                   </Link>
-                 ))}
-                 
-                 {isAuthenticated && (
-                   <div className="pt-8 mt-8 border-t border-slate-100">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 ml-4">User Preferences</p>
-                      <div className="grid grid-cols-2 gap-4">
-                         <button onClick={() => { navigate('/account-settings'); setIsMobileMenuOpen(false); }} className="flex flex-col items-center gap-3 p-6 rounded-[32px] bg-slate-50 text-slate-600 font-bold">
-                            <Settings className="w-8 h-8" />
-                            <span className="text-xs">Settings</span>
-                         </button>
-                         <button onClick={handleLogout} className="flex flex-col items-center gap-3 p-6 rounded-[32px] bg-rose-50 text-rose-600 font-bold">
-                            <LogOut className="w-8 h-8" />
-                            <span className="text-xs">Logout</span>
-                         </button>
+              <div className="flex-grow overflow-y-auto px-6 py-8 space-y-6">
+                 {/* User Profile Header in Mobile Menu */}
+                 {isAuthenticated && user && (
+                   <div className="card-premium p-6 !bg-slate-900 !text-white border-0 overflow-hidden relative group animate-reveal">
+                      <div className="absolute -right-4 -top-4 w-24 h-24 bg-sky-500/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+                      <div className="relative z-10 flex items-center gap-4">
+                         <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-0.5 overflow-hidden">
+                            {user.profilePicture ? (
+                              <img src={user.profilePicture} alt={user.name} className="w-full h-full object-cover rounded-xl" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-sky-500 text-white font-black text-xl">
+                                {user.name?.charAt(0)}
+                              </div>
+                            )}
+                         </div>
+                         <div className="flex-1">
+                            <p className="text-xs font-black text-sky-400 uppercase tracking-widest mb-1">Authenticated {user.role}</p>
+                            <h4 className="text-lg font-black tracking-tight truncate">{user.name}</h4>
+                         </div>
+                      </div>
+                      <div className="mt-6 flex gap-2">
+                        <button 
+                          onClick={() => { navigate('/account-settings'); setIsMobileMenuOpen(false); }}
+                          className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/10 transition-all"
+                        >
+                          Modify Space
+                        </button>
+                        <button 
+                          onClick={handleLogout}
+                          className="flex-1 py-2.5 bg-rose-500/80 hover:bg-rose-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                        >
+                          Sign Out
+                        </button>
                       </div>
                    </div>
                  )}
+
+                 {/* Navigation Links */}
+                 <div className="space-y-1">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-4">Registry Access</p>
+                    {navLinks.map((link, idx) => (
+                      <Link
+                        key={link.path}
+                        to={link.path}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`flex items-center gap-5 px-6 py-4 rounded-3xl text-lg font-bold transition-all animate-reveal`}
+                        style={{ animationDelay: `${idx * 100}ms` }}
+                      >
+                        <div className={`p-2.5 rounded-2xl transition-all ${
+                          isActive(link.path) 
+                            ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' 
+                            : 'bg-white shadow-sm text-slate-400 group-hover:text-sky-500'
+                        }`}>
+                           <link.icon className="w-5 h-5" />
+                        </div>
+                        <span className={isActive(link.path) ? 'text-sky-600' : 'text-slate-600'}>{link.name}</span>
+                        {isActive(link.path) && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-sky-500 shadow-[0_0_10px_#0ea5e9]" />}
+                      </Link>
+                    ))}
+                 </div>
                  
                  {!isAuthenticated && (
-                   <div className="pt-10 flex flex-col gap-4">
-                      <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="btn-secondary w-full py-5 text-xl">Login</Link>
-                      <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className="btn-primary w-full py-5 text-xl">Join the Mission</Link>
+                   <div className="pt-8 border-t border-slate-100 flex flex-col gap-4 animate-reveal" style={{ animationDelay: '300ms' }}>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-4">Onboarding</p>
+                      <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="btn-secondary w-full py-4 text-base shadow-lg shadow-slate-200/50">
+                        <LogIn className="w-4 h-4" /> Sign In
+                      </Link>
+                      <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className="btn-primary w-full py-4 text-base">
+                        <UserPlus className="w-4 h-4" /> Join Initiative
+                      </Link>
                    </div>
                  )}
               </div>
               
-              <div className="p-8 border-t border-slate-50 bg-slate-50/50">
-                 <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center">
-                       <Heart className="w-6 h-6 text-rose-500 fill-rose-500" />
+              <div className="p-8 bg-white border-t border-slate-100">
+                 <div className="flex items-center gap-4 animate-reveal" style={{ animationDelay: '500ms' }}>
+                    <div className="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center border border-rose-100">
+                       <Heart className="w-6 h-6 text-rose-500 fill-rose-500 animate-pulse" />
                     </div>
                     <div>
-                       <p className="text-xs font-black text-slate-900">Saving Lives Daily</p>
-                       <p className="text-[10px] font-bold text-slate-400">Version 8.0.2 Stable</p>
+                       <p className="text-xs font-black text-slate-900">Life-Saving Protocol v8.0</p>
+                       <p className="text-[10px] font-bold text-sky-500 uppercase tracking-widest transition-all hover:tracking-[0.2em] cursor-default">
+                          Verified & Encrypted
+                       </p>
                     </div>
                  </div>
               </div>
            </div>
         </div>
-      )}
+      </div>
+      {/* End Mobile Overlay */}
     </nav>
   );
 };
