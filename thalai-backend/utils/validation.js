@@ -394,11 +394,11 @@ const requestValidationRules = () => {
       .withMessage('Invalid blood group'),
     body('unitsRequired')
       .notEmpty().withMessage('Units required is required')
-      .isInt({ min: 1, max: 10 })
+      .isFloat({ min: 1, max: 10 })
       .withMessage('Units required must be between 1 and 10'),
     body('urgency')
       .optional()
-      .isIn(['low', 'medium', 'high', 'emergency'])
+      .isIn(['low', 'medium', 'high', 'critical', 'emergency'])
       .withMessage('Invalid urgency level'),
     body('location')
       .optional()
@@ -448,7 +448,7 @@ const updateUrgencyRules = () => {
   return [
     body('urgency')
       .notEmpty().withMessage('Urgency is required')
-      .isIn(['low', 'medium', 'high', 'emergency'])
+      .isIn(['low', 'medium', 'high', 'critical', 'emergency'])
       .withMessage('Invalid urgency level')
   ];
 };

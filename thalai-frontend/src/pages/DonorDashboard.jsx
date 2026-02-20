@@ -438,6 +438,10 @@ const DonorDashboard = () => {
                       <input type="text" name="city" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="input-field" />
                     </div>
                     <div className="space-y-2">
+                      <label className="input-label">State</label>
+                      <input type="text" name="state" value={formData.state} onChange={(e) => setFormData({...formData, state: e.target.value})} className="input-field" />
+                    </div>
+                    <div className="space-y-2">
                       <label className="input-label">Zip Code</label>
                       <input type="text" name="zipCode" value={formData.zipCode} onChange={(e) => setFormData({...formData, zipCode: e.target.value})} className="input-field" />
                     </div>

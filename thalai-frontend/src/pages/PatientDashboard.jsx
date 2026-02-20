@@ -354,6 +354,10 @@ const PatientDashboard = () => {
                         <label className="input-label">State</label>
                         <input type="text" name="state" value={formData.state} onChange={handleChange} className="input-field" />
                       </div>
+                      <div className="space-y-2">
+                        <label className="input-label">Zip Code</label>
+                        <input type="text" name="zipCode" value={formData.zipCode} onChange={handleChange} className="input-field" placeholder="123456" />
+                      </div>
                     </div>
                   </div>
 

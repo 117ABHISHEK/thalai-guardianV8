@@ -242,6 +242,13 @@ const PatientRequestForm = ({ onRequestCreated }) => {
                      <input type="text" name="hospital" value={formData.hospital} onChange={handleChange} className="input-field pl-12" placeholder="Central City Medical" />
                   </div>
                </div>
+               <div className="space-y-2">
+                  <label className="input-label">Street Address / Ward / Room</label>
+                  <div className="relative group">
+                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                     <input type="text" name="address" value={formData.address} onChange={handleChange} className="input-field pl-12" placeholder="123 Care St / Block B" />
+                  </div>
+               </div>
                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-1"><label className="input-label text-[10px]">City</label><input type="text" name="city" value={formData.city} onChange={handleChange} className="input-field py-2.5" /></div>
                   <div className="space-y-1"><label className="input-label text-[10px]">State/Region</label><input type="text" name="state" value={formData.state} onChange={handleChange} className="input-field py-2.5" /></div>
