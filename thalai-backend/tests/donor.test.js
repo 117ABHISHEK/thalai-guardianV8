@@ -33,6 +33,7 @@ describe('Donor Registration and Eligibility Tests', () => {
         dob: '2010-01-01', // 14 years old
         heightCm: 150,
         weightKg: 45,
+        address: { street: '123 St', city: 'Mumbai', state: 'Maharashtra', zipCode: '400001' }
       };
 
       const response = await request(app)
@@ -50,15 +51,18 @@ describe('Donor Registration and Eligibility Tests', () => {
       const eighteenYearsAgo = new Date();
       eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
 
+      const formattedDob = `${eighteenYearsAgo.getFullYear()}-${String(eighteenYearsAgo.getMonth() + 1).padStart(2, '0')}-${String(eighteenYearsAgo.getDate()).padStart(2, '0')}`;
+
       const donorData = {
         name: 'Adult Donor',
         email: 'adult@example.com',
         password: 'password123',
         role: 'donor',
         bloodGroup: 'O+',
-        dob: eighteenYearsAgo.toISOString().split('T')[0],
+        dob: formattedDob,
         heightCm: 175,
         weightKg: 70,
+        address: { street: '123 St', city: 'Mumbai', state: 'Maharashtra', zipCode: '400001' }
       };
 
       const response = await request(app)
@@ -75,6 +79,10 @@ describe('Donor Registration and Eligibility Tests', () => {
       const almostEighteen = new Date();
       almostEighteen.setFullYear(almostEighteen.getFullYear() - 18);
       almostEighteen.setDate(almostEighteen.getDate() + 1); // One day short of 18
+      const dobStr = almostEighteen.toISOString().split('T')[0];
+      console.log(`TEST DEBUG: Almost Adult DOB: ${dobStr}`);
+
+      const formattedDob = `${almostEighteen.getFullYear()}-${String(almostEighteen.getMonth() + 1).padStart(2, '0')}-${String(almostEighteen.getDate()).padStart(2, '0')}`;
 
       const donorData = {
         name: 'Almost Adult',
@@ -82,9 +90,10 @@ describe('Donor Registration and Eligibility Tests', () => {
         password: 'password123',
         role: 'donor',
         bloodGroup: 'O+',
-        dob: almostEighteen.toISOString().split('T')[0],
+        dob: formattedDob,
         heightCm: 175,
         weightKg: 70,
+        address: { street: '123 St', city: 'Mumbai', state: 'Maharashtra', zipCode: '400001' }
       };
 
       const response = await request(app)
@@ -104,6 +113,7 @@ describe('Donor Registration and Eligibility Tests', () => {
         role: 'patient',
         bloodGroup: 'A-',
         dob: '2010-01-01',
+        address: { street: '123 St', city: 'Mumbai', state: 'Maharashtra', zipCode: '400001' }
       };
 
       const response = await request(app)
@@ -132,6 +142,7 @@ describe('Donor Registration and Eligibility Tests', () => {
         heightCm: 175,
         weightKg: 70,
         lastDonationDate: sixtyDaysAgo.toISOString().split('T')[0],
+        address: { street: '123 St', city: 'Mumbai', state: 'Maharashtra', zipCode: '400001' }
       };
 
       const response = await request(app)
@@ -159,6 +170,7 @@ describe('Donor Registration and Eligibility Tests', () => {
         heightCm: 175,
         weightKg: 70,
         lastDonationDate: ninetyDaysAgo.toISOString().split('T')[0],
+        address: { street: '123 St', city: 'Mumbai', state: 'Maharashtra', zipCode: '400001' }
       };
 
       const response = await request(app)
@@ -183,6 +195,7 @@ describe('Donor Registration and Eligibility Tests', () => {
         heightCm: 175,
         weightKg: 70,
         lastDonationDate: eightyNineDaysAgo.toISOString().split('T')[0],
+        address: { street: '123 St', city: 'Mumbai', state: 'Maharashtra', zipCode: '400001' }
       };
 
       const response = await request(app)
@@ -204,6 +217,7 @@ describe('Donor Registration and Eligibility Tests', () => {
         heightCm: 175,
         weightKg: 70,
         // No lastDonationDate
+        address: { street: '123 St', city: 'Mumbai', state: 'Maharashtra', zipCode: '400001' }
       };
 
       const response = await request(app)
@@ -225,6 +239,7 @@ describe('Donor Registration and Eligibility Tests', () => {
         role: 'donor',
         bloodGroup: 'O+',
         dateOfBirth: '1990-01-01',
+        address: { street: '123 St', city: 'Mumbai', state: 'Maharashtra', zipCode: '400001' }
       });
 
       const donor = await Donor.create({
@@ -255,6 +270,7 @@ describe('Donor Registration and Eligibility Tests', () => {
         role: 'donor',
         bloodGroup: 'O+',
         dateOfBirth: '1990-01-01',
+        address: { street: '123 St', city: 'Mumbai', state: 'Maharashtra', zipCode: '400001' }
       });
 
       const donor = await Donor.create({
@@ -284,6 +300,7 @@ describe('Donor Registration and Eligibility Tests', () => {
         role: 'donor',
         bloodGroup: 'O+',
         dateOfBirth: '1990-01-01',
+        address: { street: '123 St', city: 'Mumbai', state: 'Maharashtra', zipCode: '400001' }
       });
 
       const lastDonationDate = new Date('2024-01-01');

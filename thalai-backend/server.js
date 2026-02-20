@@ -2,9 +2,12 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 require('dotenv').config();
+const helmet = require('helmet');
+const hpp = require('hpp');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 const logger = require('./utils/logger');
+const { apiLimiter } = require('./middleware/rateLimiter');
 
 // Import Routes
 const publicRoutes = require('./routes/publicRoutes');
@@ -69,9 +72,11 @@ const corsOptions = {
 };
 
 // Middleware
+app.use(helmet()); // Set security HTTP headers
+app.use(hpp()); // Prevent HTTP Parameter Pollution
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '1mb' })); // Strict body size limit
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // HTTP request logging with Morgan
 if (process.env.NODE_ENV === 'development') {
@@ -90,6 +95,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Routes
+app.use('/api', apiLimiter); // Standard rate limit for all API calls
 app.use('/api/public', publicRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
@@ -154,8 +160,8 @@ app.use(errorHandler);
 
 // Start Server
 const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
-  if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== 'test') {
+  const server = app.listen(PORT, () => {
     logger.info(`Server started on port ${PORT}`, {
       port: PORT,
       environment: process.env.NODE_ENV || 'development',
@@ -163,26 +169,26 @@ const server = app.listen(PORT, () => {
     });
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
-  }
-});
+  });
 
-// Handle server errors gracefully
-server.on('error', (error) => {
-  logger.error('Server error', { error: error.message, code: error.code, stack: error.stack });
-  if (error.code === 'EADDRINUSE') {
-    console.error(`❌ Port ${PORT} is already in use!`);
-    console.error(`\n💡 Try one of these solutions:`);
-    console.error(`   1. Kill the process using port ${PORT}:`);
-    console.error(`      Windows: netstat -ano | findstr :${PORT}`);
-    console.error(`      Then: taskkill /PID <PID> /F`);
-    console.error(`   2. Or use a different port: PORT=5001 npm run dev`);
-    console.error(`   3. Or run: npm run kill-port\n`);
-    process.exit(1);
-  } else {
-    console.error('❌ Server error:', error);
-    process.exit(1);
-  }
-});
+  // Handle server errors gracefully
+  server.on('error', (error) => {
+    logger.error('Server error', { error: error.message, code: error.code, stack: error.stack });
+    if (error.code === 'EADDRINUSE') {
+      console.error(`❌ Port ${PORT} is already in use!`);
+      console.error(`\n💡 Try one of these solutions:`);
+      console.error(`   1. Kill the process using port ${PORT}:`);
+      console.error(`      Windows: netstat -ano | findstr :${PORT}`);
+      console.error(`      Then: taskkill /PID <PID> /F`);
+      console.error(`   2. Or use a different port: PORT=5001 npm run dev`);
+      console.error(`   3. Or run: npm run kill-port\n`);
+      process.exit(1);
+    } else {
+      console.error('❌ Server error:', error);
+      process.exit(1);
+    }
+  });
+}
 
 module.exports = app;
 

@@ -10,6 +10,7 @@ const {
 } = require('../controllers/requestController');
 const { protect } = require('../middleware/authMiddleware');
 const { allowRoles } = require('../middleware/roleMiddleware');
+const { requestValidationRules, updateUrgencyRules, handleValidationErrors } = require('../utils/validation');
 
 // All routes require authentication
 router.use(protect);
@@ -17,7 +18,7 @@ router.use(protect);
 // @route   POST /api/requests
 // @desc    Create a new blood request
 // @access  Private (Patient)
-router.post('/', allowRoles('patient'), createRequest);
+router.post('/', allowRoles('patient'), requestValidationRules(), handleValidationErrors, createRequest);
 
 // @route   GET /api/requests/user/:id
 // @desc    Get all requests for a specific patient
@@ -42,6 +43,6 @@ router.put('/:id/cancel', cancelRequest);
 // @route   PATCH /api/requests/:id/urgency
 // @desc    Update request urgency (Admin only)
 // @access  Private/Admin
-router.patch('/:id/urgency', allowRoles('admin'), updateUrgency);
+router.patch('/:id/urgency', allowRoles('admin'), updateUrgencyRules(), handleValidationErrors, updateUrgency);
 
 module.exports = router;

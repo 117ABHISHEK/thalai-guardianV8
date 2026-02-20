@@ -3,7 +3,7 @@
  * Centralized validation functions for donor registration, donation eligibility, and data validation
  */
 
-const { body, validationResult } = require('express-validator');
+const { body, validationResult, matchedData } = require('express-validator');
 const {
   validateDonorRegistration,
   calculateAge,
@@ -15,6 +15,7 @@ const {
 
 /**
  * Validation result handler middleware
+ * Enforces strict input by rejecting unexpected fields
  */
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
@@ -25,11 +26,41 @@ const handleValidationErrors = (req, res, next) => {
       errors: errors.array().map((err) => ({
         field: err.path || err.param,
         message: err.msg,
-        value: err.value,
       })),
     });
   }
+
+  // Reject unexpected fields (Strict Mode)
+  const data = matchedData(req, { includeOptionals: true });
+  const bodyKeys = Object.keys(req.body);
+  const matchedKeys = Object.keys(data);
+  const unknownKeys = bodyKeys.filter(key => !matchedKeys.includes(key));
+
+  if (unknownKeys.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: `Request rejected: Unexpected fields detected: ${unknownKeys.join(', ')}`,
+      error: 'UNEXPECTED_FIELDS'
+    });
+  }
+
   next();
+};
+
+/**
+ * Login validation rules
+ */
+const loginRules = () => {
+  return [
+    body('email')
+      .trim()
+      .notEmpty().withMessage('Email is required')
+      .isEmail().withMessage('Invalid email format')
+      .normalizeEmail(),
+    body('password')
+      .notEmpty().withMessage('Password is required')
+      .isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+  ];
 };
 
 /**
@@ -156,14 +187,17 @@ const validateWeight = (weightKg) => {
 };
 
 /**
- * Express-validator rules for donor registration
+ * Express-validator rules for user registration (all roles)
  */
-const donorRegistrationRules = () => {
+const registrationRules = () => {
   return [
     body('name')
       .trim()
+      .escape()
       .notEmpty()
       .withMessage('Name is required')
+      .matches(/^[a-zA-Z\s]+$/)
+      .withMessage('Name must contain only alphabets')
       .isLength({ min: 2, max: 100 })
       .withMessage('Name must be between 2 and 100 characters'),
 
@@ -180,8 +214,8 @@ const donorRegistrationRules = () => {
       .withMessage('Password must be at least 6 characters long'),
 
     body('role')
-      .isIn(['patient', 'donor', 'admin'])
-      .withMessage('Invalid role. Must be one of: patient, donor, admin'),
+      .isIn(['patient', 'donor', 'admin', 'doctor'])
+      .withMessage('Invalid role. Must be one of: patient, donor, admin, doctor'),
 
     body('bloodGroup')
       .isIn(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])
@@ -197,6 +231,44 @@ const donorRegistrationRules = () => {
         return true;
       }),
 
+    body('address')
+      .optional()
+      .isObject()
+      .withMessage('Address must be an object'),
+
+    body('address.street')
+      .optional()
+      .trim()
+      .escape()
+      .notEmpty()
+      .withMessage('Street address is required'),
+
+    body('address.city')
+      .optional()
+      .trim()
+      .escape()
+      .notEmpty()
+      .withMessage('City is required')
+      .matches(/^[a-zA-Z\s]+$/)
+      .withMessage('City must contain only alphabets'),
+
+    body('address.state')
+      .optional()
+      .trim()
+      .escape()
+      .notEmpty()
+      .withMessage('State is required')
+      .matches(/^[a-zA-Z\s]+$/)
+      .withMessage('State must contain only alphabets'),
+
+    body('address.zipCode')
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage('Zip code is required')
+      .matches(/^\d{6}$/)
+      .withMessage('Zip code must be exactly 6 digits'),
+
     body('dob')
       .optional()
       .isISO8601()
@@ -207,6 +279,21 @@ const donorRegistrationRules = () => {
         }
         return true;
       }),
+
+    body('dateOfBirth')
+      .optional()
+      .isISO8601()
+      .withMessage('Invalid date format')
+      .custom((value) => {
+        if (!isNotFutureDate(value)) {
+          throw new Error('Date of birth cannot be in the future');
+        }
+        return true;
+      }),
+
+    body('gender')
+      .optional()
+      .isIn(['male', 'female', 'other', 'prefer_not_to_say']),
 
     body('heightCm')
       .optional()
@@ -233,6 +320,17 @@ const donorRegistrationRules = () => {
         }
         return true;
       }),
+
+    body('medicalHistory')
+      .optional()
+      .isArray(),
+
+    // Doctor specific fields
+    body('licenseNumber').optional().trim().escape(),
+    body('specialization').optional().trim().escape(),
+    body('qualification').optional().trim().escape(),
+    body('experience').optional().isInt({ min: 0 }),
+    body('hospital').optional(),
   ];
 };
 
@@ -285,6 +383,76 @@ const donorProfileUpdateRules = () => {
   ];
 };
 
+/**
+ * Blood request validation rules
+ */
+const requestValidationRules = () => {
+  return [
+    body('bloodGroup')
+      .notEmpty().withMessage('Blood group is required')
+      .isIn(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])
+      .withMessage('Invalid blood group'),
+    body('unitsRequired')
+      .notEmpty().withMessage('Units required is required')
+      .isInt({ min: 1, max: 10 })
+      .withMessage('Units required must be between 1 and 10'),
+    body('urgency')
+      .optional()
+      .isIn(['low', 'medium', 'high', 'emergency'])
+      .withMessage('Invalid urgency level'),
+    body('location')
+      .optional()
+      .isObject()
+      .withMessage('Location must be an object'),
+    body('location.hospital')
+      .optional()
+      .trim()
+      .escape()
+      .isLength({ max: 100 })
+      .withMessage('Hospital name too long'),
+    body('location.address')
+      .optional()
+      .trim()
+      .escape()
+      .isLength({ max: 200 }),
+    body('location.city')
+      .optional()
+      .trim(),
+    body('location.state')
+      .optional()
+      .trim(),
+    body('contactPerson')
+      .optional()
+      .isObject(),
+    body('contactPerson.name')
+      .optional()
+      .trim()
+      .isLength({ max: 100 }),
+    body('contactPerson.phone')
+      .optional()
+      .trim()
+      .custom(val => !val || isValidPhone(val)).withMessage('Invalid contact phone'),
+    body('notes')
+      .optional()
+      .trim()
+      .escape()
+      .isLength({ max: 500 })
+      .withMessage('Notes cannot exceed 500 characters'),
+  ];
+};
+
+/**
+ * Urgency update rules
+ */
+const updateUrgencyRules = () => {
+  return [
+    body('urgency')
+      .notEmpty().withMessage('Urgency is required')
+      .isIn(['low', 'medium', 'high', 'emergency'])
+      .withMessage('Invalid urgency level')
+  ];
+};
+
 module.exports = {
   handleValidationErrors,
   isValidEmail,
@@ -295,8 +463,11 @@ module.exports = {
   validateDonationInterval,
   validateHeight,
   validateWeight,
-  donorRegistrationRules,
+  registrationRules,
   donorProfileUpdateRules,
+  loginRules,
+  requestValidationRules,
+  updateUrgencyRules,
   MIN_DONATION_INTERVAL_DAYS,
   MIN_DONOR_AGE,
 };

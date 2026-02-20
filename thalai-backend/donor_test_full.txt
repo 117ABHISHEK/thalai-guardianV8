@@ -1,0 +1,131 @@
+﻿node.exe : [baseline-browser-mapping] The data in this module is over two months old.  To ensure 
+accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([baseline-brows...ping@latest -D`:String) [], Remote 
+   Exception
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  console.log
+    DEBUG: Registration - Role: donor, DOB: 2010-01-01
+
+      at log (controllers/authController.js:140:15)
+
+2026-02-20 00:28:41 [[32minfo[39m]: ::ffff:127.0.0.1 - - [19/Feb/2026:18:58:41 +0000] "POST /api/auth/register HTTP/1.1" 400 122 "-" "-" {"service":"thalai-guardian-backend","type":"http_request"}
+  console.log
+    DEBUG: Registration - Role: donor, DOB: 2008-02-19
+
+      at log (controllers/authController.js:140:15)
+
+2026-02-20 00:28:41 [[32minfo[39m]: Registration attempt {"service":"thalai-guardian-backend","email":"adult@example.com","role":"donor"}
+2026-02-20 00:28:41 [[32minfo[39m]: User created successfully {"service":"thalai-guardian-backend","userId":"69975d61fc3a5f2deb1c0b3a","email":"adult@example.com","role":"donor"}
+2026-02-20 00:28:41 [[32minfo[39m]: Donor profile created {"service":"thalai-guardian-backend","donorId":"69975d61fc3a5f2deb1c0b3c","userId":"69975d61fc3a5f2deb1c0b3a"}
+2026-02-20 00:28:41 [[32minfo[39m]: Eligibility computed {"service":"thalai-guardian-backend","donorId":"69975d61fc3a5f2deb1c0b3c","eligible":false}
+2026-02-20 00:28:41 [[32minfo[39m]: Donor profile saved {"service":"thalai-guardian-backend","donorId":"69975d61fc3a5f2deb1c0b3c"}
+2026-02-20 00:28:41 [[32minfo[39m]: User registered {"service":"thalai-guardian-backend","type":"user_registration","userId":"69975d61fc3a5f2deb1c0b3a","role":"donor","email":"adult@example.com","metadata":{"bloodGroup":"O+","isDonor":true,"isPatient":false}}
+2026-02-20 00:28:41 [[32minfo[39m]: ::ffff:127.0.0.1 - - [19/Feb/2026:18:58:41 +0000] "POST /api/auth/register HTTP/1.1" 201 391 "-" "-" {"service":"thalai-guardian-backend","type":"http_request"}
+  console.log
+    DEBUG: Registration - Role: donor, DOB: 2008-02-20
+
+      at log (controllers/authController.js:140:15)
+
+2026-02-20 00:28:41 [[32minfo[39m]: Registration attempt {"service":"thalai-guardian-backend","email":"almost@example.com","role":"donor"}
+2026-02-20 00:28:41 [[32minfo[39m]: User created successfully {"service":"thalai-guardian-backend","userId":"69975d61fc3a5f2deb1c0b43","email":"almost@example.com","role":"donor"}
+2026-02-20 00:28:41 [[32minfo[39m]: Donor profile created {"service":"thalai-guardian-backend","donorId":"69975d61fc3a5f2deb1c0b45","userId":"69975d61fc3a5f2deb1c0b43"}
+2026-02-20 00:28:41 [[32minfo[39m]: Eligibility computed {"service":"thalai-guardian-backend","donorId":"69975d61fc3a5f2deb1c0b45","eligible":false}
+2026-02-20 00:28:41 [[32minfo[39m]: Donor profile saved {"service":"thalai-guardian-backend","donorId":"69975d61fc3a5f2deb1c0b45"}
+2026-02-20 00:28:41 [[32minfo[39m]: User registered {"service":"thalai-guardian-backend","type":"user_registration","userId":"69975d61fc3a5f2deb1c0b43","role":"donor","email":"almost@example.com","metadata":{"bloodGroup":"O+","isDonor":true,"isPatient":false}}
+2026-02-20 00:28:41 [[32minfo[39m]: ::ffff:127.0.0.1 - - [19/Feb/2026:18:58:41 +0000] "POST /api/auth/register HTTP/1.1" 201 393 "-" "-" {"service":"thalai-guardian-backend","type":"http_request"}
+2026-02-20 00:28:41 [[32minfo[39m]: Registration attempt {"service":"thalai-guardian-backend","email":"youngpatient@example.com","role":"patient"}
+2026-02-20 00:28:41 [[32minfo[39m]: User created successfully {"service":"thalai-guardian-backend","userId":"69975d61fc3a5f2deb1c0b4c","email":"youngpatient@example.com","role":"patient"}
+2026-02-20 00:28:41 [[32minfo[39m]: Patient profile created {"service":"thalai-guardian-backend","userId":"69975d61fc3a5f2deb1c0b4c"}
+2026-02-20 00:28:41 [[32minfo[39m]: User registered {"service":"thalai-guardian-backend","type":"user_registration","userId":"69975d61fc3a5f2deb1c0b4c","role":"patient","email":"youngpatient@example.com","metadata":{"bloodGroup":"A-","isDonor":false,"isPatient":true}}
+2026-02-20 00:28:41 [[32minfo[39m]: ::ffff:127.0.0.1 - - [19/Feb/2026:18:58:41 +0000] "POST /api/auth/register HTTP/1.1" 201 404 "-" "-" {"service":"thalai-guardian-backend","type":"http_request"}
+  console.log
+    DEBUG: Registration - Role: donor, DOB: 1990-01-01
+
+      at log (controllers/authController.js:140:15)
+
+2026-02-20 00:28:41 [[32minfo[39m]: ::ffff:127.0.0.1 - - [19/Feb/2026:18:58:41 +0000] "POST /api/auth/register HTTP/1.1" 422 250 "-" "-" {"service":"thalai-guardian-backend","type":"http_request"}
+  console.log
+    DEBUG: Registration - Role: donor, DOB: 1990-01-01
+
+      at log (controllers/authController.js:140:15)
+
+2026-02-20 00:28:41 [[32minfo[39m]: Registration attempt {"service":"thalai-guardian-backend","email":"eligible@example.com","role":"donor"}
+2026-02-20 00:28:41 [[32minfo[39m]: User created successfully {"service":"thalai-guardian-backend","userId":"69975d61fc3a5f2deb1c0b56","email":"eligible@example.com","role":"donor"}
+2026-02-20 00:28:41 [[32minfo[39m]: Donor profile created {"service":"thalai-guardian-backend","donorId":"69975d61fc3a5f2deb1c0b58","userId":"69975d61fc3a5f2deb1c0b56"}
+2026-02-20 00:28:41 [[32minfo[39m]: Eligibility computed {"service":"thalai-guardian-backend","donorId":"69975d61fc3a5f2deb1c0b58","eligible":false}
+2026-02-20 00:28:41 [[32minfo[39m]: Donor profile saved {"service":"thalai-guardian-backend","donorId":"69975d61fc3a5f2deb1c0b58"}
+2026-02-20 00:28:41 [[32minfo[39m]: User registered {"service":"thalai-guardian-backend","type":"user_registration","userId":"69975d61fc3a5f2deb1c0b56","role":"donor","email":"eligible@example.com","metadata":{"bloodGroup":"O+","isDonor":true,"isPatient":false}}
+2026-02-20 00:28:41 [[32minfo[39m]: ::ffff:127.0.0.1 - - [19/Feb/2026:18:58:41 +0000] "POST /api/auth/register HTTP/1.1" 201 397 "-" "-" {"service":"thalai-guardian-backend","type":"http_request"}
+  console.log
+    DEBUG: Registration - Role: donor, DOB: 1990-01-01
+
+      at log (controllers/authController.js:140:15)
+
+2026-02-20 00:28:41 [[32minfo[39m]: ::ffff:127.0.0.1 - - [19/Feb/2026:18:58:41 +0000] "POST /api/auth/register HTTP/1.1" 422 250 "-" "-" {"service":"thalai-guardian-backend","type":"http_request"}
+  console.log
+    DEBUG: Registration - Role: donor, DOB: 1990-01-01
+
+      at log (controllers/authController.js:140:15)
+
+2026-02-20 00:28:41 [[32minfo[39m]: Registration attempt {"service":"thalai-guardian-backend","email":"newdonor@example.com","role":"donor"}
+2026-02-20 00:28:42 [[32minfo[39m]: User created successfully {"service":"thalai-guardian-backend","userId":"69975d61fc3a5f2deb1c0b62","email":"newdonor@example.com","role":"donor"}
+2026-02-20 00:28:42 [[32minfo[39m]: Donor profile created {"service":"thalai-guardian-backend","donorId":"69975d62fc3a5f2deb1c0b64","userId":"69975d61fc3a5f2deb1c0b62"}
+2026-02-20 00:28:42 [[32minfo[39m]: Eligibility computed {"service":"thalai-guardian-backend","donorId":"69975d62fc3a5f2deb1c0b64","eligible":false}
+2026-02-20 00:28:42 [[32minfo[39m]: Donor profile saved {"service":"thalai-guardian-backend","donorId":"69975d62fc3a5f2deb1c0b64"}
+2026-02-20 00:28:42 [[32minfo[39m]: User registered {"service":"thalai-guardian-backend","type":"user_registration","userId":"69975d61fc3a5f2deb1c0b62","role":"donor","email":"newdonor@example.com","metadata":{"bloodGroup":"O+","isDonor":true,"isPatient":false}}
+2026-02-20 00:28:42 [[32minfo[39m]: ::ffff:127.0.0.1 - - [19/Feb/2026:18:58:42 +0000] "POST /api/auth/register HTTP/1.1" 201 392 "-" "-" {"service":"thalai-guardian-backend","type":"http_request"}
+2026-02-20 00:28:42 [[32minfo[39m]: ::ffff:127.0.0.1 - - [19/Feb/2026:18:58:42 +0000] "POST /api/auth/register HTTP/1.1" 400 128 "-" "-" {"service":"thalai-guardian-backend","type":"http_request"}
+2026-02-20 00:28:42 [[32minfo[39m]: ::ffff:127.0.0.1 - - [19/Feb/2026:18:58:42 +0000] "POST /api/auth/register HTTP/1.1" 400 128 "-" "-" {"service":"thalai-guardian-backend","type":"http_request"}
+FAIL tests/donor.test.js
+  Donor Registration and Eligibility Tests
+    Age Validation
+      ΓêÜ Should reject donor registration if age < 18 (158 ms)
+      ΓêÜ Should accept donor registration if age is exactly 18 (127 ms)
+      ├ù Should reject donor registration if age is 17 years and 364 days (83 ms)
+      ΓêÜ Should accept patient registration with age < 18 (75 ms)
+    90-Day Donation Interval Rule
+      ΓêÜ Should reject donor registration if last donation was < 90 days ago (13 ms)
+      ΓêÜ Should accept donor registration if last donation was exactly 90 days ago (85 ms)
+      ΓêÜ Should accept donor registration if last donation was 89 days ago (boundary test) (9 ms)
+      ΓêÜ Should accept donor registration if no previous donation (81 ms)
+    Eligibility Service
+      ΓêÜ Should compute eligibility correctly for eligible donor (71 ms)
+      ΓêÜ Should compute eligibility correctly for ineligible donor (recent donation) (70 ms)
+      ΓêÜ Should compute nextPossibleDate correctly (69 ms)
+    Height and Weight Validation
+      ΓêÜ Should reject if height < 50 cm (11 ms)
+      ΓêÜ Should reject if weight < 20 kg (8 ms)
+
+  ΓùÅ Donor Registration and Eligibility Tests ΓÇ║ Age Validation ΓÇ║ Should reject donor 
+registration if age is 17 years and 364 days
+
+    expected 400 "Bad Request", got 201 "Created"
+
+    [0m [90m 94 |[39m         [33m.[39mpost([32m'/api/auth/register'[39m)
+     [90m 95 |[39m         [33m.[39msend(donorData)
+    [31m[1m>[22m[39m[90m 96 |[39m         [33m.[39mexpect([35m400[39m)[33m;[39m
+     [90m    |[39m          [31m[1m^[22m[39m
+     [90m 97 |[39m
+     [90m 98 |[39m       
+expect(response[33m.[39mbody[33m.[39msuccess)[33m.[39mtoBe([36mfalse[39m)[33m;[39m
+     [90m 99 |[39m       
+expect(response[33m.[39mbody[33m.[39mmessage)[33m.[39mtoContain([32m'18 years 
+old'[39m)[33m;[39m[0m
+
+      at Object.expect (tests/donor.test.js:96:10)
+      ----
+      at Test._assertStatus (node_modules/supertest/lib/test.js:252:14)
+      at node_modules/supertest/lib/test.js:308:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:285:13)
+      at Test.assert (node_modules/supertest/lib/test.js:164:23)
+      at Server.localAssert (node_modules/supertest/lib/test.js:120:14)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 12 passed, 13 total
+Snapshots:   0 total
+Time:        3.232 s
+Ran all test suites matching /tests\\donor.test.js/i.
