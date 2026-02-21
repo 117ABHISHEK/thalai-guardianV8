@@ -14,7 +14,7 @@ router.post('/ask',
   userLimiter, 
   [
     body('message').notEmpty().withMessage('Message is required').isLength({ max: 1000 }).escape(),
-    body('sessionId').optional().isUUID().withMessage('Invalid session ID format')
+    body('sessionId').optional({ nullable: true }).isUUID().withMessage('Invalid session ID format')
   ],
   handleValidationErrors,
   askChatbot

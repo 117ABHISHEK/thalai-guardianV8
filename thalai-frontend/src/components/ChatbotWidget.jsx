@@ -85,7 +85,9 @@ const ChatbotWidget = () => {
     
     setLoading(true);
     try {
-      const response = await api.post('/chatbot/ask', { message: userMessage, sessionId });
+      const payload = { message: userMessage };
+      if (sessionId) payload.sessionId = sessionId;
+      const response = await api.post('/chatbot/ask', payload);
       if (!sessionId && response.data.data.sessionId) setSessionId(response.data.data.sessionId);
       setMessages((prev) => [...prev, {
         type: 'bot',
