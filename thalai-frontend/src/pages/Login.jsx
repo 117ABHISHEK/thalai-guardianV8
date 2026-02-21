@@ -71,22 +71,7 @@ const Login = () => {
               <span className="font-medium">Live Monitoring</span>
             </div>
           </div>
-        </div>
-        
-        {/* Floating Accent */}
-        <div className="absolute bottom-12 right-12 flex items-center gap-4 px-6 py-4 glass-dark rounded-2xl">
-          <div className="flex -space-x-3">
-            {[1,2,3].map(i => (
-              <div key={i} className="w-10 h-10 rounded-full border-2 border-slate-800 bg-slate-700 overflow-hidden">
-                <img src={`https://i.pravatar.cc/100?u=${i}`} alt="user" />
-              </div>
-            ))}
-          </div>
-          <div className="text-sm">
-            <p className="text-white font-bold">Trusted by 500+</p>
-            <p className="text-slate-400">Medical Professionals</p>
-          </div>
-        </div>
+        </div>  
       </div>
 
       {/* Form Side */}
