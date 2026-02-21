@@ -52,8 +52,9 @@ const createAppointment = async (req, res) => {
       status: 'pending' 
     });
 
-    // Notify doctor
-    await sendAppointmentNotification(doctorId, appointment, 'requested');
+    // Notify doctor — fire-and-forget so email delays don't block the response
+    sendAppointmentNotification(doctorId, appointment, 'requested')
+      .catch(err => console.error('Appointment notification error:', err));
 
     res.status(201).json({
       success: true,
@@ -229,16 +230,20 @@ const updateAppointmentStatus = async (req, res) => {
 
     await appointment.save();
 
-    // Trigger Notifications based on status change
+    // Trigger Notifications based on status change — fire-and-forget
     if (status === 'scheduled') {
-      await sendAppointmentNotification(appointment.user, appointment, 'scheduled');
+      sendAppointmentNotification(appointment.user, appointment, 'scheduled')
+        .catch(err => console.error('Notification error:', err));
     } else if (status === 'completed_pending') {
-      await sendAppointmentNotification(appointment.user, appointment, 'completed_pending');
+      sendAppointmentNotification(appointment.user, appointment, 'completed_pending')
+        .catch(err => console.error('Notification error:', err));
     } else if (status === 'completed') {
-      await sendAppointmentNotification(appointment.doctor, appointment, 'completed');
+      sendAppointmentNotification(appointment.doctor, appointment, 'completed')
+        .catch(err => console.error('Notification error:', err));
     } else if (status === 'cancelled') {
       const targetId = isDoctor ? appointment.user : appointment.doctor;
-      await sendAppointmentNotification(targetId, appointment, 'cancelled');
+      sendAppointmentNotification(targetId, appointment, 'cancelled')
+        .catch(err => console.error('Notification error:', err));
     }
 
     res.status(200).json({

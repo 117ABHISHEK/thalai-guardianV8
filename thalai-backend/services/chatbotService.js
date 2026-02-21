@@ -1,6 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Patient = require("../models/patientModel");
 const Donor = require("../models/donorModel");
+const Appointment = require("../models/appointmentModel");
 const { getPredictionStatus } = require("../utils/aiPrediction");
 
 // Initialize Gemini
@@ -9,9 +10,16 @@ let genAI;
 let model;
 
 const SYSTEM_PROMPT = `You are ThalAI Guardian, a specialized AI assistant for Thalassemia patients and blood donors. 
-Your goal is to provide accurate, empathetic, and helpful information about Thalassemia.
+Your goal is to provide accurate, empathetic, and highly personalized information about Thalassemia treatment and blood donation.
 
-Guidelines:
+PERSONALIZATION PROTOCOL:
+1. You have access to the user's latest indexed medical records and synchronization data (provided in USER CLINICAL DATA).
+2. Use this data proactively to answer questions about transfusion dates, blood groups, height/weight, and appointments.
+3. If a user asks "when is my transfusion date" and it's in the data, tell them clearly.
+4. If asked about "my appointments", provide the specific dates and doctors from the provided list.
+5. If data is missing for a specific query, politely state: "I don't see that specific record in my current index, but I can tell you about general protocols."
+
+GENERAL GUIDELINES:
 1. Focus on Thalassemia management, diet, symptoms, and blood donation.
 2. If asked about medical advice, always add a disclaimer: "Please consult with your hematologist for professional medical advice."
 3. Be supportive and encouraging.
@@ -37,15 +45,15 @@ How can I help you today?`,
     patterns: ['appointment', 'book', 'schedule', 'doctor', 'visit', 'checkup', 'consultation'],
     response: `You can schedule an appointment with a hematologist directly through ThalAI Guardian. 
     
-This service is available for both Patients (for treatment) and Donors (for health clearance/consultation).
+I can also help you track your upcoming visits if you have already booked them.
 
-Steps:
+Steps to book:
 1. Select "Book Appointment" from the suggestions below.
 2. Choose your preferred doctor.
 3. Select a date and time.
 4. Confirm your booking.
 
-Would you like to start the booking process now?`,
+Would you like to start the booking process or check your existing appointments?`,
   },
   my_requests: {
     patterns: ['my requests', 'my status', 'check request', 'request history'],
@@ -102,9 +110,11 @@ Don'ts:
       'interval',
       'blood timing',
     ],
-    response: `Thalassemia patients typically need blood transfusions every 2-4 weeks, depending on their condition. 
+    response: (name) => `Thalassemia patients typically need blood transfusions every 2-4 weeks, depending on their condition. 
 
-Key points:
+I'm checking your clinical history for a more personalized update... 
+
+General Protocol:
 • Regular transfusions help maintain hemoglobin levels
 • Schedule is determined by your hematologist
 • Pre-transfusion hemoglobin should be 9-10.5 g/dL
@@ -286,38 +296,56 @@ const generateResponse = async (message, user = null, history = []) => {
   const userName = user?.name ? user.name.split(' ')[0] : 'there';
   const role = user?.role || 'Guest';
   
-  // Get base response (either string or from function)
-  let baseKnowledge = typeof responseData.response === 'function' 
-    ? responseData.response(userName) 
-    : responseData.response;
-
-  // FETCH DYNAMIC CLINICAL DATA (THE "API" PART)
+  // 1. FETCH DYNAMIC CLINICAL DATA (THE "API" PART)
   let clinicalContext = "";
   if (user && user._id) {
     try {
-      if (role.toLowerCase() === 'patient' && (intent === 'transfusion_schedule' || intent === 'general')) {
-        const prediction = await getPredictionStatus(user._id);
-        if (prediction.success && prediction.prediction.predictedDate) {
-          clinicalContext += `\n- Next Transfusion Prediction (from AI Service): ${new Date(prediction.prediction.predictedDate).toDateString()}`;
-          clinicalContext += `\n- Confidence: ${(prediction.prediction.confidence * 100).toFixed(0)}%`;
-          clinicalContext += `\n- Urgency: ${prediction.prediction.urgency.toUpperCase()}`;
-          clinicalContext += `\n- AI Explanation: ${prediction.prediction.explanation}`;
-        }
-      } else if (role.toLowerCase() === 'donor' && (intent === 'donor_guidelines' || intent === 'general')) {
-        const donorData = await Donor.findOne({ user: user._id });
-        if (donorData && donorData.lastDonationDate) {
-          clinicalContext += `\n- User's Last Donation: ${new Date(donorData.lastDonationDate).toDateString()}`;
-          if (donorData.nextPossibleDonationDate) {
-            clinicalContext += `\n- Next Possible Donation Date: ${new Date(donorData.nextPossibleDonationDate).toDateString()}`;
-            const eligible = donorData.nextPossibleDonationDate <= new Date() ? "Yes" : "No (Too soon)";
-            clinicalContext += `\n- Eligible Today based on interval: ${eligible}`;
+      // Fetch User Appointments (Common for both roles)
+      const appointments = await Appointment.find({ 
+        user: user._id, 
+        status: { $in: ['pending', 'scheduled'] },
+        date: { $gte: new Date() }
+      }).populate('doctor', 'name').sort({ date: 1 }).limit(3);
+
+      if (appointments.length > 0) {
+        clinicalContext += `\nUpcoming Appointments:`;
+        appointments.forEach(app => {
+          clinicalContext += `\n- Doctor: ${app.doctor.name}, Date: ${new Date(app.date).toLocaleDateString()}, Time: ${app.time}, Reason: ${app.reason}`;
+        });
+      }
+
+      // Role-specific medical data
+      if (role.toLowerCase() === 'patient') {
+        const patientData = await Patient.findOne({ user: user._id });
+        if (patientData) {
+          clinicalContext += `\nPatient Profile Summary:`;
+          clinicalContext += `\n- Blood Group: ${patientData.bloodGroup || 'N/A'}`;
+          clinicalContext += `\n- Thalassemia Type: ${patientData.thalassemiaType || 'N/A'}`;
+          clinicalContext += `\n- Last Transfusion: ${patientData.lastTransfusionDate ? new Date(patientData.lastTransfusionDate).toLocaleDateString() : 'No records yet'}`;
+          clinicalContext += `\n- Current Hb: ${patientData.currentHb || 'N/A'} g/dL`;
+          
+          if (patientData.predictedNextTransfusionDate) {
+            clinicalContext += `\n- AI Predicted Next Transfusion: ${new Date(patientData.predictedNextTransfusionDate).toLocaleDateString()}`;
           }
+        }
+      } else if (role.toLowerCase() === 'donor') {
+        const donorData = await Donor.findOne({ user: user._id });
+        if (donorData) {
+          clinicalContext += `\nDonor Profile Summary:`;
+          clinicalContext += `\n- Last Donation: ${donorData.lastDonationDate ? new Date(donorData.lastDonationDate).toLocaleDateString() : 'Never donated yet'}`;
+          clinicalContext += `\n- Next Possible Donation: ${donorData.nextPossibleDonationDate ? new Date(donorData.nextPossibleDonationDate).toLocaleDateString() : 'TBD'}`;
+          clinicalContext += `\n- Eligibility Status: ${donorData.eligibilityStatus || 'Pending review'}`;
         }
       }
     } catch (err) {
       console.error("Clinical context fetch error:", err);
     }
   }
+
+  // 2. Get base response (either string or from function)
+  let baseKnowledge = typeof responseData.response === 'function' 
+    ? responseData.response(userName, clinicalContext) 
+    : responseData.response;
 
   let response;
   let confidence = 0.85;

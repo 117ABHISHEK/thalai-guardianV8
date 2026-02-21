@@ -20,6 +20,7 @@ const AppointmentList = ({ role }) => {
   const [bookingData, setBookingData] = useState({ doctorId: '', date: '', time: '', reason: '' });
   const [doctors, setDoctors] = useState([]);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
@@ -108,14 +109,20 @@ const AppointmentList = ({ role }) => {
   const handleBookAppointment = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
     setUpdating(true);
     try {
       await api.post('/appointments', bookingData);
-      setShowBookModal(false);
+      setSuccessMessage('Appointment booked successfully! The doctor will confirm your slot shortly.');
       setBookingData({ doctorId: '', date: '', time: '', reason: '' });
       fetchAppointments();
+      // Close modal after 1.5s so user can read the success message
+      setTimeout(() => {
+        setShowBookModal(false);
+        setSuccessMessage('');
+      }, 1500);
     } catch (err) {
-      setError(err.response?.data?.message || 'Appointment booking failed.');
+      setError(err.response?.data?.message || 'Appointment booking failed. Please try again.');
     } finally {
       setUpdating(false);
     }
@@ -465,7 +472,16 @@ const AppointmentList = ({ role }) => {
             </div>
             
             <form onSubmit={handleBookAppointment} className="flex-1 overflow-y-auto p-8 pb-20 space-y-6">
-              {error && <div className="p-4 bg-rose-50 text-rose-600 text-xs font-black uppercase tracking-widest rounded-2xl border border-rose-100">{error}</div>}
+              {error && (
+                <div className="p-4 bg-rose-50 text-rose-600 text-xs font-black uppercase tracking-widest rounded-2xl border border-rose-100 flex items-start gap-2">
+                  <span>⚠️</span> {error}
+                </div>
+              )}
+              {successMessage && (
+                <div className="p-4 bg-emerald-50 text-emerald-700 text-xs font-black tracking-wide rounded-2xl border border-emerald-100 flex items-start gap-2">
+                  <span>✅</span> {successMessage}
+                </div>
+              )}
               
               <div className="space-y-2">
                 <label className="input-label">Select Doctor</label>
