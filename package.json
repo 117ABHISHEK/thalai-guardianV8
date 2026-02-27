@@ -8,7 +8,7 @@
     "deploy": "npm run install-all && npm run build:frontend",
     "prod": "concurrently \"npm start --prefix thalai-backend\" \"cd thalai-ai-service && gunicorn app:app\"",
     "setup-env": "node -e \"const fs=require('fs'); const env=fs.readFileSync('.env', 'utf8'); fs.writeFileSync('thalai-backend/.env', env); fs.writeFileSync('thalai-frontend/.env', env); fs.writeFileSync('thalai-ai-service/.env', env); console.log('✅ Env synchronized to all services')\"",
-    "backend": "npm start --prefix thalai-backend",
+    "backend": "npm run dev --prefix thalai-backend",
     "frontend": "npm run dev --prefix thalai-frontend",
     "ai": "cd thalai-ai-service && python app.py",
     "start-all": "concurrently \"npm run backend\" \"npm run frontend\" \"npm run ai\""

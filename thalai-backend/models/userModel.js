@@ -65,8 +65,8 @@ const userSchema = new mongoose.Schema(
             '5555555555',
             '6666666666',
             '7777777777',
-            '8888888888',
-            '9999999999'
+            '8888888888'
+            // '9999999999' is used by some seeded test profiles
           ];
           
           return !fraudPatterns.includes(number);

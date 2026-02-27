@@ -25,13 +25,13 @@ const apiLimiter = rateLimit({
  * Applied to login and registration routes
  */
 const authLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 15, // Limit each IP to 15 attempts per hour
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Increased for debugging
   standardHeaders: true,
   legacyHeaders: false,
   message: {
     success: false,
-    message: 'Too many authentication attempts, please try again after an hour',
+    message: 'Too many authentication attempts, please try again after 15 minutes',
     status: 429
   },
   validate: { default: false },

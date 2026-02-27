@@ -459,23 +459,31 @@ const login = async (req, res) => {
 
     if (!isMatch) {
       // Increment login attempts
+      // Use updateOne (no validators) — we only update tracking fields,
+      // not any user-submitted data, so full re-validation is unnecessary
+      // and would crash for users with legacy phone formats.
       user.loginAttempts += 1;
-      
+
       // Lock account after 5 attempts
       if (user.loginAttempts >= 5) {
-        user.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // Lock for 15 minutes
-        user.loginAttempts = 0; // Reset attempts after locking
-        await user.save();
-        
+        const lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+        await User.updateOne(
+          { _id: user._id },
+          { loginAttempts: 0, lockUntil }
+        );
+
         return res.status(401).json({
           success: false,
           message: 'Too many failed login attempts. Your account has been locked for 15 minutes for security.',
-          lockUntil: user.lockUntil
+          lockUntil
         });
       }
-      
-      await user.save();
-      
+
+      await User.updateOne(
+        { _id: user._id },
+        { loginAttempts: user.loginAttempts }
+      );
+
       const remainingAttempts = 5 - user.loginAttempts;
       return res.status(401).json({
         success: false,
@@ -485,9 +493,12 @@ const login = async (req, res) => {
     }
 
     // Successful login - reset attempts and lock
-    user.loginAttempts = 0;
-    user.lockUntil = undefined;
-    await user.save();
+    // Use updateOne to avoid triggering full-document validation on legacy
+    // phone numbers that predate stricter validators.
+    await User.updateOne(
+      { _id: user._id },
+      { loginAttempts: 0, $unset: { lockUntil: '' } }
+    );
 
     // Generate token
     const token = user.generateToken();

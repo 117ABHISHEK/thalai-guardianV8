@@ -16,6 +16,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -126,7 +127,7 @@ const Navbar = () => {
               <div className="flex items-center gap-4 pl-4 border-l border-slate-100">
                 <div className="relative">
                   <button 
-                    onClick={() => { setIsNotificationOpen(!isNotificationOpen); setIsMobileMenuOpen(false); }}
+                    onClick={() => { setIsNotificationOpen(!isNotificationOpen); setIsMobileMenuOpen(false); setIsProfileOpen(false); }}
                     className={`p-2.5 rounded-xl transition-all relative ${isNotificationOpen ? 'text-sky-500 bg-sky-50' : 'text-slate-400 hover:text-sky-500 hover:bg-sky-50'}`}
                   >
                     <Bell className="w-5 h-5" />
@@ -143,8 +144,20 @@ const Navbar = () => {
                   )}
                 </div>
                 
-                <div className="relative group">
-                  <button className="flex items-center gap-3 p-1.5 pr-4 bg-slate-50 border border-slate-100 rounded-2xl group-hover:bg-white group-hover:border-sky-200 transition-all">
+                <div className="relative">
+                  {/* Click-outside backdrop */}
+                  {isProfileOpen && (
+                    <div className="fixed inset-0 z-[9998]" onClick={() => setIsProfileOpen(false)} />
+                  )}
+
+                  <button
+                    onClick={() => { setIsProfileOpen(!isProfileOpen); setIsNotificationOpen(false); setIsMobileMenuOpen(false); }}
+                    className={`flex items-center gap-3 p-1.5 pr-4 border rounded-2xl transition-all ${
+                      isProfileOpen
+                        ? 'bg-white border-sky-200 shadow-md shadow-sky-500/10'
+                        : 'bg-slate-50 border-slate-100 hover:bg-white hover:border-sky-200'
+                    }`}
+                  >
                     <div className="w-9 h-9 rounded-xl bg-sky-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/20 overflow-hidden">
                        {user.profilePicture ? (
                          <img src={user.profilePicture} alt={user.name} className="w-full h-full object-cover" />
@@ -157,17 +170,23 @@ const Navbar = () => {
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{user.role}</p>
                     </div>
                   </button>
-                  
-                  {/* Dropdown */}
-                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-[24px] shadow-2xl border border-slate-100 p-2.5 opacity-0 translate-y-3 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all z-[9999]">
+
+                  {/* Click-triggered Dropdown */}
+                  <div
+                    className={`absolute right-0 top-full mt-2 w-56 bg-white rounded-[24px] shadow-2xl border border-slate-100 p-2.5 transition-all duration-200 z-[9999] ${
+                      isProfileOpen
+                        ? 'opacity-100 translate-y-0 pointer-events-auto'
+                        : 'opacity-0 translate-y-3 pointer-events-none'
+                    }`}
+                  >
                     <div className="px-4 py-3 border-b border-slate-50 mb-1">
                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Session Identity</p>
                        <p className="text-sm font-bold text-slate-900 truncate">{user.email}</p>
                     </div>
-                    <button onClick={() => navigate(`/${user.role}-dashboard`)} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all">
+                    <button onClick={() => { navigate(`/${user.role}-dashboard`); setIsProfileOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all">
                       <LayoutDashboard className="w-4 h-4" /> My Dashboard
                     </button>
-                    <button onClick={() => navigate('/account-settings')} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all">
+                    <button onClick={() => { navigate('/account-settings'); setIsProfileOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all">
                       <Settings className="w-4 h-4" /> Account Settings
                     </button>
                     <div className="h-[1px] bg-slate-50 my-1.5 mx-2" />

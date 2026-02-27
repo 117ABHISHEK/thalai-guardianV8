@@ -30,10 +30,19 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token invalid or expired
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      const requestUrl = error.config?.url || '';
+      // Only auto-logout on 401s from PROTECTED routes.
+      // A 401 on /auth/login or /auth/register just means wrong credentials —
+      // we must NOT wipe the session or redirect, so the error can reach the UI.
+      const isAuthEndpoint =
+        requestUrl.includes('/auth/login') ||
+        requestUrl.includes('/auth/register');
+
+      if (!isAuthEndpoint) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
