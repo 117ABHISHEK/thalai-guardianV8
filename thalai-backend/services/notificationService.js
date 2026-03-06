@@ -439,8 +439,8 @@ If this was not you, please change your password immediately.`;
     return await sendNotification(
       userId,
       'security_login',
-      'Account Login Alert',
-      message,
+      'Welcome Back! (Login Alert)',
+      `Welcome back to ThalAI Guardian!\n\n${message}`,
       { channel: 'all' }
     );
   } catch (error) {
@@ -450,26 +450,28 @@ If this was not you, please change your password immediately.`;
 };
 
 /**
- * Send new message notification
+ * Send welcome notification for new users
  */
-const sendNewMessageNotification = async (recipientId, senderName, messagePreview) => {
+const sendWelcomeNotification = async (userId, name) => {
   try {
-    const title = `New Message from ${senderName}`;
-    const message = `You have received a new message from ${senderName}:
+    const title = 'Welcome to ThalAI Guardian! 🩸';
+    const message = `Hi ${name}, welcome to the ThalAI Guardian community! 
     
-"${messagePreview}"
+We're glad to have you with us. Your account has been successfully created.
+- If you're a Donor: Thank you for your commitment to saving lives.
+- If you're a Patient: We're here to support your health journey with AI-powered insights.
 
-Please login to ThalAI Guardian to view and respond.`;
+Explore your dashboard to get started!`;
 
     return await sendNotification(
-      recipientId,
-      'new_message',
+      userId,
+      'welcome',
       title,
       message,
       { channel: 'all' }
     );
   } catch (error) {
-    console.error('Send new message notification error:', error);
+    console.error('Send welcome notification error:', error);
     return { success: false, error: error.message };
   }
 };
@@ -488,5 +490,6 @@ module.exports = {
   sendMatchAcceptedNotification,
   sendLoginAlert,
   sendNewMessageNotification,
+  sendWelcomeNotification,
 };
 

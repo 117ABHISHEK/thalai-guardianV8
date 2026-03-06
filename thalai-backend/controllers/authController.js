@@ -352,15 +352,11 @@ const register = async (req, res) => {
       }
     }
 
-    // Generate token
-    const token = user.generateToken();
-
-    // Log registration
-    logger.logRegistration(user._id, role, user.email, {
-      bloodGroup: user.bloodGroup,
-      isDonor: role === 'donor',
-      isPatient: role === 'patient',
-    });
+    // Send welcome notification (async)
+    const { sendWelcomeNotification } = require('../services/notificationService');
+    sendWelcomeNotification(user._id, user.name).catch(err => 
+      console.error('Failed to send welcome notification:', err)
+    );
 
     res.status(201).json({
       success: true,
