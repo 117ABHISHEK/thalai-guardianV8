@@ -19,6 +19,8 @@ ThalAI Guardian is a comprehensive blood donor eligibility and patient managemen
 ✅ **Advanced Donor Matching** - Intelligent matching using AI compatibility scores (0-100%) based on blood group, location, and medical eligibility.  
 ✅ **Donor Response Flow** - Donors can Accept/Decline requests directly; patients receive instant notifications with donor contact info.  
 ✅ **Smart Chatbot v2** - Contextual, role-based suggestions with NLP support for diet, iron overload, and emergency protocols.  
+✅ **Email & SMS Notifications** - Real-time alerts for donor matches, request status updates, and security events.  
+✅ **Account Security Alerts** - Instant email notifications for new logins from unrecognized devices or IP addresses.  
 ✅ **Admin Health Dashboard** - Real-time monitoring of AI service health, active models, and system-wide statistics.  
 ✅ **Transfusion History Tracking** - Comprehensive logging of past transfusions to improve AI prediction accuracy.  
 ✅ **Enhanced Donor Eligibility System** - 6 comprehensive validation checks (+ automated blood report screening).  
@@ -27,6 +29,9 @@ ThalAI Guardian is a comprehensive blood donor eligibility and patient managemen
 ---
 
 ## 🚀 Quick Start (Monorepo Mode)
+
+> [!IMPORTANT]
+> For a clean, step-by-step setup guide from scratch, please refer to **[GETTING_STARTED.md](GETTING_STARTED.md)**.
 
 The project is now configured as a monorepo. You can manage all three services (Backend, Frontend, AI) from the root directory.
 
@@ -124,7 +129,9 @@ Dashboard: /patient-dashboard
 - MongoDB with Mongoose
 - JWT Authentication
 - Winston Logging
-- Twilio & Nodemailer (Notification System)
+- Integrated Notification System (Email + SMS)
+  - **Nodemailer** for critical security alerts and status updates
+  - **Twilio** for urgent SMS broadcasts
 
 **AI Service**:
 

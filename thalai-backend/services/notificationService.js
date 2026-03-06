@@ -172,7 +172,7 @@ Thank you for being a lifesaver! ❤️`;
       'New Blood Request Match',
       message,
       {
-        channel: 'sms',
+        channel: 'all',
         metadata: {
           requestId,
           donorId,
@@ -211,7 +211,7 @@ const sendRequestStatusNotification = async (requestId, status) => {
       'Request Status Update',
       `🩸 ThalAI Guardian\n\n${message}\n\nRequest ID: ${request._id}\nBlood Group: ${request.bloodGroup}`,
       {
-        channel: 'sms',
+        channel: 'all',
         metadata: {
           requestId,
           status,
@@ -255,7 +255,7 @@ ThalAI Guardian`;
             '🚨 Urgent Blood Request',
             message,
             {
-              channel: 'sms',
+              channel: 'all',
               metadata: {
                 requestId,
                 donorId,
@@ -293,7 +293,7 @@ const sendAdminAlert = async (message, metadata = {}) => {
           'Admin Alert',
           `🔔 ${message}`,
           {
-            channel: 'sms',
+            channel: 'all',
             metadata,
           }
         );
@@ -423,6 +423,57 @@ You can now contact the donor to coordinate. Thank you for using ThalAI Guardian
   }
 };
 
+/**
+ * Send login alert notification
+ */
+const sendLoginAlert = async (userId, userAgent, ipAddress) => {
+  try {
+    const time = new Date().toLocaleString();
+    const message = `Security Alert: A new login was detected for your account on ${time}.
+    
+Device/Browser: ${userAgent || 'Unknown'}
+IP Address: ${ipAddress || 'Unknown'}
+
+If this was not you, please change your password immediately.`;
+
+    return await sendNotification(
+      userId,
+      'security_login',
+      'Account Login Alert',
+      message,
+      { channel: 'all' }
+    );
+  } catch (error) {
+    console.error('Send login alert error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Send new message notification
+ */
+const sendNewMessageNotification = async (recipientId, senderName, messagePreview) => {
+  try {
+    const title = `New Message from ${senderName}`;
+    const message = `You have received a new message from ${senderName}:
+    
+"${messagePreview}"
+
+Please login to ThalAI Guardian to view and respond.`;
+
+    return await sendNotification(
+      recipientId,
+      'new_message',
+      title,
+      message,
+      { channel: 'all' }
+    );
+  } catch (error) {
+    console.error('Send new message notification error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
   sendSMS,
   sendEmail,
@@ -435,5 +486,7 @@ module.exports = {
   sendConnectionNotification,
   sendCheckupSuggestionNotification,
   sendMatchAcceptedNotification,
+  sendLoginAlert,
+  sendNewMessageNotification,
 };
 

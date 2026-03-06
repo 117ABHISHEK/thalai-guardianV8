@@ -492,6 +492,12 @@ const login = async (req, res) => {
     // Generate token
     const token = user.generateToken();
 
+    // Send login alert notification (async)
+    const { sendLoginAlert } = require('../services/notificationService');
+    sendLoginAlert(user._id, req.headers['user-agent'], req.ip).catch(err => 
+      console.error('Failed to send login alert:', err)
+    );
+
     res.status(200).json({
       success: true,
       message: 'Login successful',
