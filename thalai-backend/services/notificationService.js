@@ -1,5 +1,5 @@
 const twilio = require('twilio');
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 const Notification = require('../models/notificationModel');
 const User = require('../models/userModel');
 const Donor = require('../models/donorModel');
@@ -14,15 +14,28 @@ const client = accountSid && authToken
   ? twilio(accountSid, authToken)
   : null;
 
-// Resend email client
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
+// Brevo (Sendinblue) SMTP configuration
+const transporter = nodemailer.createTransport({
+  host: 'smtp-relay.brevo.com',
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.BREVO_SMTP_USER,  // Your Brevo account login email
+    pass: process.env.BREVO_SMTP_KEY,   // Your Brevo SMTP API key
+  },
+});
 
-if (resend) {
-  console.log('[Email Service] ✅ Resend client initialized.');
+// Verify on startup
+if (process.env.BREVO_SMTP_USER && process.env.BREVO_SMTP_KEY) {
+  transporter.verify((error) => {
+    if (error) {
+      console.error('[Email Service] ❌ Brevo SMTP verification failed:', error.message);
+    } else {
+      console.log('[Email Service] ✅ Brevo SMTP ready. Sending as:', process.env.BREVO_SMTP_USER);
+    }
+  });
 } else {
-  console.warn('[Email Service] ⚠️ RESEND_API_KEY not set. Emails will not be sent.');
+  console.warn('[Email Service] ⚠️ BREVO_SMTP_USER or BREVO_SMTP_KEY not set.');
 }
 
 
@@ -66,34 +79,30 @@ const sendSMS = async (phoneNumber, message) => {
 };
 
 /**
- * Send email notification via Resend
+ * Send email notification via Brevo SMTP
  */
 const sendEmail = async (to, subject, text) => {
   try {
-    if (!resend) {
-      console.warn('[Email Service] Resend not configured. Email not sent.');
-      return { success: false, error: 'Email service not configured (missing RESEND_API_KEY)' };
+    if (!process.env.BREVO_SMTP_USER || !process.env.BREVO_SMTP_KEY) {
+      console.warn('[Email Service] Brevo not configured. Email not sent.');
+      return { success: false, error: 'Email service not configured' };
     }
 
-    const fromEmail = process.env.EMAIL_FROM || 'ThalAI Guardian <onboarding@resend.dev>';
-    console.log(`[Email Service] Sending email to ${to} via Resend...`);
+    const fromName = process.env.EMAIL_FROM_NAME || 'ThalAI Guardian';
+    const fromEmail = process.env.BREVO_SMTP_USER;
 
-    const { data, error } = await resend.emails.send({
-      from: fromEmail,
-      to: [to],
+    console.log(`[Email Service] Sending email to ${to} via Brevo...`);
+    const info = await transporter.sendMail({
+      from: `"${fromName}" <${fromEmail}>`,
+      to,
       subject,
       text,
     });
 
-    if (error) {
-      console.error(`[Email Service] Resend error for ${to}:`, error);
-      return { success: false, error: error.message };
-    }
-
-    console.log(`[Email Service] ✅ Email sent to ${to}. ID: ${data.id}`);
-    return { success: true, messageId: data.id };
+    console.log(`[Email Service] ✅ Email sent to ${to}. MessageId: ${info.messageId}`);
+    return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error(`[Email Service] Unexpected error sending to ${to}:`, error.message);
+    console.error(`[Email Service] ❌ Error sending to ${to}:`, error.message);
     return { success: false, error: error.message };
   }
 };

@@ -58,24 +58,5 @@ router.put('/change-password', protect, changePassword);
 // @access  Private
 router.get('/export-data', protect, exportData);
 
-// ============================================================
-// ⚠️ TEMPORARY: Email diagnostics route — REMOVE AFTER TESTING
-// Usage: GET /api/auth/test-email?to=yourmail@gmail.com
-// ============================================================
-router.get('/test-email', async (req, res) => {
-  const to = req.query.to || process.env.EMAIL_USER;
-  try {
-    const { sendEmail } = require('../services/notificationService');
-    const result = await sendEmail(
-      to,
-      'ThalAI Email Diagnostics Test',
-      `This is a direct email test sent from the ThalAI Guardian server.\n\nTimestamp: ${new Date().toISOString()}\nServer: ${process.env.NODE_ENV || 'development'}`
-    );
-    return res.json({ success: result.success, messageId: result.messageId, error: result.error });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
-
 module.exports = router;
 
