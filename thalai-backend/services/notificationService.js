@@ -1,5 +1,5 @@
 const twilio = require('twilio');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const Notification = require('../models/notificationModel');
 const User = require('../models/userModel');
 const Donor = require('../models/donorModel');
@@ -14,37 +14,17 @@ const client = accountSid && authToken
   ? twilio(accountSid, authToken)
   : null;
 
-// Nodemailer configuration
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // use STARTTLS
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    tls: {
-      rejectUnauthorized: false
-    }
-  });
-};
+// Resend email client
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 
-let transporter = createTransporter();
-
-// Verify connection configuration on startup
-if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-  transporter.verify((error, success) => {
-    if (error) {
-      console.error('[Email Service] ❌ Verification Failed:', error.message);
-    } else {
-      const maskedEmail = process.env.EMAIL_USER.replace(/(.{1}).+(@.+)/, "$1***$2");
-      console.log(`[Email Service] ✅ Ready to send emails as: ${maskedEmail}`);
-    }
-  });
+if (resend) {
+  console.log('[Email Service] ✅ Resend client initialized.');
 } else {
-  console.warn('[Email Service] ⚠️ Missing EMAIL_USER or EMAIL_PASS in environment.');
+  console.warn('[Email Service] ⚠️ RESEND_API_KEY not set. Emails will not be sent.');
 }
+
 
 /**
  * Send SMS notification
@@ -86,28 +66,34 @@ const sendSMS = async (phoneNumber, message) => {
 };
 
 /**
- * Send email notification
+ * Send email notification via Resend
  */
 const sendEmail = async (to, subject, text) => {
   try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.warn('Email credentials not configured. Email not sent.');
-      return { success: false, error: 'Email not configured' };
+    if (!resend) {
+      console.warn('[Email Service] Resend not configured. Email not sent.');
+      return { success: false, error: 'Email service not configured (missing RESEND_API_KEY)' };
     }
 
-    const mailOptions = {
-      from: `"ThalAI Guardian" <${process.env.EMAIL_USER}>`,
-      to,
+    const fromEmail = process.env.EMAIL_FROM || 'ThalAI Guardian <onboarding@resend.dev>';
+    console.log(`[Email Service] Sending email to ${to} via Resend...`);
+
+    const { data, error } = await resend.emails.send({
+      from: fromEmail,
+      to: [to],
       subject,
       text,
-    };
+    });
 
-    console.log(`[NotificationService] Attempting to send email to ${to}...`);
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`[NotificationService] Email sent successfully to ${to}. MessageId: ${info.messageId}`);
-    return { success: true, messageId: info.messageId };
+    if (error) {
+      console.error(`[Email Service] Resend error for ${to}:`, error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`[Email Service] ✅ Email sent to ${to}. ID: ${data.id}`);
+    return { success: true, messageId: data.id };
   } catch (error) {
-    console.error(`[NotificationService] Email sending error to ${to}:`, error);
+    console.error(`[Email Service] Unexpected error sending to ${to}:`, error.message);
     return { success: false, error: error.message };
   }
 };
