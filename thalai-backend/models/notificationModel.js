@@ -22,7 +22,10 @@ const notificationSchema = new mongoose.Schema(
         'appointment_completed',
         'connection_request',
         'connection_accepted',
-        'checkup_suggested'
+        'checkup_suggested',
+        'welcome',
+        'security_login',
+        'new_message'
       ],
       required: true,
     },
