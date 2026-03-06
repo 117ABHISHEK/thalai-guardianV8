@@ -327,16 +327,9 @@ const computeEligibility = (donorDoc) => {
 const validateDonorRegistration = (donorData) => {
   const errors = [];
 
-  // Age validation
-  if (donorData.dob) {
-    const age = calculateAge(donorData.dob);
-    if (age !== null && age < MIN_DONOR_AGE) {
-      errors.push({
-        field: 'dob',
-        message: `Must be at least ${MIN_DONOR_AGE} years old to register as donor`,
-      });
-    }
-  }
+  // Age validation - removed strict requirement for registration as per new rules
+  // Donors < 18 can register for portal access but won't be eligible to donate.
+  // Eligibility check in computeEligibility will handle the donation restriction.
 
   // Height validation
   if (donorData.heightCm !== undefined) {

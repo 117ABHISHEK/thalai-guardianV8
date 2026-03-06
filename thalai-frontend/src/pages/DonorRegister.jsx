@@ -65,7 +65,9 @@ const DonorRegister = () => {
       newErrors.dob = 'Chronological age verification required';
     } else {
       const age = calculateAge(formData.dob);
-      if (age < 18) newErrors.dob = 'Minimum functional age of 18 required for heroes';
+      if (age < 0 || age > 120) {
+        newErrors.dob = 'Age must be between 0 and 120 years';
+      }
     }
 
     setErrors(newErrors);
@@ -77,6 +79,9 @@ const DonorRegister = () => {
     
     // Sanitization
     switch (name) {
+      case 'name':
+         value = value.replace(/[^a-zA-Z\s-]/g, '');
+         break;
       case 'heightCm':
       case 'weightKg':
       case 'donationFrequencyMonths':
@@ -192,6 +197,17 @@ const DonorRegister = () => {
                   <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-8 border-b border-slate-100 pb-4">
                      <Heart className="w-4 h-4 text-rose-500" /> Biological Context
                   </h4>
+                  
+                  {formData.dob && calculateAge(formData.dob) < 18 && (
+                    <div className="mb-6 p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-start gap-3 animate-fade">
+                      <Info className="w-5 h-5 text-amber-500 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-bold text-amber-900">Portal Access Only</p>
+                        <p className="text-xs text-amber-700">As you are under 18, you will have access to the guardian portal, but you will not be eligible to donate until you reach the age of 18.</p>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
                      <div className="space-y-2">
                         <label className="input-label">Chronological Identity (DOB)</label>

@@ -68,7 +68,8 @@ const AccountSettings = () => {
 
     // Sanitization
     if (name === 'name') {
-      value = value.replace(/[^a-zA-Z\s]/g, '');
+      // Allow alphabets, spaces, and hyphens
+      value = value.replace(/[^a-zA-Z\s-]/g, '');
     }
     if (name === 'phone') {
       value = value.replace(/\D/g, '').slice(0, 10);
@@ -102,6 +103,22 @@ const AccountSettings = () => {
     e.preventDefault();
     setSaving(true);
     setMessage({ type: '', text: '' });
+
+    // Age validation (0-120)
+    if (formData.dateOfBirth) {
+      const today = new Date();
+      const birthDate = new Date(formData.dateOfBirth);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      if (age < 0 || age > 120) {
+        setMessage({ type: 'error', text: 'Age must be between 0 and 120 years' });
+        setSaving(false);
+        return;
+      }
+    }
 
     try {
       const response = await api.put('/auth/profile', formData);

@@ -208,6 +208,39 @@ const DonorDashboard = () => {
 
         {activeTab === 'overview' && (
           <div className="space-y-10">
+            {/* Age Warning Banner for Minors */}
+            {profile?.dateOfBirth && (() => {
+              const today = new Date();
+              const birthDate = new Date(profile.dateOfBirth);
+              let age = today.getFullYear() - birthDate.getFullYear();
+              const m = today.getMonth() - birthDate.getMonth();
+              if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+              
+              if (age < 18) {
+                return (
+                  <div className="card-premium bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200 mb-8 animate-reveal">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 bg-white rounded-2xl shadow-sm text-amber-500">
+                        <AlertCircle className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-black text-slate-900 mb-1">Portal Access Only</h3>
+                        <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                          Welcome to ThalAI Guardian! As you are under 18, you have full access to our portal and health tracking features. However, you will not be eligible to donate blood until you reach the age of 18.
+                        </p>
+                        <div className="mt-4 flex items-center gap-2">
+                          <span className="px-3 py-1 bg-white/50 rounded-full text-[10px] font-black uppercase text-amber-600 border border-amber-100">
+                            Age: {age} years
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
             {/* Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               <StatCard
@@ -403,7 +436,14 @@ const DonorDashboard = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                   <div className="space-y-2">
                     <label className="input-label">Display Name</label>
-                    <input type="text" name="name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required className="input-field" />
+                    <input 
+                      type="text" 
+                      name="name" 
+                      value={formData.name} 
+                      onChange={(e) => setFormData({...formData, name: e.target.value.replace(/[^a-zA-Z\s-]/g, '')})} 
+                      required 
+                      className="input-field" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <label className="input-label">Blood Group</label>

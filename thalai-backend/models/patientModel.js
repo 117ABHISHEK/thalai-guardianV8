@@ -12,6 +12,15 @@ const patientSchema = new mongoose.Schema(
       required: [true, 'User reference is required'],
       unique: true,
     },
+    dob: {
+      type: Date,
+      required: [true, 'Date of birth is required for patients'],
+    },
+    parentDetails: {
+      parentName: { type: String, trim: true },
+      parentPhone: { type: String, trim: true },
+      parentRelation: { type: String, trim: true }
+    },
     // Transfusion history - key data for ML prediction
     transfusionHistory: [
       {
@@ -223,6 +232,16 @@ const patientSchema = new mongoose.Schema(
 // Indexes (user already indexed via unique: true)
 patientSchema.index({ lastTransfusionDate: -1 });
 patientSchema.index({ predictedNextTransfusionDate: 1 });
+
+// Virtual: age calculation
+patientSchema.virtual('age').get(function () {
+  if (!this.dob) return null;
+  const today = new Date();
+  const age = today.getFullYear() - this.dob.getFullYear();
+  const monthDiff = today.getMonth() - this.dob.getMonth();
+  const dayDiff = today.getDate() - this.dob.getDate();
+  return age - (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? 1 : 0);
+});
 
 // Virtual: days since last transfusion
 patientSchema.virtual('daysSinceLastTransfusion').get(function () {

@@ -24,6 +24,9 @@ const Register = () => {
     state: '',
     zipCode: '',
     dateOfBirth: '',
+    parentName: '',
+    parentPhone: '',
+    parentRelation: '',
     licenseNumber: '',
     specialization: 'Hematology',
     qualification: '',
@@ -55,6 +58,9 @@ const Register = () => {
     // Real-time Sanitization
     switch (name) {
       case 'name':
+        // Only alphabets, spaces, and hyphens
+        value = value.replace(/[^a-zA-Z\s-]/g, '');
+        break;
       case 'city':
       case 'state':
         // Only alphabets and spaces
@@ -142,6 +148,26 @@ const Register = () => {
       return false;
     }
     
+    // Age validation (0-120)
+    const today = new Date();
+    const birthDate = new Date(formData.dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    if (age < 0 || age > 120) {
+      setError('Age must be between 0 and 120 years');
+      return false;
+    }
+
+    // Parent details validation for patients < 16
+    if (formData.role === 'patient' && age < 16) {
+      if (!formData.parentName.trim()) { setError('Parent name is required for minors'); return false; }
+      if (!formData.parentPhone.trim() || formData.parentPhone.length !== 10) { setError('Valid parent phone is required'); return false; }
+      if (!formData.parentRelation.trim()) { setError('Parent relation is required'); return false; }
+    }
+    
     return true;
   };
 
@@ -187,6 +213,11 @@ const Register = () => {
           zipCode: formData.zipCode || undefined,
         },
         dateOfBirth: formData.dateOfBirth || undefined,
+        parentDetails: (formData.role === 'patient' && (age < 16)) ? {
+          parentName: formData.parentName,
+          parentPhone: formData.parentPhone,
+          parentRelation: formData.parentRelation,
+        } : undefined,
         licenseNumber: formData.role === 'doctor' ? formData.licenseNumber : undefined,
         specialization: formData.role === 'doctor' ? formData.specialization : undefined,
         qualification: formData.role === 'doctor' ? formData.qualification : undefined,
@@ -367,6 +398,43 @@ const Register = () => {
                         />
                       </div>
                     </div>
+
+                    {/* Parent Details for minor patients */}
+                    {formData.role === 'patient' && formData.dateOfBirth && (() => {
+                      const today = new Date();
+                      const birthDate = new Date(formData.dateOfBirth);
+                      let age = today.getFullYear() - birthDate.getFullYear();
+                      const m = today.getMonth() - birthDate.getMonth();
+                      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+                      
+                      if (age < 16) {
+                        return (
+                          <div className="md:col-span-2 space-y-4 p-4 bg-sky-50 rounded-2xl border border-sky-100 animate-reveal">
+                            <h4 className="text-sm font-bold text-sky-900 border-b border-sky-200 pb-2">Parent/Guardian Details (Required for &lt; 16 years)</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-1">
+                                <label className="input-label text-xs">Parent Name</label>
+                                <input type="text" name="parentName" value={formData.parentName} onChange={handleChange} className="input-field bg-white" placeholder="Guardian Name" />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="input-label text-xs">Parent Phone</label>
+                                <input type="tel" name="parentPhone" value={formData.parentPhone} onChange={handleChange} className="input-field bg-white" placeholder="Guardian Phone" />
+                              </div>
+                              <div className="md:col-span-2 space-y-1">
+                                <label className="input-label text-xs">Relation</label>
+                                <select name="parentRelation" value={formData.parentRelation} onChange={handleChange} className="input-field bg-white">
+                                  <option value="">Select Relation</option>
+                                  <option value="Father">Father</option>
+                                  <option value="Mother">Mother</option>
+                                  <option value="Guardian">Guardian</option>
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
 
                     <div className="md:col-span-2 space-y-2">
                       <label className="input-label">Street Address</label>

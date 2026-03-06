@@ -135,7 +135,11 @@ const DoctorDashboard = () => {
   };
 
   const handleProfileChange = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    // Sanitization
+    if (name === 'name') {
+      value = value.replace(/[^a-zA-Z\s-]/g, '');
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -567,14 +571,50 @@ const DoctorDashboard = () => {
                     {/* Right Col: Contact & Action */}
                     <div className="space-y-8 lg:border-l lg:border-slate-100 lg:pl-8">
                        <section>
-                          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Patient Connect</h4>
+                          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Patient Identity & Connect</h4>
                           <div className="space-y-3">
+                             {/* Age display */}
+                             {patientDetails.dob && (() => {
+                               const today = new Date();
+                               const birthDate = new Date(patientDetails.dob);
+                               let age = today.getFullYear() - birthDate.getFullYear();
+                               const m = today.getMonth() - birthDate.getMonth();
+                               if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+                               return (
+                                 <div className="flex items-center gap-3 p-3 bg-sky-50 rounded-2xl border border-sky-100">
+                                   <Calendar className="w-4 h-4 text-sky-500" />
+                                   <span className="text-sm font-bold text-sky-700">Age: {age} years</span>
+                                 </div>
+                               );
+                             })()}
+
+                             {/* Parent Details for minors */}
+                             {patientDetails.dob && (() => {
+                               const today = new Date();
+                               const birthDate = new Date(patientDetails.dob);
+                               let age = today.getFullYear() - birthDate.getFullYear();
+                               const m = today.getMonth() - birthDate.getMonth();
+                               if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+                               
+                               if (age < 16 && patientDetails.parentDetails) {
+                                 const { parentName, parentPhone, parentRelation } = patientDetails.parentDetails;
+                                 return (
+                                   <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl space-y-2">
+                                     <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Parent/Guardian</p>
+                                     <p className="text-sm font-bold text-slate-900">{parentName || 'Unknown'} ({parentRelation || 'Guardian'})</p>
+                                     <p className="text-xs text-slate-600 flex items-center gap-2"><Phone className="w-3 h-3" /> {parentPhone || 'No contact'}</p>
+                                   </div>
+                                 );
+                               }
+                               return null;
+                             })()}
+
                              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl">
-                                <MessageSquare className="w-4 h-4 text-slate-400" />
+                                <Mail className="w-4 h-4 text-slate-400" />
                                 <span className="text-sm font-bold text-slate-600 truncate">{patientDetails.user?.email}</span>
                              </div>
                              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl">
-                                <Calendar className="w-4 h-4 text-slate-400" />
+                                <Phone className="w-4 h-4 text-slate-400" />
                                 <span className="text-sm font-bold text-slate-600">{patientDetails.user?.phone || 'No phone'}</span>
                              </div>
                           </div>

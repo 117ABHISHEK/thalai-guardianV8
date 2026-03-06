@@ -98,6 +98,9 @@ const PatientDashboard = () => {
         bloodGroup: u.bloodGroup || '',
         thalassemiaType: response.data.patient?.thalassemiaType || 'Beta Thalassemia Major',
         splenectomy: response.data.patient?.splenectomy || false,
+        parentName: response.data.patient?.parentDetails?.parentName || '',
+        parentPhone: response.data.patient?.parentDetails?.parentPhone || '',
+        parentRelation: response.data.patient?.parentDetails?.parentRelation || '',
       });
     } catch (error) {
       console.error('Failed to fetch profile:', error);
@@ -107,7 +110,10 @@ const PatientDashboard = () => {
   };
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    let { name, value, type, checked } = e.target;
+    if (name === 'name') {
+      value = value.replace(/[^a-zA-Z\s-]/g, '');
+    }
     setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
@@ -127,6 +133,11 @@ const PatientDashboard = () => {
           city: formData.city,
           state: formData.state,
           zipCode: formData.zipCode,
+        },
+        parentDetails: {
+          parentName: formData.parentName,
+          parentPhone: formData.parentPhone,
+          parentRelation: formData.parentRelation,
         }
       };
       const response = await updateProfile(updateData);
@@ -337,6 +348,40 @@ const PatientDashboard = () => {
                     </div>
                   </div>
 
+                  {/* Parent Details for minors during edit */}
+                  {formData.dateOfBirth && (() => {
+                    const today = new Date();
+                    const birthDate = new Date(formData.dateOfBirth);
+                    let age = today.getFullYear() - birthDate.getFullYear();
+                    const m = today.getMonth() - birthDate.getMonth();
+                    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+                    
+                    if (age < 16) {
+                      return (
+                        <div className="pt-8 border-t border-slate-100">
+                           <h3 className="text-xl font-display font-bold text-slate-900 mb-6 flex items-center gap-2">
+                             <Users className="w-6 h-6 text-amber-500" /> Parent / Guardian Details
+                           </h3>
+                           <div className="grid md:grid-cols-3 gap-6">
+                              <div className="space-y-2">
+                                 <label className="input-label">Parent Name</label>
+                                 <input type="text" name="parentName" value={formData.parentName} onChange={handleChange} required className="input-field" />
+                              </div>
+                              <div className="space-y-2">
+                                 <label className="input-label">Parent Phone</label>
+                                 <input type="tel" name="parentPhone" value={formData.parentPhone} onChange={handleChange} required className="input-field" />
+                              </div>
+                              <div className="space-y-2">
+                                 <label className="input-label">Relation</label>
+                                 <input type="text" name="parentRelation" value={formData.parentRelation} onChange={handleChange} required className="input-field" placeholder="Father, Mother, etc." />
+                              </div>
+                           </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
                   <div className="pt-8 border-t border-slate-100">
                     <h3 className="text-xl font-display font-bold text-slate-900 mb-6 flex items-center gap-2">
                        <ShieldCheck className="w-6 h-6 text-sky-500" /> Residency Details
@@ -376,7 +421,35 @@ const PatientDashboard = () => {
                     { label: 'Splenectomy', value: patientProfile?.splenectomy ? 'Performed' : 'Not Performed', icon: ShieldCheck, color: 'text-emerald-500', bg: 'bg-emerald-50' },
                     { label: 'Phone', value: profile?.phone || 'Not linked', icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-50' },
                     { label: 'Email', value: profile?.email, icon: Bell, color: 'text-amber-500', bg: 'bg-amber-50', full: true },
-                    { label: 'Birth Date', value: profile?.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString(undefined, { dateStyle: 'long' }) : 'Not set', icon: CalendarDays, color: 'text-purple-500', bg: 'bg-purple-50' }
+                    { label: 'Birth Date', value: profile?.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString(undefined, { dateStyle: 'long' }) : 'Not set', icon: CalendarDays, color: 'text-purple-500', bg: 'bg-purple-50' },
+                    ...(profile?.dateOfBirth && (() => {
+                      const today = new Date();
+                      const birthDate = new Date(profile.dateOfBirth);
+                      let age = today.getFullYear() - birthDate.getFullYear();
+                      const m = today.getMonth() - birthDate.getMonth();
+                      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+                      
+                      const list = [{ label: 'Age', value: `${age} Years`, icon: Clock, color: 'text-sky-500', bg: 'bg-sky-50' }];
+                      
+                      if (age < 16 && patientProfile?.parentDetails) {
+                        list.push({ 
+                          label: 'Guardian', 
+                          value: `${patientProfile.parentDetails.parentName} (${patientProfile.parentDetails.parentRelation})`, 
+                          icon: Users, 
+                          color: 'text-amber-500', 
+                          bg: 'bg-amber-50',
+                          full: true 
+                        });
+                        list.push({ 
+                          label: 'Guardian Phone', 
+                          value: patientProfile.parentDetails.parentPhone, 
+                          icon: Activity, 
+                          color: 'text-amber-500', 
+                          bg: 'bg-amber-50' 
+                        });
+                      }
+                      return list;
+                    })() || [])
                   ].map((item, idx) => (
                     <div key={idx} className={`p-6 rounded-3xl bg-slate-50/50 border border-slate-100 hover:bg-white transition-all group ${item.full ? 'md:col-span-2' : ''}`}>
                        <div className="flex items-center gap-3 mb-3">

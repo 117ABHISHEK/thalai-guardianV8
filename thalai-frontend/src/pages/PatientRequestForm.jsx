@@ -51,7 +51,7 @@ const PatientRequestForm = ({ onRequestCreated }) => {
     
     // Sanitization
     if (['city', 'state', 'contactName'].includes(name)) {
-      value = value.replace(/[^a-zA-Z\s]/g, '');
+      value = value.replace(/[^a-zA-Z\s-]/g, '');
     }
     if (name === 'zipCode') {
       value = value.replace(/\D/g, '').slice(0, 6);

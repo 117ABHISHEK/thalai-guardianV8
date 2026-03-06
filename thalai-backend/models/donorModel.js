@@ -16,18 +16,6 @@ const donorSchema = new mongoose.Schema(
     dob: {
       type: Date,
       required: [true, 'Date of birth is required for donors'],
-      validate: {
-        validator: function (dob) {
-          // Age validation: must be at least 18 years old
-          const today = new Date();
-          const age = today.getFullYear() - dob.getFullYear();
-          const monthDiff = today.getMonth() - dob.getMonth();
-          const dayDiff = today.getDate() - dob.getDate();
-          const actualAge = age - (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? 1 : 0);
-          return actualAge >= 18;
-        },
-        message: 'Donor must be at least 18 years old',
-      },
     },
     // Physical metrics
     heightCm: {
@@ -233,6 +221,9 @@ donorSchema.pre('save', function (next) {
 
 // Method to check if donation is allowed today
 donorSchema.methods.canDonateToday = function () {
+  if (!this.lastDonationDate && this.age < 18) return false; // Too young to start
+  if (this.age < 18) return false; // Minors can't donate
+
   if (!this.lastDonationDate) return true; // Never donated before
 
   const daysSince = this.daysSinceLastDonation;

@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Name is required'],
       trim: true,
-      match: [/^[a-zA-Z\s]+$/, 'Name must contain only alphabets'],
+      match: [/^[a-zA-Z\s-]+$/, 'Name must contain only alphabets and hyphens'],
       minlength: [2, 'Name must be at least 2 characters'],
       maxlength: [50, 'Name cannot exceed 50 characters'],
     },
@@ -101,6 +101,20 @@ const userSchema = new mongoose.Schema(
     },
     dateOfBirth: {
       type: Date,
+      validate: {
+        validator: function(v) {
+          if (!v) return true; // Optional depending on requirements, but if present must be 0-120
+          const today = new Date();
+          const birthDate = new Date(v);
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const m = today.getMonth() - birthDate.getMonth();
+          if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+          }
+          return age >= 0 && age <= 120;
+        },
+        message: 'Age must be between 0 and 120 years'
+      }
     },
     profilePicture: {
       type: String,
@@ -147,6 +161,16 @@ userSchema.methods.generateToken = function () {
     { expiresIn: '1d' }
   );
 };
+
+// Virtual for age calculation
+userSchema.virtual('age').get(function () {
+  if (!this.dateOfBirth) return null;
+  const today = new Date();
+  const age = today.getFullYear() - this.dateOfBirth.getFullYear();
+  const monthDiff = today.getMonth() - this.dateOfBirth.getMonth();
+  const dayDiff = today.getDate() - this.dateOfBirth.getDate();
+  return age - (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? 1 : 0);
+});
 
 const User = mongoose.model('User', userSchema);
 

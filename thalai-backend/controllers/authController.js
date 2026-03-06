@@ -18,14 +18,7 @@ const validateDonorAge = (dob) => {
     age--;
   }
 
-  if (age < 18) {
-    return {
-      valid: false,
-      message: `Donor must be at least 18 years old. Current age: ${age} years`,
-      age
-    };
-  }
-
+  // Allowed to register at any age, but cannot donate if < 18
   return { valid: true, age };
 };
 
@@ -145,13 +138,7 @@ const register = async (req, res) => {
       }
 
       const ageValidation = validateDonorAge(donorDob);
-      if (!ageValidation.valid) {
-        return res.status(400).json({
-          success: false,
-          message: ageValidation.message,
-          error: 'AGE_REQUIREMENT_NOT_MET',
-        });
-      }
+      // Removed strict age blocking - allow registration but restricted donation (handled in model/service)
 
       // Validate required donor fields
       if (!heightCm || !weightKg) {
@@ -294,6 +281,8 @@ const register = async (req, res) => {
         // Create patient profile
         await Patient.create({
           user: user._id,
+          dob: dob || dateOfBirth,
+          parentDetails: req.body.parentDetails,
           transfusionHistory: [],
         });
         logger.info('Patient profile created', { userId: user._id });
@@ -654,8 +643,10 @@ const updateProfile = async (req, res) => {
         patientUpdate.currentHbDate = new Date();
       }
       if (comorbidities) patientUpdate.comorbidities = comorbidities;
+      if (req.body.parentDetails) patientUpdate.parentDetails = req.body.parentDetails;
       if (req.body.thalassemiaType) patientUpdate.thalassemiaType = req.body.thalassemiaType;
       if (req.body.splenectomy !== undefined) patientUpdate.splenectomy = req.body.splenectomy;
+      if (req.body.dob) patientUpdate.dob = req.body.dob;
 
       const patient = await Patient.findOneAndUpdate(
         { user: user._id },

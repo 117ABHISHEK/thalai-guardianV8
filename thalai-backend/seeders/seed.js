@@ -18,7 +18,7 @@ const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const CITIES = ['Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Ahmedabad', 'Chennai', 'Kolkata', 'Pune', 'Jaipur', 'Lucknow'];
 
 const FIRST_NAMES = ['Aarav', 'Vivaan', 'Aditya', 'Vihaan', 'Arjun', 'Sai', 'Ishaan', 'Aaryan', 'Shaurya', 'Krishna', 'Diya', 'Ira', 'Ananya', 'Saanvi', 'Aditi', 'Myra', 'Avni', 'Aavya', 'Anika', 'Aadhya'];
-const LAST_NAMES = ['Sharma', 'Verma', 'Gupta', 'Patel', 'Singh', 'Kumar', 'Iyer', 'Reddy', 'Nair', 'Joshi', 'Mehta', 'Desai', 'Khanna', 'Malhotra', 'Gupta', 'Iyer', 'Das', 'Roy', 'Chowdhury', 'Mukherjee'];
+const LAST_NAMES = ['Sharma', 'Verma', 'Gupta', 'Patel', 'Singh', 'Kumar', 'Iyer', 'Reddy', 'Nair', 'Joshi', 'Mehta', 'Desai', 'Khanna', 'Malhotra', 'Gupta', 'Iyer', 'Das', 'Roy', 'Chowdhury', 'Mukherjee', 'Khan-Abbas', 'Ahmed-Zai'];
 
 const SPECIALIZATIONS = [
   'Hematology', 'Pediatric Hematology', 'Clinical Hematology', 
@@ -210,10 +210,25 @@ const seedData = async () => {
             state: 'Maharashtra', 
             zipCode: `4000${getRandomInRange(10, 99)}` 
           },
-          dateOfBirth: new Date(2000 + getRandomInRange(0, 15), getRandomInRange(0, 11), getRandomInRange(1, 28)),
+          dateOfBirth: new Date(2000 + getRandomInRange(0, 24), getRandomInRange(0, 11), getRandomInRange(1, 28)),
           profilePicture: Math.random() > 0.3 ? getRandom(profilePictures) : '', // 70% have profile pictures
           isActive: true
         });
+
+      // Age check for parent details
+      const today = new Date();
+      let age = today.getFullYear() - u.dateOfBirth.getFullYear();
+      const m = today.getMonth() - u.dateOfBirth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < u.dateOfBirth.getDate())) age--;
+
+      let parentDetails = null;
+      if (age < 16) {
+        parentDetails = {
+          parentName: `${getRandom(FIRST_NAMES)} ${getRandom(LAST_NAMES)}`,
+          parentPhone: generateIndianPhone(),
+          parentRelation: getRandom(['Father', 'Mother', 'Guardian'])
+        };
+      }
 
       const transfusionHistory = [];
       const locations = ['City Hospital', 'Central Blood Bank', 'Regional Medical Center', 'District Hospital'];
@@ -257,6 +272,8 @@ const seedData = async () => {
           'Alpha Thalassemia (HbH)'
         ]),
         splenectomy: Math.random() > 0.8,
+        dob: u.dateOfBirth,
+        parentDetails,
         transfusionHistory,
         medicalReports: generatePatientReports(5),
         comorbidities: comorbidities,
@@ -286,7 +303,13 @@ const seedData = async () => {
 
     for (let i = 1; i <= 44; i++) {
       try {
-        const age = getRandomInRange(18, 55); // Donors aged 18-55
+        // Diversify donor ages (some under 18 now allowed for portal access)
+        let age;
+        if (i <= 5) {
+          age = getRandomInRange(12, 17); // 5 minor donors
+        } else {
+          age = getRandomInRange(18, 55); // Rest are adults
+        }
         const dobYear = new Date().getFullYear() - age;
         
         const u = await User.create({
