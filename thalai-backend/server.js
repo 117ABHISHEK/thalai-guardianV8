@@ -88,6 +88,9 @@ const startServer = async () => {
       optionsSuccessStatus: 200,
     };
 
+    // 3. Force-load notification service so startup verify() logs run immediately
+    require('./services/notificationService');
+
     // 3. Middlewares
     console.log('📦  Setting up middleware...');
     app.use(helmet()); 
