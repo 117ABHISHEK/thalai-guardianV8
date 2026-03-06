@@ -16,11 +16,17 @@ const client = accountSid && authToken
 
 // Nodemailer configuration
 const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true, // use SSL
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    // Do not fail on invalid certs - helpful for cloud environments
+    rejectUnauthorized: false
+  }
 });
 
 /**
@@ -79,10 +85,12 @@ const sendEmail = async (to, subject, text) => {
       text,
     };
 
+    console.log(`[NotificationService] Attempting to send email to ${to}...`);
     const info = await transporter.sendMail(mailOptions);
+    console.log(`[NotificationService] Email sent successfully to ${to}. MessageId: ${info.messageId}`);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('Email sending error:', error);
+    console.error(`[NotificationService] Email sending error to ${to}:`, error);
     return { success: false, error: error.message };
   }
 };
@@ -109,23 +117,33 @@ const sendNotification = async (userId, type, title, message, options = {}) => {
       status: 'pending',
     });
 
+    console.log(`[NotificationService] Processing notification type: ${type} for user: ${userId}, channel: ${channel}`);
     let sentSuccessfully = true;
 
     // Send SMS
     if (user.phone && (channel === 'sms' || channel === 'all')) {
       const smsResult = await sendSMS(user.phone, `${title}\n\n${message}`);
-      if (!smsResult.success) sentSuccessfully = false;
+      if (!smsResult.success) {
+        console.warn(`[NotificationService] SMS failed for user ${userId}`);
+        sentSuccessfully = false;
+      }
     }
 
     // Send Email
     if (user.email && (channel === 'email' || channel === 'all')) {
+       console.log(`[NotificationService] Sending email to ${user.email} (channel: ${channel})`);
       const emailResult = await sendEmail(user.email, title, message);
-      if (!emailResult.success) sentSuccessfully = false;
+      if (!emailResult.success) {
+        console.warn(`[NotificationService] Email failed for user ${userId}: ${emailResult.error}`);
+        sentSuccessfully = false;
+      }
     }
 
     notification.status = sentSuccessfully ? 'sent' : 'failed';
     notification.sentAt = new Date();
     await notification.save();
+
+    console.log(`[NotificationService] Notification status finalized: ${notification.status}`);
 
     return {
       success: true,
