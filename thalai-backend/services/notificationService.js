@@ -1,5 +1,5 @@
 const twilio = require('twilio');
-const nodemailer = require('nodemailer');
+const axios = require('axios');
 const Notification = require('../models/notificationModel');
 const User = require('../models/userModel');
 const Donor = require('../models/donorModel');
@@ -14,37 +14,17 @@ const client = accountSid && authToken
   ? twilio(accountSid, authToken)
   : null;
 
-// Brevo (Sendinblue) SMTP configuration
-console.log('[Email Service] Initializing Brevo SMTP...',
-  'USER:', process.env.BREVO_SMTP_USER ? process.env.BREVO_SMTP_USER : 'NOT SET',
-  'KEY:', process.env.BREVO_SMTP_KEY ? '***SET***' : 'NOT SET'
+// Brevo HTTP API configuration (uses HTTPS port 443 — works on all cloud platforms)
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
+const BREVO_API_KEY = process.env.BREVO_SMTP_KEY;
+const BREVO_SENDER_EMAIL = process.env.BREVO_SMTP_USER;
+const BREVO_SENDER_NAME = process.env.EMAIL_FROM_NAME || 'ThalAI Guardian';
+
+console.log('[Email Service] Brevo HTTP API configured.',
+  'SENDER:', BREVO_SENDER_EMAIL || 'NOT SET',
+  'KEY:', BREVO_API_KEY ? '***SET***' : 'NOT SET'
 );
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp-relay.brevo.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.BREVO_SMTP_USER,
-    pass: process.env.BREVO_SMTP_KEY,
-  },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
-});
-
-// Verify on startup
-if (process.env.BREVO_SMTP_USER && process.env.BREVO_SMTP_KEY) {
-  transporter.verify((error) => {
-    if (error) {
-      console.error('[Email Service] ❌ Brevo SMTP verification failed:', error.message);
-    } else {
-      console.log('[Email Service] ✅ Brevo SMTP ready. Sending as:', process.env.BREVO_SMTP_USER);
-    }
-  });
-} else {
-  console.warn('[Email Service] ⚠️ BREVO_SMTP_USER or BREVO_SMTP_KEY not set.');
-}
 
 /**
  * Send SMS notification
@@ -86,31 +66,41 @@ const sendSMS = async (phoneNumber, message) => {
 };
 
 /**
- * Send email notification via Brevo SMTP
+ * Send email notification via Brevo HTTP API
  */
 const sendEmail = async (to, subject, text) => {
   try {
-    if (!process.env.BREVO_SMTP_USER || !process.env.BREVO_SMTP_KEY) {
+    if (!BREVO_API_KEY || !BREVO_SENDER_EMAIL) {
       console.warn('[Email Service] Brevo not configured. Email not sent.');
       return { success: false, error: 'Email service not configured' };
     }
 
-    const fromName = process.env.EMAIL_FROM_NAME || 'ThalAI Guardian';
-    const fromEmail = process.env.BREVO_SMTP_USER;
+    console.log(`[Email Service] Sending email to ${to} via Brevo API...`);
 
-    console.log(`[Email Service] Sending email to ${to} via Brevo...`);
-    const info = await transporter.sendMail({
-      from: `"${fromName}" <${fromEmail}>`,
-      to,
-      subject,
-      text,
-    });
+    const response = await axios.post(
+      BREVO_API_URL,
+      {
+        sender: { name: BREVO_SENDER_NAME, email: BREVO_SENDER_EMAIL },
+        to: [{ email: to }],
+        subject,
+        textContent: text,
+      },
+      {
+        headers: {
+          'api-key': BREVO_API_KEY,
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000,
+      }
+    );
 
-    console.log(`[Email Service] ✅ Email sent to ${to}. MessageId: ${info.messageId}`);
-    return { success: true, messageId: info.messageId };
+    const messageId = response.data?.messageId || response.data?.id || 'sent';
+    console.log(`[Email Service] ✅ Email sent to ${to}. MessageId: ${messageId}`);
+    return { success: true, messageId };
   } catch (error) {
-    console.error(`[Email Service] ❌ Error sending to ${to}:`, error.message);
-    return { success: false, error: error.message };
+    const errMsg = error.response?.data?.message || error.message;
+    console.error(`[Email Service] ❌ Error sending to ${to}:`, errMsg);
+    return { success: false, error: errMsg };
   }
 };
 
