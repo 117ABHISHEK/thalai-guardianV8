@@ -187,7 +187,7 @@ const register = async (req, res) => {
     // Log registration attempt
     logger.info('Registration attempt', { email, role });
 
-    // Create user
+    // Step 1: Create the User account
     let user;
     try {
       user = await User.create({
@@ -198,22 +198,26 @@ const register = async (req, res) => {
         bloodGroup,
         phone,
         address,
-        dateOfBirth: dob || dateOfBirth, // Use dob if provided, else dateOfBirth
+        dateOfBirth: dob || dateOfBirth,
       });
       logger.info('User created successfully', { userId: user._id, email, role });
     } catch (userError) {
-      console.error('❌ User creation error:', userError);
-      logger.error('User creation error', { error: userError.message, stack: userError.stack, email });
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to create user account',
-        error: userError.message,
-      });
+      if (userError.name === 'ValidationError') {
+        const errors = Object.values(userError.errors).map(err => ({
+          field: err.path,
+          message: err.msg || err.message
+        }));
+        return res.status(400).json({ success: false, message: 'User validation failed', errors });
+      }
+      if (userError.code === 11000) {
+        return res.status(400).json({ success: false, message: 'Email address already in use' });
+      }
+      throw userError;
     }
 
-    // Create role-specific profile
-    if (role === 'donor') {
-      try {
+    // Step 2: Create Role-Specific Profile
+    try {
+      if (role === 'donor') {
         const donorProfile = await Donor.create({
           user: user._id,
           dob: dob || dateOfBirth,
@@ -223,107 +227,38 @@ const register = async (req, res) => {
           lastDonationDate: lastDonationDate || null,
           donationFrequencyMonths: donationFrequencyMonths || 3,
           availabilityStatus: false,
-          eligibilityStatus: 'deferred', // Starts as deferred until admin review
-          eligibilityReason: 'Pending admin review and health clearance',
+          eligibilityStatus: 'deferred',
+          eligibilityReason: 'Pending admin review',
         });
-        logger.info('Donor profile created', { donorId: donorProfile._id, userId: user._id });
 
-        // Compute initial eligibility with error handling
+        // Compute initial eligibility
         await donorProfile.populate('user');
-        
-        let eligibility;
         try {
-          eligibility = computeEligibility(donorProfile);
-          
-          // Update donor with eligibility results
+          const eligibility = computeEligibility(donorProfile);
           donorProfile.eligibilityStatus = eligibility.eligible ? 'eligible' : 'deferred';
           donorProfile.eligibilityReason = eligibility.reason;
           donorProfile.nextPossibleDonationDate = eligibility.nextPossibleDate;
           donorProfile.eligibilityLastChecked = new Date();
-          
-          logger.info('Eligibility computed', { donorId: donorProfile._id, eligible: eligibility.eligible });
-        } catch (eligibilityError) {
-          logger.error('Eligibility computation error during registration', { 
-            error: eligibilityError.message,
-            stack: eligibilityError.stack,
-            donorId: donorProfile._id,
-            userId: user._id 
-          });
-          
-          // Set default deferred status if computation fails
-          donorProfile.eligibilityStatus = 'deferred';
-          donorProfile.eligibilityReason = 'Pending admin review and health clearance';
-          donorProfile.eligibilityLastChecked = new Date();
+          await donorProfile.save();
+        } catch (e) {
+          logger.warn('Initial eligibility computation failed (deferred)', { donorId: donorProfile._id });
         }
-        
-        await donorProfile.save();
-        logger.info('Donor profile saved', { donorId: donorProfile._id });
-        
-      } catch (donorError) {
-        console.error('❌ Donor profile creation error:', donorError);
-        logger.error('Donor profile creation error', { 
-          error: donorError.message, 
-          stack: donorError.stack,
-          userId: user._id 
-        });
-        
-        // Clean up user if donor profile creation fails
-        await User.findByIdAndDelete(user._id);
-        
-        return res.status(500).json({
-          success: false,
-          message: 'Failed to create donor profile',
-          error: donorError.message,
-        });
-      }
-    } else if (role === 'patient') {
-      try {
-        // Create patient profile
+      } else if (role === 'patient') {
         await Patient.create({
           user: user._id,
           dob: dob || dateOfBirth,
           parentDetails: req.body.parentDetails,
           transfusionHistory: [],
         });
-        logger.info('Patient profile created', { userId: user._id });
-      } catch (patientError) {
-        logger.error('Patient profile creation error', { 
-          error: patientError.message,
-          stack: patientError.stack,
-          userId: user._id 
-        });
-        
-        // Clean up user if patient profile creation fails
-        await User.findByIdAndDelete(user._id);
-        
-        return res.status(500).json({
-          success: false,
-          message: 'Failed to create patient profile',
-          error: patientError.message,
-        });
-      }
-    } else if (role === 'doctor') {
-      try {
+      } else if (role === 'doctor') {
         // Validate required doctor fields
         if (!licenseNumber || !specialization || !qualification) {
-          await User.findByIdAndDelete(user._id);
-          return res.status(400).json({
-            success: false,
-            message: 'License number, specialization, and qualification are required for doctor registration',
-          });
+          throw new Error('License number, specialization, and qualification are required');
         }
 
-        // Check if license number already exists
         const existingDoctor = await Doctor.findOne({ licenseNumber });
-        if (existingDoctor) {
-          await User.findByIdAndDelete(user._id);
-          return res.status(400).json({
-            success: false,
-            message: 'A doctor with this license number already exists',
-          });
-        }
+        if (existingDoctor) throw new Error('License number already exists');
 
-        // Create doctor profile
         await Doctor.create({
           user: user._id,
           licenseNumber,
@@ -333,64 +268,51 @@ const register = async (req, res) => {
           hospital: hospital || {},
           isVerified: false,
         });
-        logger.info('Doctor profile created', { userId: user._id, licenseNumber });
-      } catch (doctorError) {
-        logger.error('Doctor profile creation error', { 
-          error: doctorError.message,
-          stack: doctorError.stack,
-          userId: user._id 
-        });
-        
-        // Clean up user if doctor profile creation fails
-        await User.findByIdAndDelete(user._id);
-        
-        return res.status(500).json({
-          success: false,
-          message: 'Failed to create doctor profile',
-          error: doctorError.message,
-        });
       }
-    }
 
-    // Send welcome notification (async)
-    const { sendWelcomeNotification } = require('../services/notificationService');
-    sendWelcomeNotification(user._id, user.name).catch(err => 
-      console.error('Failed to send welcome notification:', err)
-    );
+      // Step 3: Success! Finalize and notify
+      const token = user.generateToken();
+      
+      const { sendWelcomeNotification } = require('../services/notificationService');
+      sendWelcomeNotification(user._id, user.name).catch(err => 
+        logger.error('Welcome notification failed', { error: err.message, userId: user._id })
+      );
 
-    res.status(201).json({
-      success: true,
-      message: 'User registered successfully',
-      data: {
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          bloodGroup: user.bloodGroup,
+      return res.status(201).json({
+        success: true,
+        message: 'Registration successful',
+        data: {
+          user: { id: user._id, name: user.name, email: user.email, role: user.role, bloodGroup: user.bloodGroup },
+          token,
         },
-        token,
-      },
-    });
-  } catch (error) {
-    console.error('❌ MAIN CATCH - Registration error:', error);
-    console.error('Error details:', { name: error.name, message: error.message, stack: error.stack });
+      });
 
-    // Handle validation errors
-    if (error.name === 'ValidationError') {
+    } catch (profileError) {
+      // ⚠️ ROLLBACK: Delete the user if profile creation fails
+      logger.error('Profile creation failed, rolling back user', { 
+        userId: user._id, 
+        error: profileError.message 
+      });
+      await User.findByIdAndDelete(user._id);
+
+      if (profileError.name === 'ValidationError') {
+        const errors = Object.values(profileError.errors).map(err => ({
+          field: err.path,
+          message: err.msg || err.message
+        }));
+        return res.status(400).json({ success: false, message: 'Profile details invalid', errors });
+      }
+
       return res.status(400).json({
         success: false,
-        message: 'Validation error',
-        errors: Object.values(error.errors).map((err) => ({
-          field: err.path,
-          message: err.message,
-        })),
+        message: profileError.message || 'Failed to create user profile',
       });
     }
-
+  } catch (error) {
+    console.error('❌ GLOBAL REGISTRATION ERROR:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error during registration',
+      message: 'Critical server error during registration',
       error: error.message,
     });
   }

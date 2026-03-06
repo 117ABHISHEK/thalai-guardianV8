@@ -185,9 +185,20 @@ const DonorRegister = () => {
             </div>
 
             {errors.submit && (
-              <div className="mb-8 p-4 bg-rose-50 border border-border-rose-100 rounded-3xl text-rose-600 flex items-center gap-3 animate-reveal">
-                 <Info className="w-5 h-5" />
-                 <span className="font-bold text-sm">{errors.submit}</span>
+              <div className="mb-8 p-4 bg-rose-50 border border-rose-100 rounded-3xl text-rose-600 flex flex-col gap-2 animate-reveal">
+                 <div className="flex items-center gap-3">
+                    <Info className="w-5 h-5" />
+                    <span className="font-bold text-sm">
+                      {typeof errors.submit === 'string' ? errors.submit : (errors.submit.message || 'Registration failed')}
+                    </span>
+                 </div>
+                 {errors.submit.errors && (
+                   <ul className="ml-10 text-xs space-y-1 list-disc opacity-80">
+                      {errors.submit.errors.map((err, idx) => (
+                        <li key={idx}><span className="capitalize">{err.field}</span>: {err.message}</li>
+                      ))}
+                   </ul>
+                 )}
               </div>
             )}
 

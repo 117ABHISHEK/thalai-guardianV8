@@ -198,6 +198,15 @@ const Register = () => {
 
     setLoading(true);
 
+    // Calculate age for logic
+    const today = new Date();
+    const birthDate = new Date(formData.dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
     try {
       const userData = {
         name: formData.name,
@@ -290,9 +299,20 @@ const Register = () => {
 
           <div className="bg-white p-8 lg:p-10 rounded-[40px] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden min-h-[500px] flex flex-col">
             {error && (
-              <div className="bg-rose-50 border border-rose-100 text-rose-600 px-4 py-3 rounded-2xl mb-6 text-sm flex items-center gap-2 animate-fade">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                {error}
+              <div className="bg-rose-50 border border-rose-100 text-rose-600 px-4 py-3 rounded-2xl mb-6 text-sm flex flex-col gap-1 animate-fade">
+                <div className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                  <span className="font-bold">{typeof error === 'string' ? error : (error.message || 'Registration failed')}</span>
+                </div>
+                {error.errors && (
+                  <ul className="ml-6 mt-1 space-y-1 list-disc opacity-80">
+                    {error.errors.map((err, idx) => (
+                      <li key={idx}>
+                        <span className="capitalize">{err.field.replace('address.', '')}</span>: {err.message}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
 
