@@ -78,6 +78,7 @@ const userSchema = new mongoose.Schema(
       street: {
         type: String,
         trim: true,
+        match: [/^[a-zA-Z0-9\s,.-]+$/, 'Street must contain only alphanumeric characters, spaces, commas, hyphens, and dots'],
         required: [true, 'Street address is required for verification']
       },
       city: {

@@ -35,10 +35,12 @@ const donorSchema = new mongoose.Schema(
           type: String,
           required: true,
           trim: true,
+          match: [/^[a-zA-Z0-9\s,.\-/#:]+$/, 'Condition must contain only alphanumeric characters, spaces, hyphens, commas, dots, slashes and hashes']
         },
         details: {
           type: String,
           trim: true,
+          match: [/^[a-zA-Z0-9\s,.\-/#:]+$/, 'Details must contain only alphanumeric characters, spaces, hyphens, commas, dots, slashes and hashes']
         },
         diagnosisDate: {
           type: Date,
@@ -56,6 +58,7 @@ const donorSchema = new mongoose.Schema(
           type: String,
           required: true,
           trim: true,
+          match: [/^[a-zA-Z0-9\s,.\-/#:]+$/, 'Title must contain only alphanumeric characters, spaces, hyphens, commas, dots, slashes and hashes']
         },
         reportDate: {
           type: Date,
@@ -90,6 +93,7 @@ const donorSchema = new mongoose.Schema(
         notes: {
           type: String,
           trim: true,
+          match: [/^[a-zA-Z0-9\s,.\-/#:]+$/, 'Notes must contain only alphanumeric characters, spaces, hyphens, commas, dots, slashes and hashes']
         },
         value: {
           type: String,
@@ -163,6 +167,7 @@ const donorSchema = new mongoose.Schema(
     eligibilityReason: {
       type: String,
       trim: true,
+      match: [/^[a-zA-Z0-9\s,.-:]+$/, 'Eligibility reason must contain only alphanumeric characters, spaces, hyphens, colons, commas, and dots'],
       default: 'Pending admin review',
     },
     nextPossibleDonationDate: {
@@ -176,6 +181,7 @@ const donorSchema = new mongoose.Schema(
     notes: {
       type: String,
       trim: true,
+      match: [/^[a-zA-Z0-9\s,.-]+$/, 'Notes must contain only alphanumeric characters, spaces, hyphens, commas, and dots']
     },
   },
   {

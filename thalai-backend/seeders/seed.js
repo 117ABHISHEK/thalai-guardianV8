@@ -18,7 +18,7 @@ const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const CITIES = ['Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Ahmedabad', 'Chennai', 'Kolkata', 'Pune', 'Jaipur', 'Lucknow'];
 
 const FIRST_NAMES = ['Aarav', 'Vivaan', 'Aditya', 'Vihaan', 'Arjun', 'Sai', 'Ishaan', 'Aaryan', 'Shaurya', 'Krishna', 'Diya', 'Ira', 'Ananya', 'Saanvi', 'Aditi', 'Myra', 'Avni', 'Aavya', 'Anika', 'Aadhya'];
-const LAST_NAMES = ['Sharma', 'Verma', 'Gupta', 'Patel', 'Singh', 'Kumar', 'Iyer', 'Reddy', 'Nair', 'Joshi', 'Mehta', 'Desai', 'Khanna', 'Malhotra', 'Gupta', 'Iyer', 'Das', 'Roy', 'Chowdhury', 'Mukherjee', 'Khan-Abbas', 'Ahmed-Zai'];
+const LAST_NAMES = ['Sharma', 'Verma', 'Gupta', 'Patel', 'Singh', 'Kumar', 'Iyer', 'Reddy', 'Nair', 'Joshi', 'Mehta', 'Desai', 'Khanna', 'Malhotra', 'Das', 'Roy', 'Chowdhury', 'Mukherjee', 'Khan-Abbas', 'Ahmed-Zai'];
 
 const SPECIALIZATIONS = [
   'Hematology', 'Pediatric Hematology', 'Clinical Hematology', 
@@ -27,10 +27,12 @@ const SPECIALIZATIONS = [
 
 const URGENCIES = ['low', 'medium', 'high', 'critical'];
 const REQUEST_STATUSES = ['pending', 'searching', 'completed', 'cancelled'];
-const APPOINTMENT_STATUSES = ['scheduled', 'pending', 'completed', 'cancelled'];
 
 const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const getRandomInRange = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+// Generate structured phone avoiding collisions
+const generateUniquePhone = (prefix, id) => `+91${prefix}${String(id).padStart(8, '0')}`;
 
 // Blood group compatibility helper
 const isBloodGroupCompatible = (donorGroup, patientGroup) => {
@@ -46,6 +48,7 @@ const isBloodGroupCompatible = (donorGroup, patientGroup) => {
   };
   return compatibility[donorGroup]?.includes(patientGroup) || false;
 };
+
 const generateDonorReports = (count) => {
   const reports = [];
   for (let i = 0; i < count; i++) {
@@ -66,7 +69,6 @@ const generateDonorReports = (count) => {
   return reports;
 };
 
-// Helper to generate patient medical reports
 const generatePatientReports = (count) => {
   const reports = [];
   for (let i = 0; i < count; i++) {
@@ -109,46 +111,31 @@ const seedData = async () => {
 
     // 1. Admin
     const admin = await User.create({
-      name: 'Central Command Admin',
+      name: 'System Admin',
       email: 'admin@thalai.com',
       password: 'password123',
       role: 'admin',
       bloodGroup: 'O+',
-      phone: '9123456789', // Unique safe number
-      address: { 
-        street: 'Main Command Hub, Administrative Block', 
-        city: 'Mumbai', 
-        state: 'Maharashtra', 
-        zipCode: '400001' 
-      },
+      phone: generateUniquePhone('90', 0),
+      address: { street: 'Command Center', city: 'Mumbai', state: 'Maharashtra', zipCode: '400001' },
       dateOfBirth: new Date('1985-01-01'),
       profilePicture: 'https://i.pravatar.cc/150?img=33',
       isActive: true
     });
 
-    const generateIndianPhone = () => {
-      // Starts with 6-9, then 9 random digits. ensuring not repetitive
-      const start = Math.floor(Math.random() * 4) + 6; // 6,7,8,9
-      const rest = Math.floor(Math.random() * 900000000) + 100000000;
-      return `${start}${rest}`;
-    };
+    console.log('✅ Admin seeded.');
 
     // 2. Doctors (10)
     const doctorUsers = [];
     for (let i = 1; i <= 10; i++) {
-        const u = await User.create({
-          name: `Dr ${getRandom(FIRST_NAMES)} ${getRandom(LAST_NAMES)}`, // Removed dot to pass validation
-          email: `doctor${i}@thalai.com`,
+      const u = await User.create({
+        name: `Dr ${getRandom(FIRST_NAMES)} ${getRandom(LAST_NAMES)}`,
+        email: `doctor${i}@thalai.com`,
         password: 'password123',
         role: 'doctor',
         bloodGroup: getRandom(BLOOD_GROUPS),
-        phone: generateIndianPhone(),
-        address: { 
-          street: `${i} Medical Street, Healthcare Complex`, 
-          city: getRandom(CITIES), 
-          state: 'Maharashtra', 
-          zipCode: `4000${getRandomInRange(10, 99)}` 
-        },
+        phone: generateUniquePhone('91', i),
+        address: { street: `Clinic ${i}`, city: getRandom(CITIES), state: 'Maharashtra', zipCode: `4000${getRandomInRange(10, 99)}` },
         dateOfBirth: new Date(1970 + getRandomInRange(0, 20), getRandomInRange(0, 11), getRandomInRange(1, 28)),
         profilePicture: `https://i.pravatar.cc/150?img=${20 + i}`,
         isActive: true
@@ -160,10 +147,7 @@ const seedData = async () => {
         licenseNumber: `MCI-${10000 + i}`,
         qualification: 'MBBS, MD',
         experience: getRandomInRange(5, 25),
-        hospital: {
-          name: `${getRandom(CITIES)} Care Hospital`,
-          address: { street: 'Medical Row', city: u.address.city, state: 'Maharashtra', zipCode: u.address.zipCode }
-        },
+        hospital: { name: `${getRandom(CITIES)} Hospital`, address: u.address },
         isVerified: true,
         verifiedBy: admin._id,
         verificationDate: new Date()
@@ -174,143 +158,76 @@ const seedData = async () => {
 
     // 3. Patients (45)
     const patientUsers = [];
-    // Profile picture URLs (using placeholder service)
-    const profilePictures = [
-      'https://i.pravatar.cc/150?img=1',
-      'https://i.pravatar.cc/150?img=2',
-      'https://i.pravatar.cc/150?img=3',
-      'https://i.pravatar.cc/150?img=5',
-      'https://i.pravatar.cc/150?img=8',
-      'https://i.pravatar.cc/150?img=9',
-      'https://i.pravatar.cc/150?img=12',
-      'https://i.pravatar.cc/150?img=13',
-      'https://i.pravatar.cc/150?img=14',
-      'https://i.pravatar.cc/150?img=16'
-    ];
-
     const patientComorbidities = [
-      { condition: 'Iron Overload', treatment: 'Chelation therapy with Deferasirox', notes: 'Regular monitoring required', severity: 'moderate' },
-      { condition: 'Osteoporosis', treatment: 'Calcium and Vitamin D supplementation', notes: 'Annual bone density scan', severity: 'mild' },
-      { condition: 'Hypothyroidism', treatment: 'Levothyroxine 50mcg daily', notes: 'TSH levels monitored quarterly', severity: 'mild' },
-      { condition: 'Diabetes Type 2', treatment: 'Metformin 500mg twice daily', notes: 'Diet controlled, HbA1c monitored', severity: 'moderate' },
-      { condition: 'Cardiac Complications', treatment: 'Regular echocardiography', notes: 'Iron-induced cardiomyopathy monitoring', severity: 'severe' }
+      { condition: 'Iron Overload', treatment: 'Chelation therapy', notes: 'Monitor quarterly', severity: 'moderate' },
+      { condition: 'Osteoporosis', treatment: 'Calcium supplements', notes: 'Bone scan annually', severity: 'mild' },
+      { condition: 'Diabetes Type 2', treatment: 'Metformin', notes: 'Diet control', severity: 'moderate' }
     ];
 
     for (let i = 1; i <= 45; i++) {
-        const u = await User.create({
-          name: `${getRandom(FIRST_NAMES)} ${getRandom(LAST_NAMES)}`,
-          email: `patient${i}@thalai.com`,
-          password: 'password123',
-          role: 'patient',
-          bloodGroup: getRandom(BLOOD_GROUPS),
-          phone: generateIndianPhone(),
-          address: { 
-            street: `${i} Patient Colony, Ward ${getRandomInRange(1, 10)}`, 
-            city: getRandom(CITIES), 
-            state: 'Maharashtra', 
-            zipCode: `4000${getRandomInRange(10, 99)}` 
-          },
-          dateOfBirth: new Date(2000 + getRandomInRange(0, 24), getRandomInRange(0, 11), getRandomInRange(1, 28)),
-          profilePicture: Math.random() > 0.3 ? getRandom(profilePictures) : '', // 70% have profile pictures
-          isActive: true
-        });
+      const age = i <= 5 ? getRandomInRange(5, 15) : getRandomInRange(16, 40);
+      const dobYear = new Date().getFullYear() - age;
+      const dob = new Date(dobYear, getRandomInRange(0, 11), getRandomInRange(1, 28));
 
-      // Age check for parent details
-      const today = new Date();
-      let age = today.getFullYear() - u.dateOfBirth.getFullYear();
-      const m = today.getMonth() - u.dateOfBirth.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < u.dateOfBirth.getDate())) age--;
+      const u = await User.create({
+        name: `${getRandom(FIRST_NAMES)} ${getRandom(LAST_NAMES)}`,
+        email: `patient${i}@thalai.com`,
+        password: 'password123',
+        role: 'patient',
+        bloodGroup: getRandom(BLOOD_GROUPS),
+        phone: generateUniquePhone('92', i),
+        address: { street: `Patient Street ${i}`, city: getRandom(CITIES), state: 'Maharashtra', zipCode: '400010' },
+        dateOfBirth: dob,
+        profilePicture: Math.random() > 0.3 ? `https://i.pravatar.cc/150?img=${i % 70}` : '',
+        isActive: true
+      });
 
       let parentDetails = null;
       if (age < 16) {
         parentDetails = {
           parentName: `${getRandom(FIRST_NAMES)} ${getRandom(LAST_NAMES)}`,
-          parentPhone: generateIndianPhone(),
-          parentRelation: getRandom(['Father', 'Mother', 'Guardian'])
+          parentPhone: generateUniquePhone('98', i),
+          parentRelation: getRandom(['Father', 'Mother'])
         };
-      }
-
-      const transfusionHistory = [];
-      const locations = ['City Hospital', 'Central Blood Bank', 'Regional Medical Center', 'District Hospital'];
-      for (let j = 0; j < 5; j++) {
-        transfusionHistory.push({
-          date: new Date(Date.now() - (j * 20 * 24 * 60 * 60 * 1000)),
-          units: getRandomInRange(1, 2),
-          hb_value: parseFloat((7 + Math.random() * 3).toFixed(1)),
-          location: getRandom(locations),
-          bloodGroup: u.bloodGroup,
-          hospital: getRandom(locations),
-          doctor: `Dr. ${getRandom(LAST_NAMES)}`,
-          notes: j === 0 ? 'Most recent transfusion, patient tolerated well' : `Routine transfusion cycle ${j + 1}`
-        });
-      }
-
-      // Generate comorbidities for some patients
-      const comorbidities = [];
-      if (Math.random() > 0.5) { // 50% of patients have comorbidities
-        const numConditions = getRandomInRange(1, 2);
-        for (let j = 0; j < numConditions; j++) {
-          const comorbidity = getRandom(patientComorbidities);
-          comorbidities.push({
-            condition: comorbidity.condition,
-            severity: comorbidity.severity,
-            diagnosisDate: new Date(Date.now() - getRandomInRange(365, 2190) * 24 * 60 * 60 * 1000), // 1-6 years ago
-            treatment: comorbidity.treatment,
-            notes: comorbidity.notes
-          });
-        }
       }
 
       const p = await Patient.create({
         user: u._id,
+        dob: u.dateOfBirth,
         heightCm: getRandomInRange(120, 180),
         weightKg: getRandomInRange(30, 70),
-        thalassemiaType: getRandom([
-          'Beta Thalassemia Major',
-          'Beta Thalassemia Intermedia',
-          'E-Beta Thalassemia',
-          'Alpha Thalassemia (HbH)'
-        ]),
+        thalassemiaType: getRandom(['Beta Thalassemia Major', 'Beta Thalassemia Intermedia', 'E-Beta Thalassemia', 'Alpha Thalassemia (HbH)']),
         splenectomy: Math.random() > 0.8,
-        dob: u.dateOfBirth,
         parentDetails,
-        transfusionHistory,
-        medicalReports: generatePatientReports(5),
-        comorbidities: comorbidities,
+        transfusionHistory: Array.from({ length: 3 }, (_, j) => ({
+          date: new Date(Date.now() - j * 20 * 24 * 60 * 60 * 1000),
+          units: getRandomInRange(1, 2),
+          hb_value: parseFloat((7 + Math.random() * 3).toFixed(1)),
+          location: 'City Hospital',
+          bloodGroup: u.bloodGroup,
+          hospital: 'City Hospital',
+          doctor: `Dr. ${getRandom(LAST_NAMES)}`
+        })),
+        medicalReports: generatePatientReports(3),
+        comorbidities: Math.random() > 0.5 ? [getRandom(patientComorbidities)] : [],
         currentHb: parseFloat((8 + Math.random() * 2).toFixed(1)),
         currentHbDate: new Date()
       });
 
-      // Assign to random doctor
+      // Assign random doctor
       const d = getRandom(doctorUsers);
-      await d.assignPatient(p._id, admin._id, 'Seeded assignment');
-      await d.save();
-
-      patientUsers.push(u);
+      await p.updateOne({ 'assignedDoctor': d.user });
+      
+      patientUsers.push(p); // saving Patient docs array to map easily to requests
     }
     console.log('✅ Patients seeded.');
 
     // 4. Donors (44)
-    const donorUsers = [];
-    const donorConditions = [
-      { condition: 'Seasonal Allergies', details: 'Mild pollen sensitivity, managed with antihistamines', contraindication: false },
-      { condition: 'Hypertension (Controlled)', details: 'Blood pressure managed with lifestyle modifications', contraindication: false },
-      { condition: 'Asthma (Mild)', details: 'Exercise-induced, well controlled with inhaler', contraindication: false },
-      { condition: 'Previous Fracture', details: 'Healed wrist fracture from 2018, no complications', contraindication: false },
-      { condition: 'Migraine', details: 'Occasional migraines, 2-3 times per year', contraindication: false },
-      { condition: 'Vitamin D Deficiency', details: 'Supplementing with 2000 IU daily', contraindication: false }
-    ];
-
+    const donors = [];
     for (let i = 1; i <= 44; i++) {
-      try {
-        // Diversify donor ages (some under 18 now allowed for portal access)
-        let age;
-        if (i <= 5) {
-          age = getRandomInRange(12, 17); // 5 minor donors
-        } else {
-          age = getRandomInRange(18, 55); // Rest are adults
-        }
+        const age = i <= 5 ? getRandomInRange(14, 17) : getRandomInRange(18, 55);
         const dobYear = new Date().getFullYear() - age;
+        const dob = new Date(dobYear, getRandomInRange(0, 11), getRandomInRange(1, 28));
         
         const u = await User.create({
           name: `${getRandom(FIRST_NAMES)} ${getRandom(LAST_NAMES)}`,
@@ -318,33 +235,24 @@ const seedData = async () => {
           password: 'password123',
           role: 'donor',
           bloodGroup: getRandom(BLOOD_GROUPS),
-          phone: `+91-92000000${i.toString().padStart(2, '0')}`,
-          address: { 
-            street: `${i} Donor Lane, Sector ${getRandomInRange(1, 20)}`, 
-            city: getRandom(CITIES), 
-            state: 'Maharashtra', 
-            zipCode: `4000${getRandomInRange(10, 99)}` 
-          },
-          dateOfBirth: new Date(dobYear, getRandomInRange(0, 11), getRandomInRange(1, 28)),
-          profilePicture: Math.random() > 0.4 ? getRandom(profilePictures) : '', // 60% have profile pictures
+          phone: generateUniquePhone('93', i),
+          address: { street: `Donor Zone ${i}`, city: getRandom(CITIES), state: 'Maharashtra', zipCode: '400021' },
+          dateOfBirth: dob,
+          profilePicture: Math.random() > 0.4 ? `https://i.pravatar.cc/150?img=${i % 70}` : '',
           isActive: true
         });
 
-        const isVerified = Math.random() > 0.2;
-        
-        // Generate medical history (some donors have conditions, some don't)
-        const medicalHistory = [];
-        if (Math.random() > 0.4) { // 60% of donors have some medical history
-          const numConditions = getRandomInRange(1, 3);
-          for (let j = 0; j < numConditions; j++) {
-            const condition = getRandom(donorConditions);
-            medicalHistory.push({
-              condition: condition.condition,
-              details: condition.details,
-              diagnosisDate: new Date(Date.now() - getRandomInRange(365, 1825) * 24 * 60 * 60 * 1000), // 1-5 years ago
-              isContraindication: condition.contraindication
-            });
-          }
+        // Enforce age logic explicitly
+        let isVerified = false;
+        let eligibilityStatus = 'deferred';
+        let eligibilityReason = 'Pending verification';
+
+        if (age >= 18) {
+            isVerified = Math.random() > 0.2;
+            eligibilityStatus = isVerified ? 'eligible' : 'deferred';
+            eligibilityReason = isVerified ? 'Cleared for donation' : 'Awaiting clinical clearance';
+        } else {
+            eligibilityReason = 'Deferred: Under 18 years of age';
         }
 
         const donor = await Donor.create({
@@ -352,65 +260,56 @@ const seedData = async () => {
           dob: u.dateOfBirth,
           heightCm: getRandomInRange(150, 190),
           weightKg: getRandomInRange(50, 90),
-          medicalHistory: medicalHistory,
-          medicalReports: generateDonorReports(5),
-          lastDonationDate: isVerified ? new Date(Date.now() - getRandomInRange(90, 180) * 24 * 60 * 60 * 1000) : null,
-          totalDonations: isVerified ? getRandomInRange(1, 10) : 0,
+          medicalHistory: [],
+          medicalReports: generateDonorReports(2),
+          lastDonationDate: isVerified ? new Date(Date.now() - getRandomInRange(90, 180) * 86400000) : null,
+          totalDonations: isVerified ? getRandomInRange(1, 5) : 0,
           isVerified,
           verifiedBy: isVerified ? admin._id : null,
           verifiedAt: isVerified ? new Date() : null,
           availabilityStatus: isVerified,
           healthClearance: isVerified,
-          eligibilityStatus: isVerified ? 'eligible' : 'deferred',
-          eligibilityReason: isVerified ? 'All health parameters within acceptable range' : 'Pending admin review and health clearance'
+          eligibilityStatus,
+          eligibilityReason
         });
 
         if (isVerified) {
           await DonorHistory.create({
             donorId: donor._id,
-            donationDate: new Date(Date.now() - getRandomInRange(100, 200) * 24 * 60 * 60 * 1000),
+            donationDate: new Date(Date.now() - getRandomInRange(100, 200) * 86400000),
             bloodGroup: u.bloodGroup,
             unitsDonated: 1,
             location: { hospital: 'Main Blood Bank', city: u.address.city, state: 'Maharashtra' },
             healthStatus: 'excellent'
           });
         }
-        donorUsers.push(u);
-      } catch (err) {
-        console.error(`Error creating donor ${i}:`, err);
-      }
+        donors.push(donor);
     }
     console.log('✅ Donors seeded.');
 
     // 5. Requests (30)
+    const requests = [];
     for (let i = 0; i < 30; i++) {
       const p = getRandom(patientUsers);
-      await Request.create({
-        patientId: p._id,
-        bloodGroup: p.bloodGroup,
+      const u = await User.findById(p.user);
+      const req = await Request.create({
+        patientId: u._id, // References User model actually
+        bloodGroup: u.bloodGroup,
         unitsRequired: getRandomInRange(1, 2),
         urgency: getRandom(URGENCIES),
         status: getRandom(REQUEST_STATUSES),
-        location: {
-          hospital: `${p.address.city} Care`,
-          city: p.address.city,
-          state: 'Maharashtra',
-          address: p.address.street
-        },
-        contactPerson: { name: 'Support', phone: p.phone, relationship: 'Guardian' }
+        location: { hospital: `${u.address.city} Care`, city: u.address.city, state: 'Maharashtra', address: u.address.street },
+        contactPerson: { name: 'Support Contact', phone: u.phone, relationship: 'Guardian' }
       });
+      requests.push(req);
     }
     console.log('✅ Requests seeded.');
-    
-    const patients = await Patient.find();
-    const doctors = await Doctor.find();
-    const donors = await Donor.find();
 
     // 6. Appointments (40)
     for (let i = 0; i < 40; i++) {
-        const p = getRandom(patients);
-        const d = getRandom(doctors);
-        const date = new Date(Date.now() + getRandomInRange(-30, 30) * 24 * 60 * 60 * 1000);
+        const p = getRandom(patientUsers);
+        const d = getRandom(doctorUsers);
+        const date = new Date(Date.now() + getRandomInRange(-30, 30) * 86400000);
         
         await Appointment.create({
             user: p.user,
@@ -418,88 +317,44 @@ const seedData = async () => {
             userRole: 'patient',
             date: date,
             time: getRandom(['10:00 AM', '11:30 AM', '02:00 PM', '04:15 PM', '05:00 PM']),
-            status: getRandom(['scheduled', 'pending', 'completed', 'cancelled']),
-            reason: getRandom(['Regular Transfusion', 'Chronic Pain Checkup', 'Iron Overload Screening', 'Blood Compatibility Test', 'General Consultation']),
-            notes: 'System generated clinical appointment during seeding.'
+            status: getRandom(['scheduled', 'pending', 'completed']),
+            reason: 'General Consultation',
+            notes: 'System seeded appointment.'
         });
     }
     console.log('✅ Appointments seeded.');
 
-    // 7. Connections / Circles (50)
-    for (let i = 0; i < 50; i++) {
-        const p = getRandom(patients);
+    // 7. Connections (Circles)
+    for (let i = 0; i < 30; i++) {
+        const p = getRandom(patientUsers);
         const d = getRandom(donors);
         
-        // Prevent duplicate connections if possible, but for seeding we just create
         try {
             await Connection.create({
                 patient: p.user,
                 donor: d.user,
                 requester: p.user,
                 status: getRandom(['pending', 'active']),
-                notes: 'Community sync connection established.'
+                notes: 'Community connection'
             });
         } catch (e) {
-            // Skip duplicates
+            // ignore duplicate pairings
         }
     }
-    console.log('✅ Connections (Circles) seeded.');
+    console.log('✅ Connections seeded.');
 
-    // 8. Notifications / Neural Signals (60)
-    const allUsers = await User.find();
-    const notificationTypes = [
-        'appointment_scheduled', 
-        'donor_match', 
-        'checkup_suggested', 
-        'urgent_request', 
-        'system',
-        'connection_accepted'
-    ];
-    
-    for (let i = 0; i < 60; i++) {
-        const u = getRandom(allUsers);
-        const type = getRandom(notificationTypes);
-        
-        await Notification.create({
-            userId: u._id,
-            title: type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-            message: `Neural Signal: Your clinical status for ${type.replace('_', ' ')} has been updated in the global registry.`,
-            type: type,
-            isRead: Math.random() > 0.5,
-            channel: 'in_app'
-        });
-    }
-    console.log('✅ Notifications seeded.');
-
-    // 9. Match Logs (40)
-    const requests = await Request.find();
-    
-    for (let i = 0; i < 40; i++) {
+    // 8. Match Logs
+    for (let i = 0; i < 20; i++) {
         const r = getRandom(requests);
+        const d = getRandom(donors);
         
-        // Find a compatible donor for this request
-        const compatibleDonors = [];
-        for (const donor of donors) {
-            const donorUser = await User.findById(donor.user);
-            if (donorUser && isBloodGroupCompatible(donorUser.bloodGroup, r.bloodGroup)) {
-                compatibleDonors.push(donor);
-            }
-        }
-
-        if (compatibleDonors.length > 0) {
-            const d = getRandom(compatibleDonors);
-            
+        const donorUser = await User.findById(d.user);
+        if (donorUser && isBloodGroupCompatible(donorUser.bloodGroup, r.bloodGroup) && d.eligibilityStatus === 'eligible') {
             await MatchLog.create({
                 requestId: r._id,
                 donorId: d._id,
                 matchScore: getRandomInRange(70, 99),
-                scoreBreakdown: {
-                    bloodGroupMatch: 40,
-                    locationScore: getRandomInRange(15, 30),
-                    availabilityScore: 20,
-                    donationFrequencyScore: 10,
-                    aiPredictionScore: getRandomInRange(5, 10)
-                },
+                scoreBreakdown: { bloodGroupMatch: 40, locationScore: 20, availabilityScore: 20, donationFrequencyScore: 10, aiPredictionScore: 5 },
                 status: getRandom(['pending', 'contacted', 'accepted'])
             });
         }

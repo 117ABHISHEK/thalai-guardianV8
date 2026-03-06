@@ -17,9 +17,21 @@ const patientSchema = new mongoose.Schema(
       required: [true, 'Date of birth is required for patients'],
     },
     parentDetails: {
-      parentName: { type: String, trim: true },
-      parentPhone: { type: String, trim: true },
-      parentRelation: { type: String, trim: true }
+      parentName: { 
+        type: String, 
+        trim: true,
+        match: [/^[a-zA-Z\s-]+$/, 'Parent name must contain only alphabets and hyphens']
+      },
+      parentPhone: { 
+        type: String, 
+        trim: true,
+        match: [/^\+?[0-9\s-]{10,15}$/, 'Parent phone number is invalid']
+      },
+      parentRelation: { 
+        type: String, 
+        trim: true,
+        match: [/^[a-zA-Z\s]+$/, 'Parent relation must contain only alphabets']
+      }
     },
     // Transfusion history - key data for ML prediction
     transfusionHistory: [
@@ -49,14 +61,17 @@ const patientSchema = new mongoose.Schema(
         notes: {
           type: String,
           trim: true,
+          match: [/^[a-zA-Z0-9\s,.\-/#]+$/, 'Notes must contain only alphanumeric characters, spaces, hyphens, commas, dots, slashes and hashes']
         },
         hospital: {
           type: String,
           trim: true,
+          match: [/^[a-zA-Z0-9\s,.-]+$/, 'Hospital must contain only alphanumeric characters, spaces, hyphens, commas, and dots']
         },
         doctor: {
           type: String,
           trim: true,
+          match: [/^[a-zA-Z\s.-]+$/, 'Doctor name can only contain alphabets, spaces, dots, and hyphens']
         },
         addedBy: {
           type: mongoose.Schema.Types.ObjectId,
@@ -109,6 +124,7 @@ const patientSchema = new mongoose.Schema(
           type: String,
           required: true,
           trim: true,
+          match: [/^[a-zA-Z0-9\s,.-]+$/, 'Condition must contain only alphanumeric characters, spaces, hyphens, commas, and dots']
         },
         severity: {
           type: String,
@@ -163,6 +179,7 @@ const patientSchema = new mongoose.Schema(
           type: String,
           required: true,
           trim: true,
+          match: [/^[a-zA-Z0-9\s,.\-/#]+$/, 'Title must contain only alphanumeric characters, spaces, hyphens, commas, dots, slashes and hashes']
         },
         reportDate: {
           type: Date,
@@ -197,6 +214,7 @@ const patientSchema = new mongoose.Schema(
         notes: {
           type: String,
           trim: true,
+          match: [/^[a-zA-Z0-9\s,.\-/#]+$/, 'Notes must contain only alphanumeric characters, spaces, hyphens, commas, dots, slashes and hashes']
         },
         value: {
           type: String,
@@ -222,6 +240,7 @@ const patientSchema = new mongoose.Schema(
     notes: {
       type: String,
       trim: true,
+      match: [/^[a-zA-Z0-9\s,.\-/#]+$/, 'Notes must contain only alphanumeric characters, spaces, hyphens, commas, dots, slashes and hashes']
     },
   },
   {

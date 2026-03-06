@@ -40,16 +40,30 @@ const doctorSchema = new mongoose.Schema(
       name: {
         type: String,
         trim: true,
+        match: [/^[a-zA-Z0-9\s,.-]+$/, 'Hospital name must contain only alphanumeric characters, spaces, hyphens, commas, and dots']
       },
       address: {
-        street: String,
-        city: String,
-        state: String,
-        zipCode: String,
+        street: {
+          type: String,
+          match: [/^[a-zA-Z0-9\s,.-]+$/, 'Street must contain only alphanumeric characters, spaces, hyphens, commas, and dots']
+        },
+        city: {
+          type: String,
+          match: [/^[a-zA-Z\s]+$/, 'City must contain only alphabets']
+        },
+        state: {
+          type: String,
+          match: [/^[a-zA-Z\s]+$/, 'State must contain only alphabets']
+        },
+        zipCode: {
+          type: String,
+          match: [/^\d{6}$/, 'Zip code must be exactly 6 digits']
+        },
       },
       phone: {
         type: String,
         trim: true,
+        match: [/^\+?[0-9\s-]{10,15}$/, 'Phone number is invalid']
       },
     },
     // Assigned Patients
