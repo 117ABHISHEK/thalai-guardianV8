@@ -61,9 +61,10 @@ const getUserNotifications = async (req, res) => {
     if (status) query.status = status;
     if (type) query.type = type;
 
+    const limitNum = parseInt(limit) || 50;
     const notifications = await Notification.find(query)
       .sort({ createdAt: -1 })
-      .limit(parseInt(limit));
+      .limit(limitNum);
 
     res.status(200).json({
       success: true,

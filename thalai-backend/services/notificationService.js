@@ -476,6 +476,28 @@ Explore your dashboard to get started!`;
   }
 };
 
+/**
+ * Send notification for a new chat message
+ */
+const sendNewMessageNotification = async (recipientId, senderName, messageText) => {
+  try {
+    const title = `New Message from ${senderName} 📩`;
+    const snippet = (messageText || '').length > 50 ? messageText.substring(0, 50) + '...' : messageText;
+    const body = `Hi! You have a new message from ${senderName}:\n\n"${snippet}"\n\nLogin to ThalAI Guardian to reply.`;
+
+    return await sendNotification(
+      recipientId,
+      'new_message',
+      title,
+      body,
+      { channel: 'in_app' } // Default to in_app, or 'all' if user wants email/sms
+    );
+  } catch (error) {
+    console.error('Send new message notification error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
   sendSMS,
   sendEmail,

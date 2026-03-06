@@ -94,9 +94,10 @@ const getChatHistory = async (req, res) => {
       query.sessionId = sessionId;
     }
 
+    const limitNum = parseInt(limit) || 50;
     const history = await ChatbotLog.find(query)
       .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
+      .limit(limitNum)
       .select('userMessage botResponse intent createdAt sessionId');
 
     res.status(200).json({

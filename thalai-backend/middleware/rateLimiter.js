@@ -6,7 +6,7 @@ const rateLimit = require('express-rate-limit');
  */
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per window
+  max: 10000, // Increased for development/polling
   standardHeaders: true, // Return rate limit info in headers
   legacyHeaders: false, // Disable X-RateLimit-* headers
   message: {
@@ -26,7 +26,7 @@ const apiLimiter = rateLimit({
  */
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Increased for debugging
+  max: 1000, // Increased for testing
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -46,7 +46,7 @@ const authLimiter = rateLimit({
  */
 const userLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 300, // More generous limit for logged-in users
+  max: 20000, // High limit for authenticated polling
   keyGenerator: (req) => {
     // If we have a user, use their ID as the key
     if (req.user && req.user.id) {
