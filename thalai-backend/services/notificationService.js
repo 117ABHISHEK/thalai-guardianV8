@@ -15,14 +15,22 @@ const client = accountSid && authToken
   : null;
 
 // Brevo (Sendinblue) SMTP configuration
+console.log('[Email Service] Initializing Brevo SMTP...',
+  'USER:', process.env.BREVO_SMTP_USER ? process.env.BREVO_SMTP_USER : 'NOT SET',
+  'KEY:', process.env.BREVO_SMTP_KEY ? '***SET***' : 'NOT SET'
+);
+
 const transporter = nodemailer.createTransport({
   host: 'smtp-relay.brevo.com',
   port: 587,
   secure: false,
   auth: {
-    user: process.env.BREVO_SMTP_USER,  // Your Brevo account login email
-    pass: process.env.BREVO_SMTP_KEY,   // Your Brevo SMTP API key
+    user: process.env.BREVO_SMTP_USER,
+    pass: process.env.BREVO_SMTP_KEY,
   },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
 });
 
 // Verify on startup
@@ -37,7 +45,6 @@ if (process.env.BREVO_SMTP_USER && process.env.BREVO_SMTP_KEY) {
 } else {
   console.warn('[Email Service] ⚠️ BREVO_SMTP_USER or BREVO_SMTP_KEY not set.');
 }
-
 
 /**
  * Send SMS notification
