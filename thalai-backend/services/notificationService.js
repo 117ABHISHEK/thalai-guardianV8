@@ -15,19 +15,36 @@ const client = accountSid && authToken
   : null;
 
 // Nodemailer configuration
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, // use SSL
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    // Do not fail on invalid certs - helpful for cloud environments
-    rejectUnauthorized: false
-  }
-});
+const createTransporter = () => {
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+    tls: {
+      rejectUnauthorized: false
+    }
+  });
+};
+
+let transporter = createTransporter();
+
+// Verify connection configuration on startup
+if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error('[Email Service] ❌ Verification Failed:', error.message);
+    } else {
+      const maskedEmail = process.env.EMAIL_USER.replace(/(.{1}).+(@.+)/, "$1***$2");
+      console.log(`[Email Service] ✅ Ready to send emails as: ${maskedEmail}`);
+    }
+  });
+} else {
+  console.warn('[Email Service] ⚠️ Missing EMAIL_USER or EMAIL_PASS in environment.');
+}
 
 /**
  * Send SMS notification
