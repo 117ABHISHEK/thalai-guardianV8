@@ -62,11 +62,13 @@ const getPublicDonors = async (req, res) => {
     const donors = await Donor.find({
       isVerified: true,
       availabilityStatus: true,
+      eligibilityStatus: 'eligible',
+      healthClearance: true,
     })
       .populate('user', 'name bloodGroup profilePicture')
       .sort({ totalDonations: -1, createdAt: -1 })
       .limit(limit)
-      .select('totalDonations lastDonationDate availabilityStatus');
+      .select('totalDonations lastDonationDate availabilityStatus eligibilityStatus healthClearance');
 
     const formattedDonors = donors
       .filter((donor) => donor.user)
@@ -77,6 +79,8 @@ const getPublicDonors = async (req, res) => {
         lastDonationDate: donor.lastDonationDate,
         isAvailable: donor.availabilityStatus,
         profilePicture: donor.user.profilePicture,
+        eligibilityStatus: donor.eligibilityStatus || 'deferred',
+        isActiveHero: donor.eligibilityStatus === 'eligible' && donor.healthClearance === true,
       }));
 
     res.status(200).json({

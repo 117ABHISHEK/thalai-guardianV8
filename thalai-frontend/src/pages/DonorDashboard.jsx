@@ -84,9 +84,19 @@ const DonorDashboard = () => {
         availabilityStatus: availabilityForm.availabilityStatus,
         lastDonationDate: availabilityForm.lastDonationDate || undefined,
       });
-      setAvailability(response.data.donor);
-      setMessage('Availability updated successfully!');
-      setTimeout(() => setMessage(''), 3000);
+      const updatedDonor = response.data.donor;
+      setAvailability(updatedDonor);
+      // Sync form back with what server actually saved (eligibility gate may have blocked it)
+      setAvailabilityForm(prev => ({
+        ...prev,
+        availabilityStatus: updatedDonor?.availabilityStatus || false,
+      }));
+      if (response.visibilityBlocked) {
+        setMessage('Visibility blocked: you must meet all eligibility criteria to appear to patients.');
+      } else {
+        setMessage('Availability updated successfully!');
+      }
+      setTimeout(() => setMessage(''), 4000);
     } catch (error) {
       setMessage(error.message || 'Failed to update availability');
       setTimeout(() => setMessage(''), 3000);
@@ -329,25 +339,50 @@ const DonorDashboard = () => {
                   )}
                 </div>
 
+                {/* Eligibility block banner */}
+                {donorProfile && donorProfile.eligibilityStatus !== 'eligible' && (
+                  <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3">
+                    <ShieldCheck className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1">Visibility Locked</p>
+                      <p className="text-xs text-amber-600 font-medium leading-relaxed">
+                        You must meet all eligibility criteria (age, verification, health clearance) before you can appear to patients as an Active Hero.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <form onSubmit={handleAvailabilitySubmit} className="space-y-8">
-                  <div className="flex items-center justify-between p-6 bg-sky-50/50 rounded-3xl border border-sky-100 transition-all hover:bg-sky-50">
+                  <div className={`flex items-center justify-between p-6 rounded-3xl border transition-all ${
+                    donorProfile?.eligibilityStatus !== 'eligible'
+                      ? 'bg-slate-50 border-slate-100 opacity-60'
+                      : 'bg-sky-50/50 border-sky-100 hover:bg-sky-50'
+                  }`}>
                     <div className="flex items-center gap-4">
                       <div className={`p-4 rounded-2xl bg-white shadow-sm ${availabilityForm.availabilityStatus ? 'text-sky-500' : 'text-slate-400'}`}>
                          <Activity className="w-6 h-6" />
                       </div>
                       <div>
                         <p className="font-black text-slate-900 text-lg tracking-tight">Public Presence</p>
-                        <p className="text-sm text-slate-500 font-medium">{availabilityForm.availabilityStatus ? 'You are visible as active' : 'Hidden from searches'}</p>
+                        <p className="text-sm text-slate-500 font-medium">
+                          {donorProfile?.eligibilityStatus !== 'eligible'
+                            ? 'Must be eligible to appear'
+                            : availabilityForm.availabilityStatus ? 'You are visible as active' : 'Hidden from searches'
+                          }
+                        </p>
                       </div>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
+                    <label className={`relative inline-flex items-center ${
+                      donorProfile?.eligibilityStatus !== 'eligible' ? 'cursor-not-allowed' : 'cursor-pointer'
+                    }`}>
                       <input 
                         type="checkbox" 
                         name="availabilityStatus"
                         checked={availabilityForm.availabilityStatus}
+                        disabled={donorProfile?.eligibilityStatus !== 'eligible'}
                         onChange={(e) => {
+                          if (donorProfile?.eligibilityStatus !== 'eligible') return;
                           setAvailabilityForm({ ...availabilityForm, availabilityStatus: e.target.checked });
-                          // Auto trigger save for a snappy feeling
                           setTimeout(() => document.getElementById('avail-submit').click(), 100);
                         }}
                         className="sr-only peer" 

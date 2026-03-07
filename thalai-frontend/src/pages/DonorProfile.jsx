@@ -7,7 +7,7 @@ import {
   CheckCircle, XCircle, Clock, AlertCircle, 
   ArrowLeft, ShieldCheck, Ruler, Weight, 
   Calendar, Award, Activity, FileText,
-  User, Edit3, Heart, Info, Sparkles, Droplets, Camera
+  User, Edit3, Heart, Info, Sparkles, Droplets, Camera, Star
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AppointmentList from '../components/AppointmentList';
@@ -65,7 +65,7 @@ const DonorProfile = () => {
   const getEligibilityStatus = () => {
     if (!eligibility) return { label: 'Pending Assessment', color: 'text-slate-400', bg: 'bg-slate-50', icon: <Clock className="w-5 h-5" /> };
     if (eligibility.eligible) return { label: 'Active Hero', color: 'text-emerald-500', bg: 'bg-emerald-50', icon: <CheckCircle className="w-5 h-5" /> };
-    return { label: 'Protocol Deferred', color: 'text-rose-500', bg: 'bg-rose-50', icon: <AlertCircle className="w-5 h-5" /> };
+    return { label: 'Newbie', color: 'text-amber-500', bg: 'bg-amber-50', icon: <Star className="w-5 h-5" /> };
   };
 
   const formatDate = (dateString) => {
@@ -96,7 +96,7 @@ const DonorProfile = () => {
                     <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
                  </button>
                  <h1 className="text-4xl font-display font-black text-slate-900 tracking-tight leading-tight mb-2">
-                    Hero <span className="text-sky-500 text-gradient">{user?.name}</span>
+                    {eligibility?.eligible ? 'Hero' : 'Donor'} <span className="text-sky-500 text-gradient">{user?.name}</span>
                  </h1>
                  <p className="text-slate-500 font-medium">Refining global identity and clinical synchronization.</p>
               </div>

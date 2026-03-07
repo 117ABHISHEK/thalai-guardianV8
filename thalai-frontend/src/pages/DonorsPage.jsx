@@ -40,7 +40,9 @@ const DonorsPage = () => {
           </div>
           <div>
             <p className="font-bold text-slate-900">{value}</p>
-            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">Verified Hero</p>
+            <p className={`text-[10px] font-black uppercase tracking-widest ${row.isActiveHero ? 'text-emerald-500' : 'text-amber-500'}`}>
+              {row.isActiveHero ? 'Active Hero' : 'Newbie'}
+            </p>
           </div>
         </div>
       )

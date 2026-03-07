@@ -41,6 +41,12 @@ const updateAvailability = async (req, res) => {
 
     const eligibility = computeEligibility(tempDonorState);
 
+    // ELIGIBILITY GATE: ineligible donors cannot be visible to patients
+    const effectiveAvailability =
+      availabilityStatus !== undefined
+        ? availabilityStatus && eligibility.eligible  // true only if donor wants it AND is eligible
+        : undefined;
+
     const updatePayload = {
       eligibilityStatus: eligibility.eligible ? 'eligible' : 'deferred',
       eligibilityReason: eligibility.reason,
@@ -48,8 +54,8 @@ const updateAvailability = async (req, res) => {
       eligibilityLastChecked: new Date(),
     };
 
-    if (availabilityStatus !== undefined) {
-      updatePayload.availabilityStatus = availabilityStatus;
+    if (effectiveAvailability !== undefined) {
+      updatePayload.availabilityStatus = effectiveAvailability;
     }
     if (lastDonationDate) {
       updatePayload.lastDonationDate = new Date(lastDonationDate);
@@ -64,9 +70,14 @@ const updateAvailability = async (req, res) => {
       { new: true } // `new: true` to return the modified document
     ).populate('user', 'name email bloodGroup phone dateOfBirth');
 
+    const visibilityBlocked = availabilityStatus === true && !eligibility.eligible;
+
     res.status(200).json({
       success: true,
-      message: 'Availability updated successfully',
+      message: visibilityBlocked
+        ? 'Availability saved, but visibility was blocked — you must meet all eligibility criteria to appear to patients.'
+        : 'Availability updated successfully',
+      visibilityBlocked,
       data: {
         donor: updatedDonor,
         eligibility,
