@@ -4,7 +4,7 @@ import { getUsers, toggleUserStatus, deleteUser } from '../api/admin';
 import { 
   Users, ShieldAlert, UserX, UserCheck, Trash2, 
   Search, Filter, ShieldCheck, Mail, Tag,
-  ArrowLeft, Settings, ShieldOff, AlertTriangle
+  ArrowLeft, Settings, ShieldOff, AlertTriangle, Droplets
 } from 'lucide-react';
 
 const SystemSettings = () => {
@@ -15,6 +15,7 @@ const SystemSettings = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [bloodGroupFilter, setBloodGroupFilter] = useState('all');
 
   useEffect(() => {
     fetchUsers();
@@ -58,7 +59,8 @@ const SystemSettings = () => {
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     const matchesStatus = statusFilter === 'all' || 
                           (statusFilter === 'active' ? user.isActive : !user.isActive);
-    return matchesSearch && matchesRole && matchesStatus;
+    const matchesBloodGroup = bloodGroupFilter === 'all' || user.bloodGroup === bloodGroupFilter;
+    return matchesSearch && matchesRole && matchesStatus && matchesBloodGroup;
   });
 
   if (loading) {
@@ -142,6 +144,24 @@ const SystemSettings = () => {
                  <option value="blocked">Blocked Only</option>
               </select>
            </div>
+           <div className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-100 rounded-2xl">
+              <Droplets className={`w-4 h-4 ${bloodGroupFilter === 'all' ? 'text-slate-400' : 'text-rose-500'}`} />
+              <select 
+                className="bg-transparent text-xs font-black uppercase tracking-widest outline-none"
+                value={bloodGroupFilter}
+                onChange={(e) => setBloodGroupFilter(e.target.value)}
+              >
+                 <option value="all">All Blood Types</option>
+                 <option value="A+">A+</option>
+                 <option value="A-">A−</option>
+                 <option value="B+">B+</option>
+                 <option value="B-">B−</option>
+                 <option value="AB+">AB+</option>
+                 <option value="AB-">AB−</option>
+                 <option value="O+">O+</option>
+                 <option value="O-">O−</option>
+              </select>
+           </div>
         </div>
 
         {/* Accounts Grid */}
@@ -178,6 +198,14 @@ const SystemSettings = () => {
                         <Mail className="w-3.5 h-3.5" />
                         <span className="text-xs font-medium truncate">{u.email}</span>
                      </div>
+                     {u.bloodGroup && (
+                       <div className="flex items-center gap-1.5 mt-2">
+                         <Droplets className="w-3.5 h-3.5 text-rose-400" />
+                         <span className="px-2 py-0.5 bg-rose-50 text-rose-600 text-[10px] font-black uppercase tracking-widest rounded-md">
+                           {u.bloodGroup}
+                         </span>
+                       </div>
+                     )}
                   </div>
 
                   <div className="pt-6 border-t border-slate-100 flex gap-3">
