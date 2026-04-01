@@ -213,13 +213,31 @@ const updateMatchStatus = async (req, res) => {
       });
     }
 
+    // Check if already accepted to avoid duplicate push
+    const wasAlreadyAccepted = match.status === 'accepted';
+
     match.status = status;
     match.notes = notes || match.notes;
     match.respondedAt = new Date();
     await match.save();
 
-    // If accepted, notify the patient
-    if (status === 'accepted') {
+    // If accepted, notify the patient and update request
+    if (status === 'accepted' && !wasAlreadyAccepted) {
+      const request = await Request.findById(match.requestId);
+      if (request) {
+        const activeDonors = request.acceptedDonors ? request.acceptedDonors.filter(d => d.status === 'active') : [];
+        const role = activeDonors.length === 0 ? 'primary' : 'backup';
+        
+        request.acceptedDonors = request.acceptedDonors || [];
+        request.acceptedDonors.push({
+          donorId: donor._id,
+          matchId: match._id,
+          role: role,
+          status: 'active'
+        });
+        await request.save();
+      }
+
       notificationService.sendMatchAcceptedNotification(match._id).catch(err => 
         console.error('Failed to send match accepted notification:', err.message)
       );

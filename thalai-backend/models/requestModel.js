@@ -78,6 +78,34 @@ const requestSchema = new mongoose.Schema(
       trim: true,
       maxlength: [500, 'Notes cannot exceed 500 characters'],
     },
+    acceptedDonors: [
+      {
+        donorId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Donor',
+          required: true,
+        },
+        matchId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'MatchLog',
+          required: true,
+        },
+        role: {
+          type: String,
+          enum: ['primary', 'backup'],
+          required: true,
+        },
+        status: {
+          type: String,
+          enum: ['active', 'unavailable', 'completed'],
+          default: 'active',
+        },
+        addedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      }
+    ],
     completedAt: {
       type: Date,
     },

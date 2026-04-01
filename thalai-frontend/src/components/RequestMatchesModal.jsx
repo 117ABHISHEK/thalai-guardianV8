@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { getTopMatches } from '../api/match';
-import { Search, X, User, MapPin, Phone, ShieldCheck, Zap, Activity, Heart, Target } from 'lucide-react';
+import { markDonorUnavailable } from '../api/requests';
+import { Search, X, User, MapPin, Phone, ShieldCheck, Zap, Activity, Heart, Target, AlertCircle } from 'lucide-react';
 
 import { createPortal } from 'react-dom';
 
 const RequestMatchesModal = ({ requestId, onClose }) => {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
     fetchMatches();
@@ -21,6 +23,20 @@ const RequestMatchesModal = ({ requestId, onClose }) => {
       console.error('Failed to fetch matches:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMarkUnavailable = async (donorId) => {
+    if (!window.confirm('Are you sure this donor is unavailable? We will notify the next backup donor immediately.')) return;
+    
+    try {
+      setUpdatingId(donorId);
+      await markDonorUnavailable(requestId, donorId);
+      await fetchMatches(); // Refresh the list
+    } catch (error) {
+      alert(error.message || 'Failed to update donor status');
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -105,12 +121,27 @@ const RequestMatchesModal = ({ requestId, onClose }) => {
 
                      <div className="pt-6 border-t border-slate-50 flex gap-3">
                         {match.status === 'accepted' ? (
-                          <a 
-                            href={`tel:${match.donor?.phone}`}
-                            className="flex-1 btn-primary py-4 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-emerald-500/20 bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center gap-2 group/btn"
-                          >
-                            <Phone className="w-4 h-4 group-hover/btn:rotate-12 transition-transform" /> Contact Hero
-                          </a>
+                          <>
+                            <a 
+                              href={`tel:${match.donor?.phone}`}
+                              className="flex-[2] btn-primary py-4 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-emerald-500/20 bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center gap-2 group/btn"
+                            >
+                              <Phone className="w-4 h-4 group-hover/btn:rotate-12 transition-transform" /> Contact Hero
+                            </a>
+                            <button
+                              onClick={() => handleMarkUnavailable(match.donorId)}
+                              disabled={updatingId === match.donorId}
+                              title="Mark as Unavailable (Promote Backup)"
+                              className="flex-1 px-4 py-4 bg-rose-50 border border-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white transition-all rounded-2xl flex items-center justify-center gap-2 text-[10px] font-black tracking-widest uppercase disabled:opacity-50"
+                            >
+                              {updatingId === match.donorId ? <Activity className="w-4 h-4 animate-spin" /> : <AlertCircle className="w-4 h-4" />}
+                              Drop
+                            </button>
+                          </>
+                        ) : match.status === 'unavailable' ? (
+                          <div className="flex-1 py-4 bg-slate-100 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-[0.1em] flex items-center justify-center gap-2">
+                             <AlertCircle className="w-4 h-4 text-rose-400" /> Marked Unavailable
+                          </div>
                         ) : (
                           <div className="flex-1 py-4 bg-slate-100 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-[0.1em] flex items-center justify-center gap-2">
                              <Activity className="w-4 h-4 animate-pulse text-sky-400" /> Awaiting Initial Link

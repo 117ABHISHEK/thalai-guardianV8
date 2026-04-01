@@ -7,6 +7,7 @@ const {
   cancelRequest,
   getRequestById,
   updateUrgency,
+  markDonorUnavailable,
 } = require('../controllers/requestController');
 const { protect } = require('../middleware/authMiddleware');
 const { allowRoles } = require('../middleware/roleMiddleware');
@@ -44,5 +45,10 @@ router.put('/:id/cancel', cancelRequest);
 // @desc    Update request urgency (Admin only)
 // @access  Private/Admin
 router.patch('/:id/urgency', allowRoles('admin'), updateUrgencyRules(), handleValidationErrors, updateUrgency);
+
+// @route   PUT /api/requests/:id/donor-unavailable/:donorId
+// @desc    Mark a donor as unavailable and promote next backup to primary
+// @access  Private (Patient/Admin)
+router.put('/:id/donor-unavailable/:donorId', markDonorUnavailable);
 
 module.exports = router;

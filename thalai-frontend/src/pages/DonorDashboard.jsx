@@ -140,7 +140,7 @@ const DonorDashboard = () => {
   return (
     <div className="min-h-screen bg-transparent font-body pb-64 animate-slide-up">
       {/* Premium Header */}
-      <div className="glass border-b border-slate-100 sticky top-16 md:top-20 z-40">
+      <div className="glass border-b border-slate-100 relative z-40">
         <div className="container-custom py-6 md:py-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-6 animate-reveal">

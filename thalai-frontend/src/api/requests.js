@@ -57,3 +57,13 @@ export const cancelRequest = async (requestId) => {
   }
 };
 
+// Mark donor unavailable and promote backup
+export const markDonorUnavailable = async (requestId, donorId) => {
+  try {
+    const response = await api.put(`/requests/${requestId}/donor-unavailable/${donorId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Failed to mark donor unavailable' };
+  }
+};
+

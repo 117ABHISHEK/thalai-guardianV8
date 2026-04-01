@@ -320,6 +320,79 @@ const updateUrgency = async (req, res) => {
   }
 };
 
+const markDonorUnavailable = async (req, res) => {
+  try {
+    const { id, donorId } = req.params;
+
+    const request = await Request.findById(id).populate('acceptedDonors.donorId');
+    if (!request) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    // Must be patient or admin
+    if (
+      request.patientId.toString() !== req.user._id.toString() &&
+      req.user.role !== 'admin'
+    ) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const donorIndex = request.acceptedDonors.findIndex(
+      (d) => d.donorId && d.donorId._id.toString() === donorId
+    );
+
+    if (donorIndex === -1) {
+      return res.status(404).json({ message: 'Donor not found in accepted list' });
+    }
+
+    // Mark as unavailable
+    request.acceptedDonors[donorIndex].status = 'unavailable';
+
+    // Update MatchLog status as well so it reflects in the frontend
+    const matchId = request.acceptedDonors[donorIndex].matchId;
+    const MatchLog = require('../models/matchLogModel');
+    await MatchLog.findByIdAndUpdate(matchId, { status: 'unavailable', notes: 'Marked unavailable by patient/admin' });
+
+    // If it was the primary, we need to promote a backup
+    let promotedDonor = null;
+    if (request.acceptedDonors[donorIndex].role === 'primary') {
+      const backupIndex = request.acceptedDonors.findIndex(
+        (d) => d.role === 'backup' && d.status === 'active'
+      );
+
+      if (backupIndex !== -1) {
+        request.acceptedDonors[backupIndex].role = 'primary';
+        promotedDonor = request.acceptedDonors[backupIndex];
+        
+        // Notify the newly promoted donor
+        const { sendNotification } = require('../services/notificationService');
+        if (promotedDonor.donorId.user) {
+          sendNotification(
+            promotedDonor.donorId.user,
+            'promoted_to_primary',
+            'You are now the Primary Donor! 🩸',
+            `The primary donor for request ${request.bloodGroup} became unavailable. You are now the primary donor. Please coordinate.`,
+            { channel: 'all' }
+          ).catch(err => console.error('Error notifying promoted donor', err));
+        }
+      }
+    }
+
+    await request.save();
+
+    res.status(200).json({
+      success: true,
+      message: promotedDonor 
+        ? 'Donor marked unavailable. Backup donor promoted seamlessly.' 
+        : 'Donor marked unavailable. No active backup available.',
+      data: { request }
+    });
+  } catch (error) {
+    console.error('Mark donor unavailable error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 module.exports = {
   createRequest,
   getUserRequests,
@@ -327,5 +400,6 @@ module.exports = {
   cancelRequest,
   getRequestById,
   updateUrgency,
+  markDonorUnavailable,
 };
 

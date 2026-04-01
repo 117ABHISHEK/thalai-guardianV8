@@ -215,7 +215,7 @@ const AccountSettings = () => {
   return (
     <div className="min-h-screen bg-transparent font-body pb-32 animate-reveal">
       {/* Header */}
-      <div className="glass border-b border-slate-100 sticky top-16 md:top-20 z-40">
+      <div className="glass border-b border-slate-100 relative z-40">
         <div className="container-custom py-6 md:py-8">
           <div className="flex items-center gap-4">
             <button 

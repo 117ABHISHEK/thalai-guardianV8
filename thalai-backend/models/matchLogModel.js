@@ -27,7 +27,7 @@ const matchLogSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'contacted', 'accepted', 'rejected', 'completed'],
+      enum: ['pending', 'contacted', 'accepted', 'rejected', 'completed', 'unavailable'],
       default: 'pending',
     },
     contactedAt: Date,
